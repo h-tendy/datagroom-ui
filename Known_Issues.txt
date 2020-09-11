@@ -1,0 +1,4 @@
+Messed up date when xlsx is generated from xlsm
+
+the app crashes at times with xlsm files, 
+setting a limit to address.bottom seems to work. (node_modules\exceljs\dist\es5\utils\cell-matrix.js:49)

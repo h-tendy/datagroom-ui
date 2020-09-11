@@ -1,0 +1,100 @@
+<!-- https://jsfiddle.net/Lw8hud96/3/ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks</title>
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+
+  <!-- Tabulator -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/4.8.0/css/semantic-ui/tabulator_semantic-ui.min.css" integrity="sha512-Uq+XQrDBLWblemvod63z8VK9lldDZyyhuNZTCkZzS82HaXkE7InzTLLcgFpb7xQ71uWdHLtL+DX1s4ASgrM8LQ==" crossorigin="anonymous" />
+
+  <!-- JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/4.8.0/js/tabulator.min.js" integrity="sha512-Pygijh52ovWsZDgf6ILLmBwE+vlKjGi75eVQQUdApJZyiRQAv1oQe7a1yZRkpQGErHJ9JciOTXq8YVgyzsIwbw==" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+  <title>Document</title>
+  <style>
+    #data-table {
+      border: 2px solid #ABB2BF;
+      width: 99%;
+      margin: 0 0.5%;
+    }
+
+    .tabulator-cell {
+      border-right: 1px solid #E0E0E0;
+      border-bottom: 1px solid #E0E0E0;
+    }
+
+    .tabulator-row {
+      background-color: #fff;
+      border-bottom: none;
+    }
+
+    .tabulator-row:nth-child(even) {
+      background-color: rgb(238, 238, 238);
+    }
+  </style>
+</head>
+<body>
+  <div id="data-table"></div>
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalTitle">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="exampleModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tabledata = [
+      {A: 1, B: 'BLOREBANK\\deb @ WIN7-CLIENT2', C: 'loadmodule Stage2-Core.ps1. Some more text and really large text. loadmodule Stage2-Core.ps1. Some more text and really large text.loadmodule Stage2-Core.ps1. Some more text and really large text.loadmodule Stage2-Core.ps1. Some more text and really large text.loadmodule Stage2-Core.ps1. Some more text and really large text.loadmodule Stage2-Core.ps1. Some more text and really large text.loadmodule Stage2-Core.ps1. Some more text and really large text.'},
+      {A: 2, B: 'BLOREBANK\\ben @ WIN7-CLIENT2', C: 'loadmodule SharpSploit.dll'},
+      {A: 3, B: 'BLOREBANK\\SYSTEM* @ BLOREDC1', C: 'loadmodule Stage2-Core.ps1'}
+    ];
+
+    const rightClickContextMenu = [
+      {
+        label:"Open",
+        action:function(e, cell){
+          console.log(cell);
+        }
+      }
+    ]
+
+    const table = new Tabulator("#data-table", {
+      //height: '82vh',
+      data: tabledata,
+      persistence:{
+        columns:true,
+      },
+      persistenceID:"tasksPersistence",
+      //persistenceMode:"cookie",
+      columns:[
+        {title:"A", field:"A", frozen:true},
+        {title:"B", field:"B", headerFilter:"input", editor: "textarea", contextMenu: rightClickContextMenu},
+        {title:"C", field:"C", headerFilter:"input", variableHeight: true, formatter: "textarea"},
+      ],
+    });
+
+    function openModel(title, body) {
+      $('#exampleModalTitle').text(title);
+      $('#exampleModalBody').text(body);
+      $('#exampleModal').modal('show');
+    }
+  </script>
+</body>
+</html>
