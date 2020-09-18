@@ -45,6 +45,7 @@ class DsView extends Component {
             pageSize: 30,
             totalRecs: 0, 
 
+            chronologyDescending: false,
             singleClickEdit: false,
             showAllFilters: false,
             disableEditing: false,
@@ -75,11 +76,16 @@ class DsView extends Component {
         this.toggleSingleFilter = this.toggleSingleFilter.bind(this);
         this.pageSizeChange = this.pageSizeChange.bind(this);
         this.ajaxResponse = this.ajaxResponse.bind(this);
+        this.ajaxURLGenerator = this.ajaxURLGenerator.bind(this);
         this.cellClickEvents = this.cellClickEvents.bind(this);
         this.copyToClipboard = this.copyToClipboard.bind(this);
+        this.copyCellToClipboard = this.copyCellToClipboard.bind(this);
         this.pickFillColorHandler = this.pickFillColorHandler.bind(this);
         this.handleColorPickerClose = this.handleColorPickerClose.bind(this);
         this.handleColorPickerOnChangeComplete = this.handleColorPickerOnChangeComplete.bind(this);
+        let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
+        chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
+        this.state.chronologyDescending = chronologyDescendingFrmLocal;
         let singleClickEditFrmLocal = localStorage.getItem("singleClickEdit");
         singleClickEditFrmLocal = JSON.parse(singleClickEditFrmLocal);
         this.state.singleClickEdit = singleClickEditFrmLocal;
@@ -331,6 +337,55 @@ class DsView extends Component {
     copyToClipboard () {
         // You have to also set 'clipboard' to true in table options.
         this.ref.table.copyToClipboard();
+    }
+
+    // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
+    copyFormatted (html) {
+        // Create container for the HTML
+        var container = document.createElement('div')
+        container.innerHTML = html
+    
+        // Hide element
+        container.style.position = 'fixed'
+        container.style.pointerEvents = 'none'
+        container.style.opacity = 0
+    
+        // Detect all style sheets of the page
+        var activeSheets = Array.prototype.slice.call(document.styleSheets)
+        .filter(function (sheet) {
+            return !sheet.disabled
+        })
+    
+        // Mount the container to the DOM to make `contentWindow` available
+        document.body.appendChild(container)
+    
+        // Copy to clipboard
+        window.getSelection().removeAllRanges()    
+        var range = document.createRange()
+        range.selectNode(container)
+        window.getSelection().addRange(range)
+        document.execCommand('copy')
+    
+        for (var i = 0; i < activeSheets.length; i++) activeSheets[i].disabled = true
+    
+        document.execCommand('copy')
+    
+        for (var i = 0; i < activeSheets.length; i++) activeSheets[i].disabled = false
+    
+        // Remove the container
+        document.body.removeChild(container)
+    }
+
+    copyCellToClipboard (e, cell) {
+        let colDef = cell.getColumn().getDefinition();
+        let html = colDef.formatter(cell, colDef.formatterParams);
+        //this.copyFormatted(html);
+
+        //let value = cell.getValue();
+        //if (typeof value != "string") return value;
+        //value = MarkdownIt.render(value);
+        this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
+
     }
 
     step1 () {
@@ -624,6 +679,7 @@ class DsView extends Component {
         this.setState({ showColorPicker: true, colorPickerLeft: e.pageX, colorPickerTop: e.pageY });
     }
 
+    
     setColumnDefinitions () {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -643,6 +699,10 @@ class DsView extends Component {
             {
                 label:"Add empty row...",
                 action: this.addRow
+            },
+            {
+                label:"Copy cell to clipboard...",
+                action: this.copyCellToClipboard
             },
             {
                 separator: true
@@ -671,6 +731,8 @@ class DsView extends Component {
             if (col.editor === "textarea" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
                 col.formatter = (cell, formatterParams) => {
+                    //cell.getElement().style.backgroundColor = 'lightpink';
+                    //cell.getElement().style.color = 'black';
                     let value = cell.getValue();
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
@@ -737,6 +799,54 @@ class DsView extends Component {
         return response; 
     }
 
+    // From tabulator
+    generateParamsList (data, prefix) {
+        var self = this,
+        output = [];
+    
+        prefix = prefix || "";
+    
+        if ( Array.isArray(data) ) {
+            data.forEach(function(item, i){
+                output = output.concat(self.generateParamsList(item, prefix ? prefix + "[" + i + "]" : i));
+            });
+        }else if (typeof data === "object"){
+            for (var key in data){
+                output = output.concat(self.generateParamsList(data[key], prefix ? prefix + "[" + key + "]" : key));
+            }
+        }else{
+            output.push({key:prefix, value:data});
+        }
+    
+        return output;    
+    }
+
+    serializeParams (params) {
+        var output = this.generateParamsList(params),
+        encoded = [];
+    
+        output.forEach(function(item){
+            encoded.push(encodeURIComponent(item.key) + "=" + encodeURIComponent(item.value));
+        });
+    
+        return encoded.join("&");    
+    }
+
+    ajaxURLGenerator (url, config, params) {
+        if(url){
+            if(params && Object.keys(params).length) {
+                // Pick this from a checkbox. 
+                params.chronology = this.state.chronologyDescending ? 'desc' : 'asc';
+                if(!config.method || config.method.toLowerCase() == "get"){
+                    config.method = "get";
+    
+                    url += (url.includes("?") ? "&" : "?") + this.serializeParams(params);
+                }
+            }
+        }
+        return url;    
+    }
+
     step2 () {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -752,6 +862,8 @@ class DsView extends Component {
                                 data={[]}
                                 options={{
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}`,
+                                    ajaxURLGenerator:this.ajaxURLGenerator,
+                                    chronology: this.state.chronologyDescending,
                                     //ajaxProgressiveLoad:"load",
                                     //ajaxProgressiveLoadDelay: 200,
                                     pagination:"remote",
@@ -877,6 +989,13 @@ class DsView extends Component {
                     {this.rowDeleteStatus()}
                 </Row>
                 <Row>
+                    <Col md={2} sm={2} xs={2}> 
+                    <Form.Check inline type="checkbox" label="&nbsp;Desc order" checked={this.state.chronologyDescending} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({chronologyDescending: checked, showAllFilters: false}); // filters get wiped out unfortunately. This problem with react-tabulator. 
+                                    localStorage.setItem("chronologyDescending", JSON.stringify(checked));
+                                }}/>
+                    </Col>
                     <Col md={2} sm={2} xs={2}> 
                     <Form.Check inline type="checkbox" label="&nbsp;One-click editing" checked={this.state.singleClickEdit} onChange={(event) => {
                                     let checked = event.target.checked;
