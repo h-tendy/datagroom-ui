@@ -760,21 +760,6 @@ class DsView extends Component {
                     col.editorParams.verticalNavigation = "table"
                 }
             }
-
-            // XXX: support both autocomplete and select. autocomplete for single selection and typing assistance. select for multi-selection. 
-            if ( false /*col.field === "Organization" || col.field === "Tags" || col.field === "Caetgory" */) {
-                col.editor = "autocomplete"; // for single select. 
-                col.editor = "select"; // for multi-select. 
-                col.editor = MyAutoCompleter;
-                col.editorParams = {
-                    //values: ["red", "white"]
-                    values: ["PLM", "HW/FW/FPGA", "SysArch", "IQNOS Software Dev", "IQNOS System Test", "DNA Software Dev", "DNA Test", "Optical Test", "TechPubs", "PMO", "MFG", "Services", "RRT", "Quality"],
-                    showListOnEmpty: true,
-                    allowEmpty: true,
-                    multiselect: true,
-                };
-                col.formatter = "textarea"; // XXX: because single line doesn't wrap.
-            }
             // XXX: No need for any conditional formatting for now. 
             if (col.field === "Severity") {
                 col.formatter = (cell, formatterParams) => {

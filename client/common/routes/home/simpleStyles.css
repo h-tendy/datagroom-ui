@@ -128,7 +128,7 @@ code {
     background-color: #fff;
     color: #555;
     /* Jayaram, changed the below two. */
-    font-weight: normal;
+    font-weight: bold;
     font-size: 80%;
 
     white-space: nowrap;
@@ -147,8 +147,9 @@ code {
     display: inline-block;
     position: relative;
     box-sizing: border-box;
+    height: inherit;
     border-right: 1px solid #ddd;
-    background-color: #fff;
+    background-color: darkgreen;
     text-align: left;
     vertical-align: bottom;
     overflow: hidden;
@@ -163,8 +164,9 @@ code {
   
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
     box-sizing: border-box;
+    height: inherit;
     position: relative;
-    padding: 4px;
+    padding: 0px;
   }
   
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-header-menu-button {
@@ -180,8 +182,10 @@ code {
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
     box-sizing: border-box;
     width: 100%;
+    height: inherit;
     white-space: nowrap;
-    /*white-space: normal;*/
+    white-space: normal;
+    color: white;
     overflow: hidden;
     word-wrap: break-word;
     text-overflow: ellipsis;
@@ -200,8 +204,8 @@ code {
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-arrow {
     display: inline-block;
     position: absolute;
-    top: 9px;
-    right: 8px;
+    top: 7px;
+    right: 0px;
     width: 0;
     height: 0;
     border-left: 6px solid transparent;
@@ -224,7 +228,7 @@ code {
   
   .tabulator .tabulator-header .tabulator-col.ui-sortable-helper {
     position: absolute;
-    background-color: #e6e6e6 !important;
+    /*background-color: #e6e6e6 !important;*/
     border: 1px solid #ddd;
   }
   
@@ -250,26 +254,26 @@ code {
   }
   
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title {
-    padding-right: 25px;
+    padding-right: 0px;
   }
   
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover {
     cursor: pointer;
-    background-color: #e6e6e6;
+    background-color: darkorange !important;
   }
   
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="none"] .tabulator-col-content .tabulator-arrow {
     border-top: none;
-    border-bottom: 6px solid #bbb;
+    border-bottom: 6px solid lightgray !important;
   }
   
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="asc"] .tabulator-col-content .tabulator-arrow {
     border-top: none;
-    border-bottom: 6px solid #666;
+    border-bottom: 6px solid red !important;
   }
   
   .tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort="desc"] .tabulator-col-content .tabulator-arrow {
-    border-top: 6px solid #666;
+    border-top: 6px solid red !important;
     border-bottom: none;
   }
   
