@@ -1,3 +1,23 @@
+body blockquote {
+  margin: 0;
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding: 0 1em;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: small;
+  color: black;
+  background-color: lightgray;
+  border-left: 0.5em solid #2A313F;
+  ;
+}
+
+body blockquote>:first-child {
+  margin-top: 0;
+}
+
+body blockquote>:last-child {
+  margin-bottom: 0;
+}
 .g {
   /*background-color: rgb(253, 252, 224);*/
   background-color: rgb(190, 255, 188);
