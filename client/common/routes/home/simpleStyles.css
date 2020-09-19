@@ -147,9 +147,9 @@ code {
     display: inline-block;
     position: relative;
     box-sizing: border-box;
-    height: inherit;
+    /*height: inherit;*/
     border-right: 1px solid #ddd;
-    background-color: darkgreen;
+    background-color: #2A313F;
     text-align: left;
     vertical-align: bottom;
     overflow: hidden;
@@ -164,9 +164,9 @@ code {
   
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
     box-sizing: border-box;
-    height: inherit;
+    /*height: inherit;*/
     position: relative;
-    padding: 0px;
+    padding: 4px;
   }
   
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-header-menu-button {
@@ -182,7 +182,7 @@ code {
   .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
     box-sizing: border-box;
     width: 100%;
-    height: inherit;
+    /*height: inherit;*/
     white-space: nowrap;
     white-space: normal;
     color: white;
