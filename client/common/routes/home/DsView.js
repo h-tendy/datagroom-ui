@@ -894,9 +894,9 @@ class DsView extends Component {
                                     cellMouseEnter: (e, cell) => {
                                         //console.log("Enter-1, prev: ", cell.__dg__prevBgColor);
                                         //console.log("Enter-1, cur: ", cell.getElement().style.backgroundColor);
-                                        if (cell.getElement().style.backgroundColor !== "lightblue") 
+                                        if (cell.getElement().style.backgroundColor !== "#fcfcfc") 
                                             cell.__dg__prevBgColor = cell.getElement().style.backgroundColor;
-                                        cell.getElement().style.backgroundColor = "lightblue";
+                                        cell.getElement().style.backgroundColor = "#fcfcfc";
                                         //console.log("Enter-2, prev: ", cell.__dg__prevBgColor);
                                         //console.log("Enter-2, cur: ", cell.getElement().style.backgroundColor);
                                     },
