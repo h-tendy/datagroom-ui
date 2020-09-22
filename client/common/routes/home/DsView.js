@@ -25,6 +25,25 @@ let MarkdownIt = new require('markdown-it')({
     html: true
 }).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-highlightjs'));
 
+// From: https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
+// Remember old renderer, if overridden, or proxy to default renderer
+var defaultRender = MarkdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+    return self.renderToken(tokens, idx, options);
+  };
+
+MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    // If you are sure other plugins can't add `target` - drop check below
+    var aIndex = tokens[idx].attrIndex('target');
+  
+    if (aIndex < 0) {
+      tokens[idx].attrPush(['target', '_blank']); // add new attribute
+    } else {
+      tokens[idx].attrs[aIndex][1] = '_blank';    // replace value of existing attr
+    }
+  
+    // pass token to default renderer.
+    return defaultRender(tokens, idx, options, env, self);
+};
 
 const config = {};
 if (process.env.NODE_ENV === 'development') {
@@ -97,6 +116,23 @@ class DsView extends Component {
         disableEditingFrmLocal = JSON.parse(disableEditingFrmLocal);
         this.state.disableEditing = disableEditingFrmLocal;
         */
+        const root = document.querySelector('#root')
+
+        root.addEventListener('click', (e) => { 
+            /*       
+            if (target.tagName === 'BUTTON' && e.target.className === 'my-button') {
+                e.stopPropagation()
+                location.href = 'http://stackoverflow.com'
+            } */
+            console.log("Trapped event: ", e);
+            if (e.target.href) {
+                console.log("href...", e.target.href);
+                //e.stopImmediatePropagation();
+                //e.stopPropagation();
+                //e.preventDefault();
+            }
+        })
+
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
