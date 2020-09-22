@@ -230,7 +230,7 @@ class DsView extends Component {
         const { match } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-
+        console.log("In edit cancelled");
         let column = cell.getColumn().getField();
         let _id = cell.getRow().getData()['_id'];
         if (!_id) {
@@ -516,6 +516,7 @@ class DsView extends Component {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
+        console.log("In edited");
 
         // When I'm using MyAutoCompleter, we have to explicitly adjust the 
         // height. But added it everywhere. 
@@ -743,6 +744,7 @@ class DsView extends Component {
                     // Set the editor to a fixed one for special keys. 
                     col.editor = MyTextArea;
                     col.cellEditCancelled = (cell) => {
+                        console.log("Inside second editcancelled..")
                         cell.getRow().normalizeHeight();
                     }
                 }

@@ -20,9 +20,10 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
     // Store initial value. 
     var curVal = cell.getValue();
     console.log("curVal: ", curVal);
+    console.log("initialValue before nullifying it: ", initialValue);
     initialValue = null;
     console.log("initialValue: ", initialValue);
-    console.log("initialDisplayValue: ");
+    console.log("initialDisplayValue: ", initialDisplayValue);
 
     if (editorParams.conditionalValues) {
         editorParams.values = [];
@@ -68,7 +69,7 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
 
     listEl.addEventListener("mousedown", function(e){
         blurable = false;
-
+        console.log("listEL mousedown");
         setTimeout(function(){
             blurable = true;
         }, 10);
@@ -325,6 +326,7 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
 
                 el.addEventListener("mousedown", function(e){
                     blurable = false;
+                    console.log("eL mousedown");
 
                     setTimeout(function(){
                         blurable = true;
@@ -398,7 +400,7 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
 
     function chooseItem(){
         hideList();
-
+        console.log("Chooseitem!");
         if(currentItem){
             if(initialValue !== currentItem.value){
                 //initialValue = currentItem.value;
@@ -449,7 +451,11 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
                     vals = filterInvalids(vals);
                 }
                 successVal = vals.join(', ');
-                success(successVal);
+                if (successVal !== initialDisplayValue) {
+                    success(successVal);
+                } else {
+                    cancel();
+                }
             } else {
                 cancel();
             }
@@ -604,6 +610,8 @@ function MyAutoCompleter (cell, onRendered, success, cancel, editorParams){
     input.addEventListener("blur", function(e){
         if(blurable){
             chooseItem();
+        } else {
+            console.log("Not calling chooseItem!");
         }
     });
 

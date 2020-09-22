@@ -322,7 +322,7 @@ function MySingleAutoCompleter (cell, onRendered, success, cancel, editorParams)
 
     function chooseItem(){
         hideList();
-
+        console.log("chooseitem single");
         if(currentItem){
             if(initialValue !== currentItem.value){
                 initialValue = currentItem.value;
@@ -342,8 +342,15 @@ function MySingleAutoCompleter (cell, onRendered, success, cancel, editorParams)
                 } else{
                     let { status, match } = isExactMatch (input.value);
                     if (status) {
-                        success(match);
+                        if (initialValue !== match) {
+                            console.log("Calling success now... ; single");
+                            success(match);
+                        } else  {
+                            console.log("Calling cancel..; single");
+                            cancel();
+                        }
                     } else {
+                        console.log("Calling cancel now...; single");
                         cancel();
                     }
                 }
