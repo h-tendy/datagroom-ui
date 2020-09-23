@@ -116,23 +116,6 @@ class DsView extends Component {
         disableEditingFrmLocal = JSON.parse(disableEditingFrmLocal);
         this.state.disableEditing = disableEditingFrmLocal;
         */
-        const root = document.querySelector('#root')
-
-        root.addEventListener('click', (e) => { 
-            /*       
-            if (target.tagName === 'BUTTON' && e.target.className === 'my-button') {
-                e.stopPropagation()
-                location.href = 'http://stackoverflow.com'
-            } */
-            console.log("Trapped event: ", e);
-            if (e.target.href) {
-                console.log("href...", e.target.href);
-                //e.stopImmediatePropagation();
-                //e.stopPropagation();
-                //e.preventDefault();
-            }
-        })
-
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
