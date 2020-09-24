@@ -13,7 +13,8 @@ class MyTabulator extends Component {
         //console.log("Current Options: ", this.props.options);
         //console.log("Next options: ", nextProps.options);
         if (this.props.options.paginationSize !== nextProps.options.paginationSize || 
-            this.props.options.chronology !== nextProps.options.chronology) {
+            this.props.options.chronology !== nextProps.options.chronology || 
+            this.props.options.forceRefresh !== nextProps.options.forceRefresh) {
             return true;
         }
         return false;

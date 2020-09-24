@@ -161,6 +161,47 @@ export function dsHome (state = initialState, action) {
                 delete newState.dsSetView;
                 return newState
             }                        
+        case dsConstants.JIRA_REFRESH_REQUEST:
+            {
+                let newState = {...state};
+                if (!newState.dsJiraRefresh)
+                    newState.dsJiraRefresh = {};
+                newState.dsJiraRefresh.dsName = action.dsName;
+                newState.dsJiraRefresh.dsView = action.dsView;
+                newState.dsJiraRefresh.status = 'refreshing';
+                return newState
+            }
+        case dsConstants.JIRA_REFRESH_SUCCESS:
+            {
+                let newState = {...state};
+                if (!newState.dsJiraRefresh)
+                    newState.dsJiraRefresh = {};
+                newState.dsJiraRefresh.dsName = action.dsName;
+                newState.dsJiraRefresh.dsView = action.dsView;
+                newState.dsJiraRefresh.status = 'done';
+                newState.dsJiraRefresh.serverStatus = action.serverStatus;
+                return newState
+            }
+        case dsConstants.JIRA_REFRESH_FAILURE:
+            {
+                let newState = {...state};
+                if (!newState.dsJiraRefresh)
+                    newState.dsJiraRefresh = {};
+                newState.dsJiraRefresh.dsName = action.dsName;
+                newState.dsJiraRefresh.dsView = action.dsView;
+                newState.dsJiraRefresh.status = 'fail';
+                newState.dsJiraRefresh.message = action.message;
+                return newState
+            }
+        case dsConstants.JIRA_REFRESH_DELETE_TRACKER:
+            {
+                let newState = {...state};
+                if (!newState.dsJiraRefresh)
+                    newState.dsJiraRefresh = {};
+                newState.dsJiraRefresh.status = 'dusted';
+                return newState
+            }
+            
         default:
             return state
     }

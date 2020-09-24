@@ -9,7 +9,8 @@ export const dsActions = {
     getDsList,
     deleteDs,
     deleteOneDoc,
-    setViewDefinitions
+    setViewDefinitions,
+    refreshJira
 }
 
 
@@ -141,11 +142,15 @@ function deleteOneDoc (dsName, dsView, dsUser, _id, row) {
 }
 
 
-function setViewDefinitions (dsName, dsView, dsUser, viewDefs) {
+function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig) {
     return async dispatch => {
         try {
             dispatch(request());
-            let responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs});
+            let responseJson;
+            if (jiraConfig)
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig});
+            else 
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs});
             if (responseJson)
                 dispatch(success(responseJson));
             else 
@@ -157,4 +162,23 @@ function setViewDefinitions (dsName, dsView, dsUser, viewDefs) {
     function request() { return { type: dsConstants.SET_VIEW_DEFS_REQUEST, dsName, dsView, dsUser } }
     function success(serverStatus) { return { type: dsConstants.SET_VIEW_DEFS_SUCCESS, dsName, dsView, dsUser, serverStatus } }
     function failure(message) { return { type: dsConstants.SET_VIEW_DEFS_FAILURE, dsName, dsView, dsUser, message } }
+}
+
+
+function refreshJira (dsName, dsView, dsUser) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.refreshJira({dsName, dsView, dsUser});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("Jira refresh failure"));
+        } catch (error) {
+            dispatch(failure("Jira refresh failure"));
+        }
+    }
+    function request() { return { type: dsConstants.JIRA_REFRESH_REQUEST, dsName, dsView, dsUser } }
+    function success(serverStatus) { return { type: dsConstants.JIRA_REFRESH_SUCCESS, dsName, dsView, dsUser, serverStatus } }
+    function failure(message) { return { type: dsConstants.JIRA_REFRESH_FAILURE, dsName, dsView, dsUser, message } }
 }

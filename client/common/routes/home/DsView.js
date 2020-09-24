@@ -48,6 +48,7 @@ MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self)
 const config = {};
 if (process.env.NODE_ENV === 'development') {
     config.apiUrl = "http://in-mvlb52:8887"
+    config.apiUrl = "http://localhost:8887"
 } else {
     config.apiUrl = ""
 }
@@ -63,6 +64,7 @@ class DsView extends Component {
             editingButtonText: 'Disable Editing',
             pageSize: 30,
             totalRecs: 0, 
+            refresh: 0,
 
             chronologyDescending: false,
             singleClickEdit: false,
@@ -71,7 +73,7 @@ class DsView extends Component {
             showColorPicker: false,
             colorPickerLeft: 0,
             colorPickerTop: 0,
-            color: 0
+            color: 0,
         };
         this.ref = null;
         
@@ -102,6 +104,9 @@ class DsView extends Component {
         this.pickFillColorHandler = this.pickFillColorHandler.bind(this);
         this.handleColorPickerClose = this.handleColorPickerClose.bind(this);
         this.handleColorPickerOnChangeComplete = this.handleColorPickerOnChangeComplete.bind(this);
+        this.jiraRefreshHandler = this.jiraRefreshHandler.bind(this);
+        this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
+
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
         this.state.chronologyDescending = chronologyDescendingFrmLocal;
@@ -650,6 +655,23 @@ class DsView extends Component {
         dispatch(dsActions.deleteOneDoc(dsName, dsView, user.user, _id, cell.getRow()));
     }
 
+    jiraRefreshStatus () {
+        const { dispatch, dsHome } = this.props;
+        if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'done') {
+            this.setState({ refresh: this.state.refresh + 1 });
+            dispatch({ type: dsConstants.JIRA_REFRESH_DELETE_TRACKER })
+        }
+
+    }
+
+    jiraRefreshHandler () {
+        const { dispatch, match, user } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        dispatch(dsActions.refreshJira(dsName, dsView, user.user));
+    }
+
     toggleSingleFilter (e, column) {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -870,6 +892,7 @@ class DsView extends Component {
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}`,
                                     ajaxURLGenerator:this.ajaxURLGenerator,
                                     chronology: this.state.chronologyDescending,
+                                    forceRefresh: this.state.refresh,
                                     //ajaxProgressiveLoad:"load",
                                     //ajaxProgressiveLoadDelay: 200,
                                     pagination:"remote",
@@ -971,9 +994,13 @@ class DsView extends Component {
     }
 
     render () {
-        const { match } = this.props;
-        let me = this;
+        const { match, dsHome } = this.props;
+        let me = this; 
         this.fixOneTimeLocalStorage();
+        let jiraRefreshButton = <Button onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+ 
+        if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
+            jiraRefreshButton = <Button onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
         return (
             <div>
                 <Row>
@@ -990,9 +1017,11 @@ class DsView extends Component {
                     <Button onClick={this.toggleEditing}> {this.state.editingButtonText} </Button> */}
                     <Button onClick={this.copyToClipboard}> Copy-to-clipbard </Button>
                     <Button onClick={this.addRow}> Add Row </Button>
+                    {jiraRefreshButton}
                     {this.cellEditStatus()}
                     {this.addRowStatus()}
                     {this.rowDeleteStatus()}
+                    {this.jiraRefreshStatus()}
                 </Row>
                 <Row>
                     <Col md={2} sm={2} xs={2}> 

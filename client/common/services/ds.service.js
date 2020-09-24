@@ -8,12 +8,14 @@ export const dsService = {
     getDsList, 
     deleteDs,
     deleteOneDoc,
-    setViewDefinitions
+    setViewDefinitions,
+    refreshJira
 };
 
 const config = {};
 if (process.env.NODE_ENV === 'development') {
     config.apiUrl = "http://in-mvlb52:8887"
+    config.apiUrl = "http://localhost:8887"
 } else {
     config.apiUrl = ""
 }
@@ -194,6 +196,30 @@ async function setViewDefinitions (body) {
         if (response.ok) {
             responseJson = await response.json();
             console.log('setViewDefinition: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+async function refreshJira (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/refreshJira`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('refreshJira: ', responseJson);
         }
         return responseJson;
     } catch(e) {

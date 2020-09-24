@@ -32,6 +32,8 @@ class DsViewEdit extends Component {
             filterButtonText: 'Enable Filters',
             editingButtonText: 'Disable Editing',
             refreshAfterRender: false,
+            jira: false,
+            jql: "",
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -153,10 +155,34 @@ class DsViewEdit extends Component {
             }
             filteredDefs.push(currentDefs[i]);
         }
+        let jiraColumns = {
+            "Work-id": false,
+            "Description": false
+        }; let jiraColumnsPresent = true;
+        for (let i = 0; i < currentDefs.length; i++) {
+            for (let key in jiraColumns) {
+                if (currentDefs[i].field === key) {
+                    jiraColumns[key] = true;
+                }
+            }
+        }
+        for (let key in jiraColumns) {
+            if (!jiraColumns[key]) {
+                jiraColumnsPresent = false; 
+                break;
+            }
+        }
+        let jiraConfig = null;
+        if (jiraColumnsPresent && this.state.jira && this.state.jql) {
+            jiraConfig = {
+                jira: true,
+                jql: this.state.jql
+            }
+        }
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig));
     }
 
     isKey (field) {
@@ -674,6 +700,7 @@ class DsViewEdit extends Component {
 
     render () {
         const { match } = this.props;
+        let me = this;
         return (
             <div>
                 <Row>
@@ -683,6 +710,30 @@ class DsViewEdit extends Component {
                 </Row>
                 <br/>
                 {this.step1()}
+                <Row>
+                    <Col md={2} sm={2} xs={2}> 
+                    <Form.Check inline type="checkbox" label="&nbsp;Add Jira query" checked={this.state.jira} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({jira: checked}); 
+                                }}/>
+                    </Col>
+                    { this.state.jira && 
+                        <Col md={6} sm={6} xs={6}> 
+                        <Form.Control type="text" defaultValue={this.state.jql} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    if (!value) return;
+                                    me.setState({jql: value});
+                                }, 1000)
+                            }} />
+                        </Col> 
+                    }
+                </Row>
+                <br/>
                 <Row>
                     <Button onClick={this.pushColumnDefs}> Set View </Button>
                     <Button onClick={this.showAllCols}> Show all columns </Button>
