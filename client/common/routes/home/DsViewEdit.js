@@ -32,7 +32,7 @@ class DsViewEdit extends Component {
             filterButtonText: 'Enable Filters',
             editingButtonText: 'Disable Editing',
             refreshAfterRender: false,
-            jira: false,
+            jira: null,
             jql: "",
 
             somethingChanged: 0,
@@ -699,7 +699,16 @@ class DsViewEdit extends Component {
 
 
     render () {
-        const { match } = this.props;
+        const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
+
+        try {
+            if (this.state.jira === null && dsHome.dsViews[dsView].jiraConfig) {
+                this.setState({ jira: dsHome.dsViews[dsView].jiraConfig.jira, 
+                                jql: dsHome.dsViews[dsView].jiraConfig.jql });
+            }
+        } catch (e) {};
+
         let me = this;
         return (
             <div>
