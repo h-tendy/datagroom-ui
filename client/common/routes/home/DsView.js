@@ -995,12 +995,19 @@ class DsView extends Component {
 
     render () {
         const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
         let me = this; 
         this.fixOneTimeLocalStorage();
-        let jiraRefreshButton = <Button onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
- 
-        if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
-            jiraRefreshButton = <Button onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
+        let jiraRefreshButton = "";
+
+        try {
+            if (dsHome.dsViews[dsView].jiraConfig.jira) {
+                jiraRefreshButton = <Button onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+                if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
+                    jiraRefreshButton = <Button onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
+            }
+        } catch (e) {};
+
         return (
             <div>
                 <Row>
