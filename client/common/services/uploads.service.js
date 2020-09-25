@@ -8,6 +8,7 @@ export const uploadService = {
 const config = {};
 if (process.env.NODE_ENV === 'development') {
     config.apiUrl = "http://in-mvlb52:8887"
+    config.apiUrl = "http://localhost:8887"
 } else {
     config.apiUrl = ""
 }

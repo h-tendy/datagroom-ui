@@ -1065,7 +1065,8 @@ class DsView extends Component {
                 <Row>
                 <Col md={4} sm={4} xs={4}> 
                     <b>Total records: {this.state.totalRecs} | </b>
-                    <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><b>Edit-log</b></Link>
+                    <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><b>Edit-log</b></Link> |&nbsp;
+                    <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><b>Edit-view</b></Link>
                 </Col>
                 </Row>
                 {this.step2()}
