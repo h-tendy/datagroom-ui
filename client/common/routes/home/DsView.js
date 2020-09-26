@@ -787,6 +787,15 @@ class DsView extends Component {
                     value = MarkdownIt.render(value);
                     return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px">${value}</div>`;
                 }
+                col.formatterClipboard = (cell, formatterParams) => {
+                    //cell.getElement().style.backgroundColor = 'lightpink';
+                    //cell.getElement().style.color = 'black';
+                    let value = cell.getValue();
+                    if (value === undefined) return "";
+                    if (typeof value != "string") return value;
+                    value = MarkdownIt.render(value);
+                    return `<div style="white-space:normal;word-wrap:break-word;">${value}</div>`;
+                }
                 col.variableHeight = true;
                 if (col.editor === "textarea") {
                     // Set the editor to a fixed one for special keys. 
