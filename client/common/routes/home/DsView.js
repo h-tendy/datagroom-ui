@@ -773,7 +773,7 @@ class DsView extends Component {
             col.contextMenu = cellContextMenu;
             col.editable = this.cellEditCheck;
 
-            if (this.state.initialHeaderFilter.length) {
+            if (this.state.showAllFilters) {
                 col.headerFilter = "input";
             }
 
