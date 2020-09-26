@@ -65,6 +65,7 @@ class DsView extends Component {
             pageSize: 30,
             totalRecs: 0, 
             refresh: 0,
+            initialHeaderFilter: [],
 
             chronologyDescending: false,
             singleClickEdit: false,
@@ -545,6 +546,7 @@ class DsView extends Component {
         // When I'm using MyAutoCompleter, we have to explicitly adjust the 
         // height. But added it everywhere. 
         cell.getRow().normalizeHeight();
+        this.ref.table.rowManager.adjustTableSize(false);
         //This maybe too expensive? Not good because it loses scrolling position
         //this.ref.table.redraw();
         // This is the correct routine to call which doesn't lose your scrolling. 
@@ -669,6 +671,8 @@ class DsView extends Component {
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
+        let initialHeaderFilter = this.ref.table.getHeaderFilters();
+        this.setState({initialHeaderFilter});
         dispatch(dsActions.refreshJira(dsName, dsView, user.user));
     }
 
@@ -769,6 +773,9 @@ class DsView extends Component {
             col.contextMenu = cellContextMenu;
             col.editable = this.cellEditCheck;
 
+            if (this.state.initialHeaderFilter.length) {
+                col.headerFilter = "input";
+            }
 
             if (col.editor === "textarea" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
@@ -920,6 +927,7 @@ class DsView extends Component {
                                     index: "_id",
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
+                                    initialHeaderFilter: this.state.initialHeaderFilter,
                                     //height: "500px",
                                     //virtualDomBuffer: 500,
                                     //selectable: true,
@@ -1034,7 +1042,8 @@ class DsView extends Component {
                     <Col md={2} sm={2} xs={2}> 
                     <Form.Check inline type="checkbox" label="&nbsp;Desc order" checked={this.state.chronologyDescending} onChange={(event) => {
                                     let checked = event.target.checked;
-                                    me.setState({chronologyDescending: checked, showAllFilters: false}); // filters get wiped out unfortunately. This problem with react-tabulator. 
+                                    let initialHeaderFilter = me.ref.table.getHeaderFilters();
+                                    me.setState({chronologyDescending: checked, initialHeaderFilter});
                                     localStorage.setItem("chronologyDescending", JSON.stringify(checked));
                                 }}/>
                     </Col>
