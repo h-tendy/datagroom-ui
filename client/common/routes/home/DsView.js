@@ -66,6 +66,7 @@ class DsView extends Component {
             totalRecs: 0, 
             refresh: 0,
             initialHeaderFilter: [],
+            frozenCol: "",
 
             chronologyDescending: false,
             singleClickEdit: false,
@@ -96,6 +97,9 @@ class DsView extends Component {
         this.deleteRowHandler = this.deleteRowHandler.bind(this);
         this.duplicateAndAddRowHandler = this.duplicateAndAddRowHandler.bind(this);
         this.toggleSingleFilter = this.toggleSingleFilter.bind(this);
+        this.freezeColumn = this.freezeColumn.bind(this);
+        this.unfreezeColumn = this.unfreezeColumn.bind(this);
+        this.setFreezeColumn = this.setFreezeColumn.bind(this);
         this.pageSizeChange = this.pageSizeChange.bind(this);
         this.ajaxResponse = this.ajaxResponse.bind(this);
         this.ajaxURLGenerator = this.ajaxURLGenerator.bind(this);
@@ -676,6 +680,43 @@ class DsView extends Component {
         dispatch(dsActions.refreshJira(dsName, dsView, user.user));
     }
 
+    setFreezeColumn (e, column, freeze) {
+        const { match, dsHome } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        let currentDefs = this.ref.table.getColumnDefinitions();
+        // Last column freezing or unfreezing is no-op in our design. 
+        if (currentDefs[currentDefs.length - 1].field === column.getField()) 
+            return;
+
+        // Preserve the filters first. 
+        let initialHeaderFilter = this.ref.table.getHeaderFilters();
+        this.setState({initialHeaderFilter});
+
+        if (freeze)
+            this.setState({frozenCol: column.getField(), refresh: this.state.refresh + 1});
+        else 
+            this.setState({frozenCol: "", refresh: this.state.refresh + 1});
+        // Doesn't do the right thing. 
+        // https://github.com/olifolkerd/tabulator/issues/2868
+        /*
+        let newVal;
+        for (let j = 0; j < currentDefs.length; j++) {
+            if (currentDefs[j].field === column.getField()) {
+                currentDefs[j].frozen = freeze;
+                this.ref.table.updateColumnDefinition(currentDefs[j].field, {frozen: freeze});
+                break;
+            }
+        } */
+    }
+    freezeColumn (e, column) {
+        this.setFreezeColumn(e, column, true);
+    }
+    unfreezeColumn (e, column) {
+        this.setFreezeColumn(e, column, false)
+    }
+
     toggleSingleFilter (e, column) {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -735,6 +776,14 @@ class DsView extends Component {
             {
                 label:"Toggle Filters",
                 action: this.toggleSingleFilter
+            },
+            {
+                label:"Freeze",
+                action: this.freezeColumn
+            },
+            {
+                label:"Unfreeze",
+                action: this.unfreezeColumn
             }
         ];
         let cellContextMenu = [
@@ -833,6 +882,25 @@ class DsView extends Component {
                 }
             }
             columns.push(col);
+        }
+        // One more iteration to deal with frozen columns. 
+        if (this.state.frozenCol) {
+            let beforeFrozen = true;
+            for (let i = 0; i < columns.length; i++) {
+                let col = columns[i];
+                if (beforeFrozen)
+                    col.frozen = true;
+                else
+                    delete col.frozen;
+                if (col.field === this.state.frozenCol) {
+                    beforeFrozen = false;
+                }
+            }
+        } else {
+            for (let i = 0; i < columns.length; i++) {
+                let col = columns[i];
+                delete col.frozen;
+            }
         }
         return columns;
     }
