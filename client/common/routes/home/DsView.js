@@ -259,7 +259,6 @@ class DsView extends Component {
         const { match } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        console.log("In edit cancelled");
         let column = cell.getColumn().getField();
         let _id = cell.getRow().getData()['_id'];
         if (!_id) {
@@ -545,7 +544,6 @@ class DsView extends Component {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        console.log("In edited");
 
         // When I'm using MyAutoCompleter, we have to explicitly adjust the 
         // height. But added it everywhere. 
@@ -1087,9 +1085,9 @@ class DsView extends Component {
 
         try {
             if (dsHome.dsViews[dsView].jiraConfig.jira) {
-                jiraRefreshButton = <Button onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+                jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
                 if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
-                    jiraRefreshButton = <Button onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
+                    jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
             }
         } catch (e) {};
 
@@ -1097,18 +1095,18 @@ class DsView extends Component {
             <div>
                 <Row>
                     <Col md={12} sm={12} xs={12}> 
-                        <h3 style={{ 'float': 'center' }}><label className="underline">Dataset view: {match.params.dsName} | {match.params.dsView}</label></h3>
+                        <h4 style={{ 'float': 'center' }}> {match.params.dsName}</h4>
                     </Col>
                 </Row>
                 {this.step1()}
                 <br/>
                 <Row>
-                    <Button onClick={this.downloadXlsx}> Get xlsx </Button>
+                    <Button size="sm" onClick={this.downloadXlsx}> Get xlsx </Button>
                     {/* 
-                    <Button onClick={this.toggleFilters}> {this.state.filterButtonText} </Button>
-                    <Button onClick={this.toggleEditing}> {this.state.editingButtonText} </Button> */}
-                    <Button onClick={this.copyToClipboard}> Copy-to-clipbard </Button>
-                    <Button onClick={this.addRow}> Add Row </Button>
+                    <Button size="sm" onClick={this.toggleFilters}> {this.state.filterButtonText} </Button>
+                    <Button size="sm" onClick={this.toggleEditing}> {this.state.editingButtonText} </Button> */}
+                    <Button size="sm" onClick={this.copyToClipboard}> Copy-to-clipbard </Button>
+                    <Button size="sm" onClick={this.addRow}> Add Row </Button>
                     {jiraRefreshButton}
                     {this.cellEditStatus()}
                     {this.addRowStatus()}
@@ -1125,21 +1123,21 @@ class DsView extends Component {
                                 }}/>
                     </Col>
                     <Col md={2} sm={2} xs={2}> 
-                    <Form.Check inline type="checkbox" label="&nbsp;One-click editing" checked={this.state.singleClickEdit} onChange={(event) => {
+                    <Form.Check inline type="checkbox" label="&nbsp;1-click editing" checked={this.state.singleClickEdit} onChange={(event) => {
                                     let checked = event.target.checked;
                                     me.setState({singleClickEdit: checked});
                                     localStorage.setItem("singleClickEdit", JSON.stringify(checked));
                                 }}/>
                     </Col>
                     <Col md={2} sm={2} xs={2}> 
-                    <Form.Check inline type="checkbox" label="&nbsp;Show all filters" checked={this.state.showAllFilters} onChange={(event) => {
+                    <Form.Check inline type="checkbox" label="&nbsp;Show filters" checked={this.state.showAllFilters} onChange={(event) => {
                                     let checked = event.target.checked;
                                     me.setState({showAllFilters: checked});
                                     localStorage.setItem("showAllFilters", JSON.stringify(checked));
                                     me.toggleFilters();
                                 }}/>
                     </Col>
-                    <Col md={2} sm={2} xs={2}> 
+                    <Col md={3} sm={3} xs={3}> 
                     <Form.Check inline type="checkbox" label="&nbsp;Disable Editing" checked={this.state.disableEditing} onChange={(event) => {
                                     let checked = event.target.checked;
                                     me.setState({disableEditing: checked});
@@ -1149,7 +1147,7 @@ class DsView extends Component {
                     </Col>
                 </Row>
                 <Row>
-                <Col md={4} sm={4} xs={4}> 
+                <Col md={6} sm={6} xs={6}> 
                     <b>Total records: {this.state.totalRecs} | </b>
                     <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><b>Edit-log</b></Link> |&nbsp;
                     <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><b>Edit-view</b></Link>
