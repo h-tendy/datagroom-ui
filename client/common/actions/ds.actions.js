@@ -150,7 +150,7 @@ function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig, dsDes
             if (jiraConfig)
                 responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription});
             else 
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs});
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, dsDescription});
             if (responseJson)
                 dispatch(success(responseJson));
             else 
