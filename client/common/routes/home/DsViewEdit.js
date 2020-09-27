@@ -35,6 +35,7 @@ class DsViewEdit extends Component {
             refreshAfterRender: false,
             jira: null,
             jql: "",
+            dsDescription: null,
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -180,10 +181,13 @@ class DsViewEdit extends Component {
                 jql: this.state.jql
             }
         }
+        let dsDescription = {
+            dsDescription: this.state.dsDescription
+        }
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription));
     }
 
     isKey (field) {
@@ -331,6 +335,39 @@ class DsViewEdit extends Component {
         //this.ref.table.setColumns(currentDefs);
     }
 
+    dsDescription () {
+        const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
+        let initialDesc = "", me = this;
+        try {
+            // First time, set it from the store. Subsequent edits will remain in this.state.
+            if (this.state.dsDescription === null)
+                this.setState({dsDescription: dsHome.dsViews[dsView].dsDescription.dsDescription});
+        } catch (e) {}
+
+        let retJsx = 
+        <Row>
+            <Col md={2} sm={2} xs={2}> 
+                <b>Dataset Description: </b>
+            </Col>
+            <Col md={10} sm={10} xs={10}> 
+                <Form.Control as="textarea" rows="3" defaultValue={this.state.dsDescription} onChange={(event) => {
+                    let value = event.target.value;
+                    let key = "__dg__dsDescription"
+                    if (me.state.debounceTimers[key]) {
+                        clearTimeout(me.state.debounceTimers[key]);
+                    }
+                    me.state.debounceTimers[key] = setTimeout(() => {
+                        delete me.state.debounceTimers[key];
+                        //if (!value) return;
+                        me.setState({dsDescription: value})
+                    }, 1000)
+                }} />
+            </Col>
+        </Row>
+        return retJsx;
+    }
+
     editorParamsControl (col) {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -472,6 +509,13 @@ class DsViewEdit extends Component {
         // try-catch for invalid access to columnAttrs if it is not loaded yet. 
         try {
             let me = this;
+            let label = 
+                <Row>
+                    <Col md={2} sm={2} xs={2}> 
+                        <b>Column Attributes: </b>
+                    </Col>
+                </Row>
+            s1.push(label); s1.push(<br/>);
             for (let i = 0; i < dsHome.dsViews[dsView].columnAttrs.length; i++) {
                 let col = dsHome.dsViews[dsView].columnAttrs[i];
                 let editorCurVal = {};
@@ -709,15 +753,28 @@ class DsViewEdit extends Component {
                                 jql: dsHome.dsViews[dsView].jiraConfig.jql });
             }
         } catch (e) {};
+        let pushButton = ""
+        try {
+            if (dsHome.dsSetView.status === "setting") {
+                //console.log("Button is disabled");
+                pushButton = <Button disabled onClick={this.pushColumnDefs}> Set View </Button>
+            }
+        } catch (e) {};
+        if (!pushButton) {
+            //console.log("Button is enabled");
+            pushButton = <Button onClick={this.pushColumnDefs}> Set View </Button>
+        }
 
         let me = this;
         return (
             <div>
                 <Row>
                     <Col md={12} sm={12} xs={12}> 
-                        <h3 style={{ 'float': 'center' }}><label className="underline">Dataset view: {match.params.dsName} | {match.params.dsView}</label></h3>
+                        <h3 style={{ 'float': 'center' }}>Dataset view: {match.params.dsName} | {match.params.dsView}</h3>
                     </Col>
                 </Row>
+                <br/>
+                {this.dsDescription()}
                 <br/>
                 {this.step1()}
                 <Row>

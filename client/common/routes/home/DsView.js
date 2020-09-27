@@ -1090,12 +1090,21 @@ class DsView extends Component {
                     jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
             }
         } catch (e) {};
-
+        let dsDescription = ""; 
+        try {
+            let value = MarkdownIt.render(dsHome.dsViews[dsView].dsDescription.dsDescription);
+            dsDescription = <div dangerouslySetInnerHTML={{ __html: value }}/>
+        } catch (e) {};
         return (
             <div>
                 <Row>
                     <Col md={12} sm={12} xs={12}> 
-                        <h4 style={{ 'float': 'center' }}> {match.params.dsName}</h4>
+                        <h3 style={{ 'float': 'center' }}> {match.params.dsName}</h3>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col md={8} sm={8} xs={8}> 
+                        {dsDescription}
                     </Col>
                 </Row>
                 {this.step1()}

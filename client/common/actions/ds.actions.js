@@ -142,13 +142,13 @@ function deleteOneDoc (dsName, dsView, dsUser, _id, row) {
 }
 
 
-function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig) {
+function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription) {
     return async dispatch => {
         try {
             dispatch(request());
             let responseJson;
             if (jiraConfig)
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig});
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription});
             else 
                 responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs});
             if (responseJson)
