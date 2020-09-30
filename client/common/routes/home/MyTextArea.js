@@ -55,7 +55,13 @@ function MyTextArea(cell, onRendered, success, cancel, editorParams) {
     //submit new value on blur or change
     input.addEventListener("change", onChange);
     input.addEventListener("blur", onChange);
-
+    // This is how you can retain focus while editing. 
+    // You also have to disable blur I think. 
+    // This is experimental. 
+    //window.addEventListener("mousedown", onChange);
+    //input.addEventListener("mousedown", function (e) {
+    //    e.stopPropagation();
+    //})
     input.addEventListener("keyup", function () {
 
         // Jayaram: 8/23 change, only set height if it is different in the

@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom'
 //import { ReactTabulator } from 'react-tabulator';
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
+import MyCodeMirror from './MyCodeMirror';
 import Select from 'react-select';
 //import 'highlight.js/styles/vs.css'
 //import 'highlight.js/styles/zenburn.css'
@@ -334,6 +335,8 @@ class DsView extends Component {
                     currentDefs[j].editor = dsHome.dsViews[dsView].columnAttrs[j].editor;
                     if (currentDefs[j].editor === 'textarea') {
                         currentDefs[j].editor = MyTextArea;
+                    } else if (currentDefs[j].editor === 'codemirror') {
+                        currentDefs[j].editor = MyCodeMirror;
                     }
                     console.log("Field: ", currentDefs[j].field, "editor: ", dsHome.dsViews[dsView].columnAttrs[j].editor);
                 }
@@ -824,7 +827,7 @@ class DsView extends Component {
                 col.headerFilter = "input";
             }
 
-            if (col.editor === "textarea" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
+            if (col.editor === "textarea" || col.editor === "codemirror" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
                 col.formatter = (cell, formatterParams) => {
                     //cell.getElement().style.backgroundColor = 'lightpink';
@@ -844,9 +847,11 @@ class DsView extends Component {
                     return `<div style="white-space:normal;word-wrap:break-word;">${value}</div>`;
                 }
                 col.variableHeight = true;
-                if (col.editor === "textarea") {
-                    // Set the editor to a fixed one for special keys. 
-                    col.editor = MyTextArea;
+                if (col.editor === "textarea" || col.editor === "codemirror") {
+                    if (col.editor === "textarea")
+                        col.editor = MyTextArea;
+                    else 
+                        col.editor = MyCodeMirror;
                     col.cellEditCancelled = (cell) => {
                         console.log("Inside second editcancelled..")
                         cell.getRow().normalizeHeight();

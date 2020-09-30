@@ -36,6 +36,7 @@ class DsViewEdit extends Component {
             jira: null,
             jql: "",
             dsDescription: null,
+            widths: {},
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -50,6 +51,7 @@ class DsViewEdit extends Component {
         this.setEditorToFalse = this.setEditorToFalse.bind(this);
         this.setEditorToInput = this.setEditorToInput.bind(this);
         this.setEditorToTextArea = this.setEditorToTextArea.bind(this);
+        this.setEditorToCodeMirror = this.setEditorToCodeMirror.bind(this);
         this.setFormatter = this.setFormatter.bind(this);
         this.setFormatterToPlainText = this.setFormatterToPlainText.bind(this);
         this.setFormatterToTextArea = this.setFormatterToTextArea.bind(this)
@@ -88,7 +90,13 @@ class DsViewEdit extends Component {
         }
     }
     renderComplete () {
-        this.setState({somethingChanged: this.state.somethingChanged++});
+        let widths = {};
+        let cols = this.ref.table.getColumns();
+        for (let i = 0; i < cols.length; i++) {
+            widths[cols[i].getField()] = cols[i].getWidth();
+        }
+        console.log("Widths are: ", widths);
+        this.setState({ widths });
     }
 
     async addCol (e, data) {
@@ -240,6 +248,10 @@ class DsViewEdit extends Component {
 
     setEditorToTextArea (e, column) {
         this.setEditor(e, column, 'textarea');
+    }
+
+    setEditorToCodeMirror (e, column) {
+        this.setEditor(e, column, 'codemirror');
     }
 
     setEditorToAutocomplete (e, column) {
@@ -478,7 +490,7 @@ class DsViewEdit extends Component {
         let dsView = match.params.dsView;
         let s1 = [];
         let editorOptions = [];
-        ['line', 'paragraph', 'autocomplete'].map((v) => {
+        ['line', 'paragraph', 'codemirror', 'autocomplete'].map((v) => {
             let row = {};
             row.value = v;
             row.label = v;
@@ -577,6 +589,8 @@ class DsViewEdit extends Component {
                                 let column = me.ref.table.getColumn(col.field);
                                 if (value.value === "paragraph")
                                     me.setEditorToTextArea("", column);
+                                else if (value.value === "codemirror")
+                                    me.setEditorToCodeMirror("", column);
                                 else if (value.value === "line")
                                     me.setEditorToInput("", column);
                                 else if (value.value === "autocomplete")
