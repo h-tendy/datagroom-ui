@@ -41,6 +41,8 @@ class DsViewEdit extends Component {
             somethingChanged: 0,
             debounceTimers: {}
         };
+        //this.widths = {};
+        this.editors = {};
         this.ref = null;
         this.recordRef = this.recordRef.bind(this);
         this.pushColumnDefs = this.pushColumnDefs.bind(this);
@@ -94,8 +96,9 @@ class DsViewEdit extends Component {
         let cols = this.ref.table.getColumns();
         for (let i = 0; i < cols.length; i++) {
             widths[cols[i].getField()] = cols[i].getWidth();
+            //this.widths[cols[i].getField()] = cols[i].getWidth();
         }
-        console.log("Widths are: ", widths);
+        //console.log("Widths are: ", widths);
         this.setState({ widths });
     }
 
@@ -153,6 +156,7 @@ class DsViewEdit extends Component {
                     }
                 }
             }
+            currentDefs[i].editor = this.editors[currentDefs[i].field];
             // Just remove editorParms.values, showListOnEmpty, allowEmpty, multiselect 
             // if it is not autocomplete. 
             if (currentDefs[i].editor !== "autocomplete") {
@@ -233,6 +237,8 @@ class DsViewEdit extends Component {
         for (let j = 0; j < currentDefs.length; j++) {
             if (currentDefs[j].field === column.getField()) {
                 let width = column.getWidth(); // For some weird reason, width gets lost. Hence. 
+                this.editors[column.getField()] = editor;
+                if (editor === "codemirror") editor = "textarea";
                 this.ref.table.updateColumnDefinition(currentDefs[j].field, {editor, width});
                 break;
             }
@@ -353,9 +359,11 @@ class DsViewEdit extends Component {
         let initialDesc = "", me = this;
         try {
             // First time, set it from the store. Subsequent edits will remain in this.state.
-            if (this.state.dsDescription === null)
-                this.setState({dsDescription: dsHome.dsViews[dsView].dsDescription.dsDescription});
-        } catch (e) {}
+            if (this.state.dsDescription === null) {
+                if (dsHome.dsViews[dsView].dsDescription.dsDescription)
+                    this.setState({dsDescription: dsHome.dsViews[dsView].dsDescription.dsDescription});
+            }
+        } catch (e) { }
 
         let retJsx = 
         <Row>
@@ -391,7 +399,6 @@ class DsViewEdit extends Component {
             let columnDef = this.ref.table.getColumn(col.field).getDefinition();
             //console.log("editorParamsControl got called: ", columnDef);
             if (columnDef.editor === "autocomplete") {
-                console.log("Found an autocomplete for: ", col.field);
                 let valueStr = "", checked = true, condValues = false, condExprStr = "";
                 try {
                     valueStr = columnDef.editorParams.values.join(', ');
@@ -536,6 +543,8 @@ class DsViewEdit extends Component {
                 } else if (col.editor === "input") {
                     editorCurVal = editorOptions[0];
                 } else if (col.editor === "autocomplete") {
+                    editorCurVal = editorOptions[3];
+                } else if (col.editor === "codemirror") {
                     editorCurVal = editorOptions[2];
                 }
                 let hdrFilterTypeCurVal = {};
@@ -701,12 +710,15 @@ class DsViewEdit extends Component {
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let columns = [];
             for (let i = 0; i < dsHome.dsViews[dsView].columnAttrs.length; i++) {
-                let col = dsHome.dsViews[dsView].columnAttrs[i];
+                let col = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].columnAttrs[i]));
                 if (!this.isKey(col.field)) {
                     col.headerMenu = headerMenuWithHide;
                 } else {
                     col.headerMenu = headerMenuWithoutHide;
                 }
+                if (!this.editors[col.field])
+                    this.editors[col.field] = col.editor;
+                if (col.editor === "codemirror") col.editor = "textarea";
                 col.editable = () => { return false };
                 columns.push(col);
             }

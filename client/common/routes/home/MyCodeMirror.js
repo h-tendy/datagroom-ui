@@ -58,10 +58,22 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
 
                 //console.log(editor.getScrollInfo());
                 //editor.setSize("100%", 200);
-                //input.style.height = "200px";
-                //scrollHeight = heightNow;
-                //editor.refresh();
-                //cell.getRow().normalizeHeight();
+                /*
+                console.log("current input height:", input.style.height);
+                console.log("current input scroll height: ", input.scrollHeight);
+                console.log("current input offsetheight: ", input.offsetHeight);
+                input.style.height = "400px";
+                input.value = editor.getValue();
+                editor.refresh();
+                let orgFn = cell.getHeight;
+                cell.getHeight = () => {
+                    console.log("I got called...");
+                    return 400;
+                }
+                cell.height = 400;
+                cell.getRow().normalizeHeight();
+                cell.getHeight = orgFn;
+                */
                 return;
             });
             editor.on("keydown", function (cm, e) {
