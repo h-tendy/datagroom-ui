@@ -80,6 +80,7 @@ class DsView extends Component {
         };
         this.ref = null;
         
+        this.timers = {};
         this.lockedByOthersCells = {};
         this.firstRenderCompleted = false;
         this.cellImEditing = null;
@@ -287,6 +288,11 @@ class DsView extends Component {
         //cell.__dg__prevBgColor = cell.getElement().style.backgroundColor;
         //cell.getElement().style.backgroundColor = cell.__dg__prevBgColor;
         //delete cell.__dg__prevBgColor;
+        // If you have started editing some cell, don't fire this timer. 
+        if (this.timers["post-cell-edited"]) {
+            clearTimeout(this.timers["post-cell-edited"]);
+            this.timers["post-cell-edited"] = null;
+        }
     }
 
     toggleFilters () {
@@ -551,7 +557,17 @@ class DsView extends Component {
         // When I'm using MyAutoCompleter, we have to explicitly adjust the 
         // height. But added it everywhere. 
         cell.getRow().normalizeHeight();
-        this.ref.table.rowManager.adjustTableSize(false);
+        // XXX: This below call makes you lose continuous editing. Maybe you can 
+        // call this in a delayed fashion.
+        if (this.timers["post-cell-edited"]) {
+            clearTimeout(this.timers["post-cell-edited"]);
+            this.timers["post-cell-edited"] = null;
+        }
+        this.timers["post-cell-edited"] = setTimeout(() => {
+            //cell.getRow().normalizeHeight();
+            this.ref.table.rowManager.adjustTableSize(false);
+        }, 500);
+
         //This maybe too expensive? Not good because it loses scrolling position
         //this.ref.table.redraw();
         // This is the correct routine to call which doesn't lose your scrolling. 
