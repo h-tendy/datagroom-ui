@@ -50,33 +50,35 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
             mode: "markdown",
             highlightFormatting: true
           });
-        //editor.refresh();
-            editor.on("keyup", function () {
-
-                // Dynamic resizing isn't working yet for 
-                // code-mirror. See MyTextArea on what happens here. 
-
-                //console.log(editor.getScrollInfo());
-                //editor.setSize("100%", 200);
-                /*
-                console.log("current input height:", input.style.height);
-                console.log("current input scroll height: ", input.scrollHeight);
-                console.log("current input offsetheight: ", input.offsetHeight);
-                input.style.height = "400px";
-                input.value = editor.getValue();
-                editor.refresh();
-                let orgFn = cell.getHeight;
-                cell.getHeight = () => {
-                    console.log("I got called...");
-                    return 400;
-                }
-                cell.height = 400;
+        let h;
+        if (editor.getDoc().lineCount() === 1)
+            h = 25;
+        else 
+            h = (editor.getDoc().lineCount() + 1) * 18;
+        cell._cell.setHeightSpecial(h);
+        cell.getRow().normalizeHeight();
+        editor.refresh();
+        editor.on("keyup", function (cm, e) {
+            if (true) {
+                //console.log("current input height:", input.style.height);
+                //console.log("cell element: ", cell._cell.element);
+                //console.log("current input scroll height: ", input.scrollHeight);
+                //console.log("current input offsetheight: ", input.offsetHeight);
+                let h = cell._cell.element.style.height;
+                //console.log('h:', h);
+                //h = h.replace('px', '');
+                //h = parseInt(h) + 25;
+                if (editor.getDoc().lineCount() === 1)
+                    h = 25;
+                else 
+                    h = (editor.getDoc().lineCount() + 1) * 18;
+                cell._cell.setHeightSpecial(h);
                 cell.getRow().normalizeHeight();
-                cell.getHeight = orgFn;
-                */
-                return;
-            });
-            editor.on("keydown", function (cm, e) {
+                editor.refresh();
+            }
+            return;
+        });
+        editor.on("keydown", function (cm, e) {
             let pos = cm.getCursor();
             switch (e.keyCode) {
                 case 27:
@@ -127,25 +129,16 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
     });
 
     function onChange(e) {
-        console.log("Onchange now");
         if (!editor) return;
-        console.log("On change past !editor check");
         let curValue = editor.getValue();
-        console.log("Onchange curValue:", curValue);
         if (((cellValue === null || typeof cellValue === "undefined") && curValue !== "") || curValue !== cellValue) {
-            console.log("Will call success function now!");
             if (success(curValue)) {
-                console.log("Success value true");
                 cellValue = curValue; //persist value if successfully validated incase editor is used as header filter
-            } else {
-                console.log("Success value is false!");
             }
-
             setTimeout(function () {
                 cell.getRow().normalizeHeight();
             }, 300)
         } else {
-            console.log("Onchange cancel..");
             cancel();
         }
     }
