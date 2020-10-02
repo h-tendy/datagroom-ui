@@ -50,12 +50,16 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
             mode: "markdown",
             highlightFormatting: true
           });
-        let h;
+        let initialHeight = cell._cell.element.style.height;
+        initialHeight = initialHeight.replace('px', '');
+        initialHeight = parseInt(initialHeight);
+        /*let h;
         if (editor.getDoc().lineCount() === 1)
             h = 25;
         else 
             h = (editor.getDoc().lineCount() + 1) * 18;
-        cell._cell.setHeightSpecial(h);
+        */
+        cell._cell.setHeightSpecial(initialHeight);
         cell.getRow().normalizeHeight();
         editor.refresh();
         editor.on("keyup", function (cm, e) {
@@ -72,7 +76,7 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
                     h = 25;
                 else 
                     h = (editor.getDoc().lineCount() + 1) * 18;
-                cell._cell.setHeightSpecial(h);
+                cell._cell.setHeightSpecial(Math.max(h, initialHeight));
                 cell.getRow().normalizeHeight();
                 editor.refresh();
             }
