@@ -17,6 +17,7 @@ import 'highlight.js/styles/solarized-light.css'
 import MyAutoCompleter from './MyAutoCompleter';
 import MySingleAutoCompleter from './MySingleAutoCompleter';
 import ColorPicker from './ColorPicker';
+import Modal from './Modal';
 
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
@@ -68,6 +69,10 @@ class DsView extends Component {
             refresh: 0,
             initialHeaderFilter: [],
             frozenCol: "",
+            showModal: false,
+            modalTitle: "Title of modal",
+            modalQuestion: "This is the modal question",
+            modalCallback: null,
 
             chronologyDescending: false,
             singleClickEdit: false,
@@ -97,6 +102,8 @@ class DsView extends Component {
         this.toggleEditing = this.toggleEditing.bind(this);
         this.addRow = this.addRow.bind(this);
         this.deleteRowHandler = this.deleteRowHandler.bind(this);
+        this.deleteAllRowsInViewQuestion = this.deleteAllRowsInViewQuestion.bind(this);
+        this.deleteAllRowsInView = this.deleteAllRowsInView.bind(this);
         this.duplicateAndAddRowHandler = this.duplicateAndAddRowHandler.bind(this);
         this.toggleSingleFilter = this.toggleSingleFilter.bind(this);
         this.freezeColumn = this.freezeColumn.bind(this);
@@ -113,6 +120,7 @@ class DsView extends Component {
         this.handleColorPickerOnChangeComplete = this.handleColorPickerOnChangeComplete.bind(this);
         this.jiraRefreshHandler = this.jiraRefreshHandler.bind(this);
         this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
+        this.toggleModal = this.toggleModal.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -236,6 +244,11 @@ class DsView extends Component {
         //this.firstRenderCompleted = true;
     }
 
+    toggleModal (confirmed) {
+        this.state.modalCallback(confirmed);
+        this.setState({ showModal: !this.state.showModal });
+    }
+
     cellClickEvents (e, cell) {
         if (e.type === "dblclick" && !this.state.singleClickEdit && !this.state.disableEditing && this.cellEditCheckForConflicts(cell)) {
             // Force edit
@@ -349,15 +362,15 @@ class DsView extends Component {
             } catch (e) {}
         //this.ref.table.updateColumnDefinition(currentDefs[j].field, {editor: newVal});
         }
+        let initialHeaderFilter = this.ref.table.getHeaderFilters();
         this.ref.table.setColumns(currentDefs);
-        this.setState( { editingButtonText: newVal ? 'Disable Editing' : 'Enable Editing'} );
+        this.setState( { editingButtonText: newVal ? 'Disable Editing' : 'Enable Editing', initialHeaderFilter, refresh: this.state.refresh + 1 } );
     }
 
-    async addRow (e, data) {
+    async addRow (e, cell, data) {
         const { dispatch, match, dsHome } = this.props;
         //let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        console.log("Add row called..: ", data);
         if (!data) data = {};
         try {
             if (Object.keys(dsHome.dsRowAdds[dsView]).length) {
@@ -512,7 +525,7 @@ class DsView extends Component {
                     let update = { _id: k };
                     update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
                     this.ref.table.updateData([ update ]);
-                    status += `Update failed, reverted [key, value]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.oldVal}]`
+                    status += `Update failed (error: ${dsHome.dsEdits[k].serverStatus.error}), reverted [key, value]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.oldVal}]`
 
                     // Release the lock
                     this.cellImEditing = null;
@@ -635,7 +648,7 @@ class DsView extends Component {
         let newData = JSON.parse(JSON.stringify(cell.getData()));
         delete newData._id;
         console.log("newData: ", newData);
-        this.addRow(null, newData);
+        this.addRow(null, cell, newData);
         //cell.setValue("");
     }
 
@@ -677,6 +690,62 @@ class DsView extends Component {
         // Delete logic
         dispatch(dsActions.deleteOneDoc(dsName, dsView, user.user, _id, cell.getRow()));
     }
+
+    deleteAllRowsStatus () {
+        const { dispatch, dsHome } = this.props;
+        let status = ''
+        try {
+            Object.entries(dsHome.dsDeletes).map( (kv) => {
+                let k = kv[0];
+                if (dsHome.dsDeletes[k].deleteStatus === 'done' && 
+                    dsHome.dsDeletes[k].serverStatus.status === 'fail') {
+                    status += `Delete failed on server `
+                } else if (dsHome.dsDeletes[k].deleteStatus === 'done' && 
+                    dsHome.dsDeletes[k].serverStatus.status === 'success') {
+                    let rows = dsHome.dsDeletes[k].deleteTracker.rows;
+                    for (let i = 0; i < rows.length; i++)
+                        rows[i].delete();
+                    dispatch({ type: dsConstants.DELETE_MANY_DELETE_TRACKER, _id: k })
+                } else if (dsHome.dsDeletes[k].deleteStatus === 'fail') {
+                    status += `Delete API failed`;
+                }
+            })
+        } catch (e) {}
+        return <b style={{color: "red"}}> {status} </b>;
+    }
+
+    deleteAllRowsInView (confirmed) {
+        const { dispatch, match, user, dsHome } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        console.log("Confirmed is: ", confirmed);
+        if (confirmed) {
+            let rows = this.ref.table.getRows();
+            let objects = [];
+            console.log("Will now delete Rows: ", rows);
+            for (let i = 0; i < rows.length; i++) {
+                let _id = rows[i].getData()['_id'];
+                if (_id)
+                    objects.push(_id);
+            }
+            dispatch(dsActions.deleteManyDocs(dsName, dsView, user.user, objects, rows));
+        }
+        this.setState({ showModal: !this.state.showModal });
+    }
+
+    deleteAllRowsInViewQuestion () {
+        const { dispatch, match, user, dsHome } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        let rows = this.ref.table.getRows();
+        this.setState({ modalTitle: "Delete all rows in view?", 
+                        modalQuestion: `This will delete ${rows.length} rows. Please confirm. Undoing support is not yet available!`,
+                        modalCallback: this.deleteAllRowsInView,
+                        showModal: !this.state.showModal });
+    }
+
 
     jiraRefreshStatus () {
         const { dispatch, dsHome } = this.props;
@@ -830,6 +899,10 @@ class DsView extends Component {
             {
                 label:"Delete row...",
                 action: this.deleteRowHandler
+            },
+            {
+                label:"Delete all rows in view...",
+                action: this.deleteAllRowsInViewQuestion
             },
         ];        
         let columns = [];
@@ -1141,6 +1214,7 @@ class DsView extends Component {
                     {this.cellEditStatus()}
                     {this.addRowStatus()}
                     {this.rowDeleteStatus()}
+                    {this.deleteAllRowsStatus()}
                     {this.jiraRefreshStatus()}
                 </Row>
                 <Row>
@@ -1184,6 +1258,10 @@ class DsView extends Component {
                 </Col>
                 </Row>
                 {this.step2()}
+                <Modal show={this.state.showModal}
+                    onClose={this.toggleModal} title={this.state.modalTitle}>
+                    {this.state.modalQuestion}
+                </Modal>
                 {this.state.showColorPicker ? <ColorPicker left={this.state.colorPickerLeft} top={this.state.colorPickerTop} color={this.state.color} onChangeComplete={this.handleColorPickerOnChangeComplete} handleClose={this.handleColorPickerClose}/>: ''}
             </div>
         );

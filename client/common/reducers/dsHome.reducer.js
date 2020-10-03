@@ -201,7 +201,39 @@ export function dsHome (state = initialState, action) {
                 newState.dsJiraRefresh.status = 'dusted';
                 return newState
             }
-            
+        case dsConstants.DELETE_MANY_REQUEST:
+            {
+                let newState = {...state};
+                if (!newState.dsDeletes)
+                    newState.dsDeletes = {};
+                newState.dsDeletes["__dg__DELETE_MANY"] = { deleteStatus: 'deleting', deleteTracker: action.deleteTracker };
+                return newState
+            }
+        case dsConstants.DELETE_MANY_SUCCESS:
+            {
+                let newState = {...state};
+                if (!newState.dsDeletes)
+                    newState.dsDeletes = {};
+                newState.dsDeletes["__dg__DELETE_MANY"] = { deleteStatus: 'done', serverStatus: action.serverStatus, deleteTracker: action.deleteTracker };
+                return newState
+            }
+        case dsConstants.DELETE_MANY_FAILURE:
+            {
+                let newState = {...state};
+                if (!newState.dsDeletes)
+                    newState.dsDeletes = {};
+                newState.dsDeletes["__dg__DELETE_MANY"] = { deleteStatus: 'fail', deleteTracker: action.deleteTracker, error: action.message };
+                return newState
+            }
+        case dsConstants.DELETE_MANY_DELETE_TRACKER:
+            {
+                let newState = {...state};
+                if (!newState.dsDeletes)
+                    newState.dsDeletes = {};
+                delete newState.dsDeletes["__dg__DELETE_MANY"];
+                return newState
+            }
+                
         default:
             return state
     }

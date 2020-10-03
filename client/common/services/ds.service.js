@@ -8,6 +8,7 @@ export const dsService = {
     getDsList, 
     deleteDs,
     deleteOneDoc,
+    deleteManyDocs,
     setViewDefinitions,
     refreshJira
 };
@@ -178,6 +179,29 @@ async function deleteOneDoc (body) {
     }
 }
 
+async function deleteManyDocs (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/deleteManyDocs`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('deleteManyDocs: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
 
 async function setViewDefinitions (body) {
     try {

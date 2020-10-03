@@ -9,6 +9,7 @@ export const dsActions = {
     getDsList,
     deleteDs,
     deleteOneDoc,
+    deleteManyDocs,
     setViewDefinitions,
     refreshJira
 }
@@ -139,6 +140,25 @@ function deleteOneDoc (dsName, dsView, dsUser, _id, row) {
     function request(_id, deleteTracker) { return { type: dsConstants.DELETE_SINGLE_REQUEST, dsName, dsView, dsUser, _id, deleteTracker } }
     function success(_id, deleteTracker, serverStatus) { return { type: dsConstants.DELETE_SINGLE_SUCCESS, dsName, dsView, dsUser, _id, deleteTracker, serverStatus } }
     function failure(_id, deleteTracker, message) { return { type: dsConstants.DELETE_SINGLE_FAILURE, dsName, dsView, dsUser, _id, deleteTracker, message } }
+}
+
+function deleteManyDocs (dsName, dsView, dsUser, objects, rows) {
+    return async dispatch => {
+        let deleteTracker = { objects, rows }
+        try {
+            dispatch(request(deleteTracker));
+            let responseJson = await dsService.deleteManyDocs({dsName, dsView, dsUser, objects});
+            if (responseJson)
+                dispatch(success(deleteTracker, responseJson));
+            else 
+                dispatch(failure(deleteTracker, "deleteManyDocs failure"));
+        } catch (error) {
+            dispatch(failure(deleteTracker, "deleteManyDocs failure"));
+        }
+    }
+    function request(deleteTracker) { return { type: dsConstants.DELETE_MANY_REQUEST, dsName, dsView, dsUser, deleteTracker } }
+    function success(deleteTracker, serverStatus) { return { type: dsConstants.DELETE_MANY_SUCCESS, dsName, dsView, dsUser, deleteTracker, serverStatus } }
+    function failure(deleteTracker, message) { return { type: dsConstants.DELETE_MANY_FAILURE, dsName, dsView, dsUser, deleteTracker, message } }
 }
 
 
