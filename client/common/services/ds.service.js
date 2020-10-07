@@ -10,7 +10,10 @@ export const dsService = {
     deleteOneDoc,
     deleteManyDocs,
     setViewDefinitions,
-    refreshJira
+    refreshJira,
+    addFilter,
+    editFilter,
+    deleteFilter
 };
 
 const config = {};
@@ -244,6 +247,80 @@ async function refreshJira (body) {
         if (response.ok) {
             responseJson = await response.json();
             console.log('refreshJira: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+
+async function addFilter (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/addFilter`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('addFilter: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+
+async function editFilter (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/editFilter`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('editFilter: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+async function deleteFilter (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/deleteFilter`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('deleteFilter: ', responseJson);
         }
         return responseJson;
     } catch(e) {

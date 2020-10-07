@@ -17,7 +17,7 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsViews)
                     newState.dsViews = {};
-                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription };
+                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription, filters: action.columnsAndKeys.filters };
                 return newState
             }
         case dsConstants.LOAD_COLUMNS_FAILURE:
@@ -233,7 +233,81 @@ export function dsHome (state = initialState, action) {
                 delete newState.dsDeletes["__dg__DELETE_MANY"];
                 return newState
             }
-                
+        case dsConstants.ADD_FILTER_REQUEST: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterAdds)
+                    newState.dsFilterAdds = {};
+                newState.dsFilterAdds[action.dsView] = { ...newState.dsFilterAdds[action.dsView], status: action.status, filter: action.filter };
+                return newState
+            }
+        case dsConstants.ADD_FILTER_SUCCESS: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterAdds)
+                    newState.dsFilterAdds = {};
+                newState.dsFilterAdds[action.dsView] = { ...newState.dsFilterAdds[action.dsView], status: action.status, serverStatus: action.serverStatus };
+                return newState
+            }
+        case dsConstants.ADD_FILTER__FAILURE: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterAdds)
+                    newState.dsFilterAdds = {};
+                newState.dsFilterAdds[action.dsView] = { ...newState.dsFilterAdds[action.dsView], status: action.status, error: action.message };
+                return newState
+            }            
+
+        case dsConstants.EDIT_FILTER_REQUEST: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterEdits)
+                    newState.dsFilterEdits = {};
+                newState.dsFilterEdits[action.dsView] = { ...newState.dsFilterEdits[action.dsView], status: action.status, filter: action.filter };
+                return newState
+            }
+        case dsConstants.EDIT_FILTER_SUCCESS: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterEdits)
+                    newState.dsFilterEdits = {};
+                newState.dsFilterEdits[action.dsView] = { ...newState.dsFilterEdits[action.dsView], status: action.status, serverStatus: action.serverStatus };
+                return newState
+            }
+        case dsConstants.EDIT_FILTER__FAILURE: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterEdits)
+                    newState.dsFilterEdits = {};
+                newState.dsFilterEdits[action.dsView] = { ...newState.dsFilterEdits[action.dsView], status: action.status, error: action.message };
+                return newState
+            }            
+
+        case dsConstants.DELETE_FILTER_REQUEST: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterDeletes)
+                    newState.dsFilterDeletes = {};
+                newState.dsFilterDeletes[action.dsView] = { ...newState.dsFilterDeletes[action.dsView], status: action.status, filter: action.filter };
+                return newState
+            }
+        case dsConstants.DELETE_FILTER_SUCCESS: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterDeletes)
+                    newState.dsFilterDeletes = {};
+                newState.dsFilterDeletes[action.dsView] = { ...newState.dsFilterDeletes[action.dsView], status: action.status, serverStatus: action.serverStatus };
+                return newState
+            }
+        case dsConstants.DELETE_FILTER__FAILURE: 
+            {
+                let newState = {...state};
+                if (!newState.dsFilterDeletes)
+                    newState.dsFilterDeletes = {};
+                newState.dsFilterDeletes[action.dsView] = { ...newState.dsFilterDeletes[action.dsView], status: action.status, error: action.message };
+                return newState
+            }            
+
         default:
             return state
     }

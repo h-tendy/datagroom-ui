@@ -1,4 +1,5 @@
-import React, { Component } from 'react'
+import React, { Component, ReactDOM } from 'react'
+import { Route } from 'react-router-dom'
 import { Row, Col, Button, Form } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { dsActions } from '../../actions/ds.actions';
@@ -18,6 +19,7 @@ import MyAutoCompleter from './MyAutoCompleter';
 import MySingleAutoCompleter from './MySingleAutoCompleter';
 import ColorPicker from './ColorPicker';
 import Modal from './Modal';
+import FilterControls from './FilterControls';
 
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
@@ -68,6 +70,8 @@ class DsView extends Component {
             totalRecs: 0, 
             refresh: 0,
             initialHeaderFilter: [],
+            initialSort: [],
+            filter: '',
             frozenCol: "",
             showModal: false,
             modalTitle: "Title of modal",
@@ -121,6 +125,7 @@ class DsView extends Component {
         this.jiraRefreshHandler = this.jiraRefreshHandler.bind(this);
         this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
         this.toggleModal = this.toggleModal.bind(this);
+        this.processFilterChange = this.processFilterChange.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -1097,6 +1102,7 @@ class DsView extends Component {
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
+                                    initialSort: this.state.initialSort,
                                     //height: "500px",
                                     //virtualDomBuffer: 500,
                                     //selectable: true,
@@ -1138,6 +1144,49 @@ class DsView extends Component {
         return s2;
     }
 
+    processFilterChange (filter) {
+        const { match, history, dsHome } = this.props;
+        let dsView = match.params.dsView;
+        let newUrl = match.url;
+        
+        let urlWords = match.url.split('/');
+        //console.log('in processFilterChange: ', filter);
+        //console.log('urlWords: ', urlWords);
+        newUrl = '/' + urlWords[1] + '/' + urlWords[2] + '/' + urlWords[3];
+        if (filter) newUrl += '/' + filter;
+        let initialHeaderFilter = [], initialSort = [];
+        if (filter) {
+            try {
+                // Tabulator messes up the hdrSorters, so we give it a copy. 
+                initialHeaderFilter = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].filters[filter].hdrFilters));
+                initialSort = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].filters[filter].hdrSorters));
+                if (JSON.stringify(this.state.initialHeaderFilter) !== JSON.stringify(initialHeaderFilter) || JSON.stringify(this.state.initialSort) !== JSON.stringify(initialSort)) {
+                        this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, refresh: this.state.refresh + 1});
+                    console.log('moving to :', newUrl);
+                    history.push(newUrl);
+                }
+            } catch (e) { 
+                // At least note it down... 
+                if (this.state.filter !== filter) {
+                    this.setState({ filter });
+                    history.push(newUrl);
+                }
+            }
+        } else {
+            initialHeaderFilter = [];
+            initialSort = [];
+            if (this.state.initialHeaderFilter.length === 0 && this.state.initialSort.length === 0) {
+                console.log("should not be coming here");
+            } else /*if (this.state.initialHeaderFilter !== initialHeaderFilter || this.state.initialSort !== initialSort)*/ {
+                this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, refresh: this.state.refresh + 1});
+            }
+            //console.log("match:", match);
+            //console.log("location:", this.props.location)
+            if (newUrl !== this.props.location.pathname)
+                history.push(newUrl);
+        }
+    }
+
     fixOneTimeLocalStorage () {
         const { match } = this.props;
         // We don't want to store editor and headerFilter status in localStorage
@@ -1172,11 +1221,13 @@ class DsView extends Component {
 
     render () {
         const { match, dsHome } = this.props;
+        let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
+
         let me = this; 
         this.fixOneTimeLocalStorage();
         let jiraRefreshButton = "";
-
+        console.log("In DsView render..");
         try {
             if (dsHome.dsViews[dsView].jiraConfig.jira) {
                 jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
@@ -1189,6 +1240,7 @@ class DsView extends Component {
             let value = MarkdownIt.render(dsHome.dsViews[dsView].dsDescription.dsDescription);
             dsDescription = <div dangerouslySetInnerHTML={{ __html: value }}/>
         } catch (e) {};
+        this.processFilterChange(this.state.filter);
         return (
             <div>
                 <Row>
@@ -1250,6 +1302,15 @@ class DsView extends Component {
                                 }}/>
                     </Col>
                 </Row>
+                {
+                    <Route exact path={`${match.path}/:filter`} render={(props) => {
+                        let filter = props.match.params.filter;
+                        if (filter !== me.state.filter) {
+                            me.processFilterChange(filter);
+                        }
+                    }} />
+                }
+                <FilterControls show={me.state.showAllFilters} dsName={dsName} dsView={dsView} tableRef={me.ref} onFilterChange={me.processFilterChange} defaultValue={me.state.filter}/>                
                 <Row>
                 <Col md={6} sm={6} xs={6}> 
                     <b>Total records: {this.state.totalRecs} | </b>

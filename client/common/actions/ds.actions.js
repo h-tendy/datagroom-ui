@@ -11,7 +11,10 @@ export const dsActions = {
     deleteOneDoc,
     deleteManyDocs,
     setViewDefinitions,
-    refreshJira
+    refreshJira,
+    addFilter,
+    editFilter,
+    deleteFilter
 }
 
 
@@ -202,3 +205,60 @@ function refreshJira (dsName, dsView, dsUser) {
     function success(serverStatus) { return { type: dsConstants.JIRA_REFRESH_SUCCESS, dsName, dsView, dsUser, serverStatus } }
     function failure(message) { return { type: dsConstants.JIRA_REFRESH_FAILURE, dsName, dsView, dsUser, message } }
 }
+
+
+function addFilter (dsName, dsView, dsUser, filter) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.addFilter({dsName, dsView, dsUser, filter});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("addFilter failure"));
+        } catch (error) {
+            console.log("Error:", error);
+            dispatch(failure("addFilter failure"));
+        }
+    }
+    function request() { return { type: dsConstants.ADD_FILTER_REQUEST, dsName, dsView, dsUser, status: 'inserting', filter } }
+    function success(serverStatus) { return { type: dsConstants.ADD_FILTER_SUCCESS, dsName, dsView, dsUser, status: 'success', serverStatus } }
+    function failure(message) { return { type: dsConstants.ADD_FILTER__FAILURE, dsName, dsView, dsUser, status: 'fail', message } }
+}
+
+function editFilter (dsName, dsView, dsUser, filter) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.editFilter({dsName, dsView, dsUser, filter});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("editFilter failure"));
+        } catch (error) {
+            dispatch(failure("editFilter failure"));
+        }
+    }
+    function request() { return { type: dsConstants.EDIT_FILTER_REQUEST, dsName, dsView, dsUser, status: 'editing', filter } }
+    function success(serverStatus) { return { type: dsConstants.EDIT_FILTER_SUCCESS, dsName, dsView, dsUser, status: 'success', serverStatus } }
+    function failure(message) { return { type: dsConstants.EDIT_FILTER__FAILURE, dsName, dsView, dsUser, status: 'fail', message } }
+}
+
+function deleteFilter (dsName, dsView, dsUser, filter) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.deleteFilter({dsName, dsView, dsUser, filter});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("deleteFilter failure"));
+        } catch (error) {
+            dispatch(failure("deleteFilter failure"));
+        }
+    }
+    function request() { return { type: dsConstants.DELETE_FILTER_REQUEST, dsName, dsView, dsUser, status: 'deleting', filter } }
+    function success(serverStatus) { return { type: dsConstants.DELETE_FILTER_SUCCESS, dsName, dsView, dsUser, status: 'success', serverStatus } }
+    function failure(message) { return { type: dsConstants.DELETE_FILTER__FAILURE, dsName, dsView, dsUser, status: 'fail', message } }
+}
+
