@@ -919,6 +919,8 @@ class DsView extends Component {
 
             if (this.state.showAllFilters) {
                 col.headerFilter = "input";
+                if (col.headerFilterType)
+                    col.headerFilter = col.headerFilterType;
             }
 
             if (col.editor === "textarea" || col.editor === "codemirror" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
