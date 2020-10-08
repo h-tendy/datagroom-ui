@@ -324,7 +324,6 @@ class DsView extends Component {
         let newVal;
         for (let j = 0; j < currentDefs.length; j++) {
             newVal = currentDefs[j].headerFilter ? false : 'input';
-            currentDefs[j].headerFilter = newVal;
             try {
                 // If the headerFilter has to be set, then set it from the backend value. 
                 if (newVal) {
@@ -332,6 +331,7 @@ class DsView extends Component {
                         newVal = dsHome.dsViews[dsView].columnAttrs[j].headerFilterType;
                 }
             } catch (e) {}
+            currentDefs[j].headerFilter = newVal;
             //this.ref.table.updateColumnDefinition(currentDefs[j].field, {editor: newVal});
         }
         this.ref.table.setColumns(currentDefs);
@@ -818,7 +818,6 @@ class DsView extends Component {
         for (let j = 0; j < currentDefs.length; j++) {
             if (currentDefs[j].field === column.getField()) {
                 newVal = currentDefs[j].headerFilter ? false : 'input';
-                currentDefs[j].headerFilter = newVal;
                 try {
                     // If the headerFilter has to be set, then set it from the backend value. 
                     if (newVal) {
@@ -831,6 +830,7 @@ class DsView extends Component {
                         }*/
                     }
                 } catch (e) {}
+                currentDefs[j].headerFilter = newVal;
                 // Comment this line and uncomment couple of lines below to use setCOlumns
                 // if you don't like the header row width. 
                 this.ref.table.updateColumnDefinition(currentDefs[j].field, {headerFilter: newVal});
