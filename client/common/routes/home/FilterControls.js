@@ -114,12 +114,25 @@ class FilterControls extends React.Component {
                             sorter.dir = hdrSortersTmp[i].dir;
                             hdrSorters.push(sorter);
                         }
+                        let filterColumnAttrs = {};
+                        let cols = me.props.tableRef.table.getColumns();
+                        for (let i = 0; i < cols.length; i++) {
+                            let field = cols[i].getField();
+                            let attrsForField = {};
+                            if (!cols[i].isVisible()) {
+                                attrsForField.hidden = true;
+                            }
+                            attrsForField.width = cols[i].getWidth();
+                            filterColumnAttrs[field] = attrsForField;
+                        }
+                
                         console.log("State: ", me.state);
                         let newFilter = {};
                         newFilter.name = name; 
                         newFilter.description = me.state.saveDescription;
                         newFilter.hdrFilters = hdrFilters;
                         newFilter.hdrSorters = hdrSorters;
+                        newFilter.filterColumnAttrs = filterColumnAttrs;
                         console.log("Save Filter object: ", newFilter);
                         dispatch(dsActions.editFilter(dsName, dsView, user.user, newFilter));
                         setTimeout(() => {dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));}, 500);
@@ -181,11 +194,24 @@ class FilterControls extends React.Component {
                             sorter.dir = hdrSortersTmp[i].dir;
                             hdrSorters.push(sorter);
                         }
+                        let filterColumnAttrs = {};
+                        let cols = me.props.tableRef.table.getColumns();
+                        for (let i = 0; i < cols.length; i++) {
+                            let field = cols[i].getField();
+                            let attrsForField = {};
+                            if (!cols[i].isVisible()) {
+                                attrsForField.hidden = true;
+                            }
+                            attrsForField.width = cols[i].getWidth();
+                            filterColumnAttrs[field] = attrsForField;
+                        }
+                
                         let newFilter = {};
                         newFilter.name = this.state.saveAsNewName;
                         newFilter.description = this.state.saveAsNewDescription;
                         newFilter.hdrFilters = hdrFilters;
                         newFilter.hdrSorters = hdrSorters;
+                        newFilter.filterColumnAttrs = filterColumnAttrs;
                         console.log("New Filter object: ", newFilter);
                         dispatch(dsActions.addFilter(dsName, dsView, user.user, newFilter)); 
                         setTimeout(() => {dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));}, 500);

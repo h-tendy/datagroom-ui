@@ -71,6 +71,8 @@ class DsView extends Component {
             refresh: 0,
             initialHeaderFilter: [],
             initialSort: [],
+            filterColumnAttrs: {},
+            currentColumnAttrs: {}, // Unused, cleanup all uses of this one. 
             filter: '',
             frozenCol: "",
             showModal: false,
@@ -126,6 +128,13 @@ class DsView extends Component {
         this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
         this.toggleModal = this.toggleModal.bind(this);
         this.processFilterChange = this.processFilterChange.bind(this);
+        this.isKey = this.isKey.bind(this);
+        this.hideColumn = this.hideColumn.bind(this);
+        this.showAllCols = this.showAllCols.bind(this);
+        this.columnResized = this.columnResized.bind(this);
+        this.columnVisibilityChanged = this.columnVisibilityChanged.bind(this);
+        this.retainColumnAttrs = this.retainColumnAttrs.bind(this);
+        this.applyFilterColumnAttrs = this.applyFilterColumnAttrs.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -247,6 +256,62 @@ class DsView extends Component {
         //if (this.firstRenderCompleted) return;
         socket.emit('getActiveLocks', dsName);
         //this.firstRenderCompleted = true;
+    }
+
+    showAllCols () {
+        let cols = this.ref.table.getColumns();
+        for (let i = 0; i < cols.length; i++) {
+            if (!cols[i].isVisible())
+                cols[i].show();
+        }
+    }
+
+    hideColumn (e, column) {
+        const { match, dsHome } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        if (!this.isKey(column.getField()))
+            column.hide();
+    }
+
+    columnResized (column) {
+        let forField = this.state.currentColumnAttrs[column.getField()];
+        if (!forField) forField = {};
+        if (forField.width !== column.getWidth()) {
+            let currentColumnAttrs = { ...this.state.currentColumnAttrs };
+            forField.width = column.getWidth();
+            currentColumnAttrs[column.getField()] = forField;
+            this.setState({ currentColumnAttrs });
+        }
+    }
+
+    columnVisibilityChanged (column, visible) {
+        let forField = this.state.currentColumnAttrs[column.getField()];
+        if (!forField) forField = {};
+        if (forField.hidden !== !visible) {
+            let currentColumnAttrs = { ...this.state.currentColumnAttrs };
+            forField.hidden = !visible;
+            currentColumnAttrs[column.getField()] = forField;
+            this.setState({ currentColumnAttrs });
+        }
+    }
+
+    isKey (field) {
+        const { match, dsHome } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+
+        //console.log("Field is: ", field);
+        if (dsHome.dsViews[dsView].keys && dsHome.dsViews[dsView].keys.length) {
+            for (let i = 0; i < dsHome.dsViews[dsView].keys.length; i++) {
+                let key = dsHome.dsViews[dsView].keys[i];
+                //console.log("key is: ", key);
+                if (field === key)
+                    return true;
+            }
+        }
+        return false;
     }
 
     toggleModal (confirmed) {
@@ -863,7 +928,7 @@ class DsView extends Component {
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
-        let headerMenu = [
+        let headerMenuWithoutHide = [
             {
                 label:"Toggle Filters",
                 action: this.toggleSingleFilter
@@ -876,6 +941,28 @@ class DsView extends Component {
                 label:"Unfreeze",
                 action: this.unfreezeColumn
             }
+        ];
+        let headerMenuWithHide = [
+            {
+                label:"Toggle Filters",
+                action: this.toggleSingleFilter
+            },
+            {
+                label:"Freeze",
+                action: this.freezeColumn
+            },
+            {
+                label:"Unfreeze",
+                action: this.unfreezeColumn
+            },
+            {
+                label:"<i class='fas fa-eye-slash'></i> Hide Column",
+                action: this.hideColumn
+            },            
+            {
+                label:"<i class='fas fa-eye'></i> Unhide all Columns",
+                action: this.showAllCols
+            },            
         ];
         let cellContextMenu = [
             {
@@ -913,7 +1000,11 @@ class DsView extends Component {
         let columns = [];
         for (let i = 0; i < dsHome.dsViews[dsView].columnAttrs.length; i++) {
             let col = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].columnAttrs[i]));
-            col.headerMenu = headerMenu;
+            if (!this.isKey(col.field)) {
+                col.headerMenu = headerMenuWithHide;
+            } else {
+                col.headerMenu = headerMenuWithoutHide;
+            }
             col.contextMenu = cellContextMenu;
             col.editable = this.cellEditCheck;
 
@@ -1104,7 +1195,9 @@ class DsView extends Component {
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
-                                    initialSort: this.state.initialSort,
+                                    initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
+                                    //columnResized: this.columnResized,
+                                    //columnVisibilityChanged: this.columnVisibilityChanged,
                                     //height: "500px",
                                     //virtualDomBuffer: 500,
                                     //selectable: true,
@@ -1156,18 +1249,22 @@ class DsView extends Component {
         //console.log('urlWords: ', urlWords);
         newUrl = '/' + urlWords[1] + '/' + urlWords[2] + '/' + urlWords[3];
         if (filter) newUrl += '/' + filter;
-        let initialHeaderFilter = [], initialSort = [];
+        let initialHeaderFilter = [], initialSort = [], filterColumnAttrs = {};
         if (filter) {
             try {
                 // Tabulator messes up the hdrSorters, so we give it a copy. 
                 initialHeaderFilter = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].filters[filter].hdrFilters));
                 initialSort = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].filters[filter].hdrSorters));
-                if (JSON.stringify(this.state.initialHeaderFilter) !== JSON.stringify(initialHeaderFilter) || JSON.stringify(this.state.initialSort) !== JSON.stringify(initialSort)) {
-                        this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, refresh: this.state.refresh + 1});
+                if (dsHome.dsViews[dsView].filters[filter].filterColumnAttrs) {
+                    filterColumnAttrs = JSON.parse(JSON.stringify(dsHome.dsViews[dsView].filters[filter].filterColumnAttrs));
+                }
+                if (JSON.stringify(this.state.initialHeaderFilter) !== JSON.stringify(initialHeaderFilter) || JSON.stringify(this.state.initialSort) !== JSON.stringify(initialSort) || JSON.stringify(this.state.filterColumnAttrs) !== JSON.stringify(filterColumnAttrs)) {
+                    this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
                     console.log('moving to :', newUrl);
                     history.push(newUrl);
                 }
             } catch (e) { 
+                console.log("I am getting an exception...: ", e)
                 // At least note it down... 
                 if (this.state.filter !== filter) {
                     this.setState({ filter });
@@ -1177,16 +1274,66 @@ class DsView extends Component {
         } else {
             initialHeaderFilter = [];
             initialSort = [];
-            if (this.state.initialHeaderFilter.length === 0 && this.state.initialSort.length === 0) {
+            filterColumnAttrs = {};
+            if (this.state.initialHeaderFilter.length === 0 && this.state.initialSort.length === 0 && Object.keys(this.state.filterColumnAttrs).length === 0) {
                 console.log("should not be coming here");
             } else /*if (this.state.initialHeaderFilter !== initialHeaderFilter || this.state.initialSort !== initialSort)*/ {
-                this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, refresh: this.state.refresh + 1});
+                this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
             }
             //console.log("match:", match);
             //console.log("location:", this.props.location)
             if (newUrl !== this.props.location.pathname)
                 history.push(newUrl);
         }
+
+        this.applyFilterColumnAttrs();
+    }
+
+    applyFilterColumnAttrs () {
+        try {
+            console.log("Applying for: ", this.state.filter);
+            // process filterColumnAttrs
+            let cols = this.ref.table.getColumns();
+            if (Object.keys(this.state.filterColumnAttrs)) {
+                for (let field in this.state.filterColumnAttrs) {
+                    let fieldAttrs = this.state.filterColumnAttrs[field];
+                    for (let i = 0; i < cols.length; i++) {
+                        if (cols[i].getField() === field) {
+                            if (fieldAttrs.hidden && cols[i].isVisible()) {
+                                cols[i].hide();
+                            }
+                            if (cols[i].getWidth() !== fieldAttrs.width) {
+                                cols[i].setWidth(fieldAttrs.width);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // When you clear a filter, filterColumnAttrs will be empty object.
+                // Then, you have to unhide everything. 
+                this.showAllCols();
+            }
+        } catch (e) { console.log("Exception while applying for: ", this.state.filter, e) }
+    }
+
+    // Unused. 
+    retainColumnAttrs () {
+        try {
+            let cols = this.ref.table.getColumns();
+            for (let field in this.state.currentColumnAttrs) {
+                let fieldAttrs = this.state.currentColumnAttrs[field];
+                for (let i = 0; i < cols.length; i++) {
+                    if (cols[i].getField() === field) {
+                        if (fieldAttrs.hidden && cols[i].isVisible()) {
+                            cols[i].hide();
+                        }
+                        if (cols[i].getWidth() !== fieldAttrs.width) {
+                            cols[i].setWidth(fieldAttrs.width);
+                        }
+                    }
+                }
+            }
+        } catch (e) {}
     }
 
     fixOneTimeLocalStorage () {
@@ -1243,6 +1390,7 @@ class DsView extends Component {
             dsDescription = <div dangerouslySetInnerHTML={{ __html: value }}/>
         } catch (e) {};
         this.processFilterChange(this.state.filter);
+        //this.retainColumnAttrs();
         return (
             <div>
                 <Row>
