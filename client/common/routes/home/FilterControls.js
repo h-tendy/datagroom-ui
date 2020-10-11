@@ -38,6 +38,7 @@ class FilterControls extends React.Component {
             <>
             <Row>
                 <Col md={4} sm={4} xs={4}> 
+                    <b>Delete:</b> {name} ? &nbsp;&nbsp; 
                     <Button size="sm" onClick={() => {
                         if (!me.props.tableRef) return;
                         if (!this.props.defaultValue) {
@@ -87,6 +88,14 @@ class FilterControls extends React.Component {
             } catch (e) {}
             returnJsx = 
             <>
+            <Row>
+                <Col md={2} sm={2} xs={2}> 
+                    <b>Saving to:</b>
+                </Col>
+                <Col md={4} sm={4} xs={4}> 
+                    {name}
+                </Col>
+            </Row> <br/>
             <Row>
                 <Col md={2} sm={2} xs={2}> 
                     <b>Description: </b>

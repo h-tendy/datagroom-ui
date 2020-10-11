@@ -174,7 +174,7 @@ class DsViewEdit extends Component {
             "Work-id": false,
             "Description": false
         }; let jiraColumnsPresent = true;
-        let jiraFields = { 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'created':1, 'rrtTargetRls':1, 'status':1};
+        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'status':1};
         let dsFields = {};
         for (let i = 0; i < currentDefs.length; i++) {
             for (let key in jiraColumns) {
@@ -186,6 +186,7 @@ class DsViewEdit extends Component {
         }
         for (let key in jiraColumns) {
             if (!jiraColumns[key]) {
+                console.log("Unknown jira column: ", key);
                 jiraColumnsPresent = false; 
                 break;
             }
@@ -193,7 +194,7 @@ class DsViewEdit extends Component {
         function validateMapping (jiraFieldMapping) {
             let ret = { status: true, error: '' };
             for (let key in jiraFieldMapping) {
-                if (key === "key") continue;
+                //if (key === "key") continue;
                 if (!jiraFields[key]) {
                     ret.error = `Unknown Jira key: ${key}`;
                     ret.status = false;
@@ -220,6 +221,7 @@ class DsViewEdit extends Component {
             }
             let ret = validateMapping(jiraFieldMapping);
             console.log("validate ret: ", ret);
+            jiraColumnsPresent = ret.status;
             if (!ret.status) { jiraFieldMapping = {};}
         }
         let jiraConfig = null;
