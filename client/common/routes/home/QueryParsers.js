@@ -11,16 +11,15 @@ function parseExpr (exprStr) {
     if (m && (m.length >= 2)) {
         expr["="] = {};
         let key = m[1], value = m[2];
-        /*
-        let quotesMatch = m[0].match(/^"(.*)"$/);
-        if (quotesMatch && quotesMatch.length >= 1)
-            key = quotesMatch[0];
-        quotesMatch = m[1].match(/^"(.*)"$/);
-        if (quotesMatch && quotesMatch.length >= 1)
-            value = quotesMatch[0];
-        */
         expr["="].key = key;
         expr["="].value = value;
+    }
+    m = exprStr.match(/^\s*"(.*?)"\s*=~\s*"(.*?)"\s*$/);
+    if (m && (m.length >= 2)) {
+        expr["=~"] = {};
+        let key = m[1], regex = m[2];
+        expr["=~"].key = key;
+        expr["=~"].regex = regex;
     }
     return expr;
 }
@@ -31,6 +30,16 @@ function evalExpr (expr, data) {
             let equalsExpr = expr[key];
             let rowValue = data[equalsExpr["key"]];
             if (rowValue === equalsExpr["value"]) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (key === "=~") {
+            let equalsExpr = expr[key];
+            let rowValue = data[equalsExpr["key"]];
+            let regex = new RegExp(equalsExpr["regex"], "i");
+            if (regex.test(rowValue)) {
                 return true;
             } else {
                 return false;

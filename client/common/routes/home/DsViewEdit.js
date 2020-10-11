@@ -35,6 +35,7 @@ class DsViewEdit extends Component {
             refreshAfterRender: false,
             jira: null,
             jql: "",
+            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "foundInRls", "created", "rrtTargetRls", "status" \n\n',
             dsDescription: null,
             widths: {},
 
@@ -173,12 +174,15 @@ class DsViewEdit extends Component {
             "Work-id": false,
             "Description": false
         }; let jiraColumnsPresent = true;
+        let jiraFields = { 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'created':1, 'rrtTargetRls':1, 'status':1};
+        let dsFields = {};
         for (let i = 0; i < currentDefs.length; i++) {
             for (let key in jiraColumns) {
                 if (currentDefs[i].field === key) {
                     jiraColumns[key] = true;
                 }
             }
+            dsFields[currentDefs[i].field] = 1;
         }
         for (let key in jiraColumns) {
             if (!jiraColumns[key]) {
@@ -186,11 +190,44 @@ class DsViewEdit extends Component {
                 break;
             }
         }
+        function validateMapping (jiraFieldMapping) {
+            let ret = { status: true, error: '' };
+            for (let key in jiraFieldMapping) {
+                if (key === "key") continue;
+                if (!jiraFields[key]) {
+                    ret.error = `Unknown Jira key: ${key}`;
+                    ret.status = false;
+                    break;
+                }
+                if (!dsFields[jiraFieldMapping[key]]) {
+                    ret.error = `Unknown column in data-set: ${jiraFieldMapping[key]}`;
+                    ret.status = false;
+                }
+            }
+            return ret;
+        }
+        let jiraFieldMapping = {};
+        if (this.state.jiraFieldMapping) {
+            let lines = this.state.jiraFieldMapping.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                if (/^\s*#/.test(line)) continue;
+                let m = line.match(/^\s*"(.*?)"\s*->\s*"(.*?)"\s*$/);
+                if (m && (m.length >= 2)) {
+                    let jiraKey = m[1], dsField = m[2];
+                    jiraFieldMapping[jiraKey] = dsField;
+                }
+            }
+            let ret = validateMapping(jiraFieldMapping);
+            console.log("validate ret: ", ret);
+            if (!ret.status) { jiraFieldMapping = {};}
+        }
         let jiraConfig = null;
         if (jiraColumnsPresent && this.state.jira && this.state.jql) {
             jiraConfig = {
                 jira: true,
-                jql: this.state.jql
+                jql: this.state.jql,
+                jiraFieldMapping
             }
         }
         let dsDescription = {
@@ -434,57 +471,52 @@ class DsViewEdit extends Component {
                                     me.ref.table.updateColumnDefinition(col.field, {editorParams});
         
                                 }, 1000)
-                            }} />
-                            <Form.Check type="checkbox" label="&nbsp;Multi" checked={checked} onChange={(event) => {
-                                let checked = event.target.checked;
-                                let curEditorParams = columnDef.editorParams || {}
-                                let editorParams = { 
-                                    ...curEditorParams,
-                                    multiselect: checked
-                                }
-                                // trigger render again no matter what changed. 
-                                me.setState({somethingChanged: me.state.somethingChanged++});
-                                console.log("Setting to: ", editorParams);
-                                me.ref.table.updateColumnDefinition(col.field, {editorParams});
-                            }}/>
-                            <Form.Check type="checkbox" label="&nbsp;Cond-values" checked={condValues} onChange={(event) => {
-                                let checked = event.target.checked;
-                                let curEditorParams = columnDef.editorParams || {}
-                                let editorParams = { 
-                                    ...curEditorParams,
-                                    conditionalValues: checked
-                                }
-                                // trigger render again no matter what changed. 
-                                me.setState({somethingChanged: me.state.somethingChanged++});
-                                console.log("Setting to: ", editorParams);
-                                me.ref.table.updateColumnDefinition(col.field, {editorParams});
-                            }}/>
-                            { condValues && 
-                                <Form.Control as="textarea" rows="3" defaultValue={condExprStr} onChange={(event) => {
-                                    let value = event.target.value;
-                                    if (me.state.debounceTimers[col.field]) {
-                                        clearTimeout(me.state.debounceTimers[col.field]);
-                                    }
-                                    me.state.debounceTimers[col.field] = setTimeout(() => {
-                                        delete me.state.debounceTimers[col.field];
-                                        // trigger render again no matter what changed. 
-                                        //me.setState({somethingChanged: me.state.somethingChanged++});        
-                                        if (!value) return;
-                                        let condExprs = value.split('\n').map(v => v.trim());
-                                        condExprs = condExprs.filter(v=> v !== "");
-                                        let editorParams = { 
-                                            ...columnDef.editorParams,
-                                            conditionalExprs: condExprs,
-                                            showListOnEmpty: true,
-                                            allowEmpty: true
-                                        }
-                                        console.log("Setting to: ", editorParams);
-                                        me.ref.table.updateColumnDefinition(col.field, {editorParams});
-                                    }, 1000)
-                                }} />
+                        }} />
+                        <Form.Check type="checkbox" label="&nbsp; autocomplete multi" checked={checked} onChange={(event) => {
+                            let checked = event.target.checked;
+                            let curEditorParams = columnDef.editorParams || {}
+                            let editorParams = { 
+                                ...curEditorParams,
+                                multiselect: checked
                             }
-
-
+                            // trigger render again no matter what changed. 
+                            me.setState({somethingChanged: me.state.somethingChanged++});
+                            me.ref.table.updateColumnDefinition(col.field, {editorParams});
+                        }}/>
+                        <Form.Check type="checkbox" label="&nbsp; autocomplete cond-values" checked={condValues} onChange={(event) => {
+                            let checked = event.target.checked;
+                            let curEditorParams = columnDef.editorParams || {}
+                            let editorParams = { 
+                                ...curEditorParams,
+                                conditionalValues: checked
+                            }
+                            // trigger render again no matter what changed. 
+                            me.setState({somethingChanged: me.state.somethingChanged++});
+                            me.ref.table.updateColumnDefinition(col.field, {editorParams});
+                        }}/>
+                        { condValues && 
+                            <Form.Control as="textarea" rows="3" defaultValue={condExprStr} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers[col.field]) {
+                                    clearTimeout(me.state.debounceTimers[col.field]);
+                                }
+                                me.state.debounceTimers[col.field] = setTimeout(() => {
+                                    delete me.state.debounceTimers[col.field];
+                                    // trigger render again no matter what changed. 
+                                    //me.setState({somethingChanged: me.state.somethingChanged++});        
+                                    if (!value) return;
+                                    let condExprs = value.split('\n').map(v => v.trim());
+                                    condExprs = condExprs.filter(v=> v !== "");
+                                    let editorParams = { 
+                                        ...columnDef.editorParams,
+                                        conditionalExprs: condExprs,
+                                        showListOnEmpty: true,
+                                        allowEmpty: true
+                                    }
+                                    me.ref.table.updateColumnDefinition(col.field, {editorParams});
+                                }, 1000)
+                            }} />
+                        }
                       </div>
             }
         } catch (e) {}
@@ -571,6 +603,16 @@ class DsViewEdit extends Component {
                 } else if (col.vertAlign === 'bottom') {
                     vertAlignCurVal = vertAlignOptions[2]
                 }
+                let conditionalFormatting = false, condFormatExprStr = "";
+                // XXX: This function should be using columnDef everywhere and not just col!
+                let columnDef = this.ref.table.getColumn(col.field).getDefinition();
+                try {
+                    conditionalFormatting = columnDef.formatterParams.conditionalFormatting;
+                } catch (e) {}
+                try {
+                    condFormatExprStr = columnDef.formatterParams.conditionalExprs.join('\n');
+                } catch (e) {}
+
                 s1.push(<Row style={{'border': '1px solid black', 'border-radius': '5px', 'padding': '10px'}}>
                     <Col md={2} sm={2} xs={2}> 
                     <b>{col.field}</b>
@@ -620,6 +662,43 @@ class DsViewEdit extends Component {
                                     me.setHdrFilterTypeToText("", column);
                             }}
                         />
+                        <Form.Check type="checkbox" label="&nbsp; conditional formatting" checked={conditionalFormatting} onChange={(event) => {
+                            let checked = event.target.checked;
+                            let curFormatterParams = columnDef.formatterParams || {}
+                            let formatterParams = { 
+                                ...curFormatterParams,
+                                conditionalFormatting: checked
+                            }
+                            // trigger render again no matter what changed. 
+                            me.setState({somethingChanged: me.state.somethingChanged++});
+                            me.ref.table.updateColumnDefinition(col.field, { formatterParams });
+                        }}/>
+                        { conditionalFormatting && 
+                            <Form.Control as="textarea" rows="3" defaultValue={condFormatExprStr} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers[col.field]) {
+                                    clearTimeout(me.state.debounceTimers[col.field]);
+                                }
+                                me.state.debounceTimers[col.field] = setTimeout(() => {
+                                    delete me.state.debounceTimers[col.field];
+                                    // trigger render again no matter what changed. 
+                                    //me.setState({somethingChanged: me.state.somethingChanged++});        
+                                    if (!value) return;
+                                    let curFormatterParams = columnDef.formatterParams || {}
+                                    let condExprs = value.split('\n').map(v => v.trim());
+                                    condExprs = condExprs.filter(v=> v !== "");
+                                    let formatterParams = { 
+                                        ...curFormatterParams,
+                                        conditionalExprs: condExprs,
+                                    }
+                                    me.setState({somethingChanged: me.state.somethingChanged++});
+                                    me.ref.table.updateColumnDefinition(col.field, { formatterParams });
+                                }, 1000)
+                            }} />
+                        }
+
+
+
                     </Col>
                 </Row>);
                 s1.push(<br/>);
@@ -775,8 +854,14 @@ class DsViewEdit extends Component {
 
         try {
             if (this.state.jira === null && dsHome.dsViews[dsView].jiraConfig) {
+                let jiraFieldMapping = this.state.jiraFieldMapping;
+                for (let key in dsHome.dsViews[dsView].jiraConfig.jiraFieldMapping) {
+                    jiraFieldMapping += `"${key}" -> "${dsHome.dsViews[dsView].jiraConfig.jiraFieldMapping[key]}"` + '\n';
+                }
                 this.setState({ jira: dsHome.dsViews[dsView].jiraConfig.jira, 
-                                jql: dsHome.dsViews[dsView].jiraConfig.jql });
+                                jql: dsHome.dsViews[dsView].jiraConfig.jql, 
+                                jiraFieldMapping
+                             });
             }
         } catch (e) {};
         let pushButton = ""
@@ -824,6 +909,30 @@ class DsViewEdit extends Component {
                                 }, 1000)
                             }} />
                         </Col> 
+                    }
+                </Row>
+                <Row>
+                    { this.state.jira && 
+                        <Col md={2} sm={2} xs={2}> 
+                            <b>Jira field mapping: </b>
+                        </Col>
+                    }
+                    { this.state.jira && 
+                        <Col md={6} sm={6} xs={6}> 
+                        <Form.Control as="textarea" rows="3" defaultValue={this.state.jiraFieldMapping} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    // trigger render again no matter what changed. 
+                                    //me.setState({somethingChanged: me.state.somethingChanged++});        
+                                    if (!value) return;
+                                    me.setState({jiraFieldMapping: value});
+                                }, 1000)
+                            }} />
+                        </Col>
                     }
                 </Row>
                 <br/>

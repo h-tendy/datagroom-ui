@@ -20,6 +20,7 @@ import MySingleAutoCompleter from './MySingleAutoCompleter';
 import ColorPicker from './ColorPicker';
 import Modal from './Modal';
 import FilterControls from './FilterControls';
+import QueryParsers from './QueryParsers';
 
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
@@ -1013,21 +1014,53 @@ class DsView extends Component {
                 if (col.headerFilterType)
                     col.headerFilter = col.headerFilterType;
             }
-
+            // Do in a function so that you can attach to all formatters.
+            function doConditionalFormatting (cell, formatterParams) {
+                if (formatterParams && formatterParams.conditionalFormatting) {
+                    let rowData = cell.getRow().getData();
+                    for (let i = 0; i < formatterParams.conditionalExprs.length; i++) {
+                        // XXX: Add more error checking here
+                        let exprStr = formatterParams.conditionalExprs[i].split('->')[0].trim();
+                        let expr = QueryParsers.parseExpr(exprStr);
+                        if (QueryParsers.evalExpr(expr, rowData)) {
+                            let values = formatterParams.conditionalExprs[i].split('->')[1].trim();
+                            values = JSON.parse(values);
+                            if (values.backgroundColor) {
+                                cell.getElement().style.backgroundColor = values.backgroundColor;
+                            }
+                            if (values.color) {
+                                cell.getElement().style.color = values.color;
+                            }
+                            break;
+                        }
+                    }
+                }            
+            }
+            if (col.editor === "input") {
+                col.formatter = (cell, formatterParams) => {
+                    let value = cell.getValue();
+                    doConditionalFormatting(cell, formatterParams);
+                    return value;
+                }
+                col.formatterClipboard = (cell, formatterParams) => {
+                    let value = cell.getValue();
+                    doConditionalFormatting(cell, formatterParams);
+                    if (value === undefined) return "";
+                    return value;
+                }
+            }
             if (col.editor === "textarea" || col.editor === "codemirror" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
                 col.formatter = (cell, formatterParams) => {
-                    //cell.getElement().style.backgroundColor = 'lightpink';
-                    //cell.getElement().style.color = 'black';
                     let value = cell.getValue();
+                    doConditionalFormatting(cell, formatterParams);
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
-                    return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px">${value}</div>`;
+                    return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
                 }
                 col.formatterClipboard = (cell, formatterParams) => {
-                    //cell.getElement().style.backgroundColor = 'lightpink';
-                    //cell.getElement().style.color = 'black';
                     let value = cell.getValue();
+                    doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
@@ -1056,19 +1089,6 @@ class DsView extends Component {
                 col.editor = MySingleAutoCompleter;
                 if (!col.editorParams.verticalNavigation) {
                     col.editorParams.verticalNavigation = "table"
-                }
-            }
-            // XXX: No need for any conditional formatting for now. 
-            if (col.field === "Severity") {
-                col.formatter = (cell, formatterParams) => {
-                    let value = cell.getValue();
-                    if(value && value.indexOf("Critical") > 0){
-                        cell.getElement().style.backgroundColor = 'red';
-                        value = "<span style='font-weight:bold;'>" + value + "</span>";
-                    } else {
-                        cell.getElement().style.backgroundColor = ''
-                    }
-                    return value;
                 }
             }
             columns.push(col);
@@ -1212,24 +1232,15 @@ class DsView extends Component {
                                         }  
                                     },
                                     cellMouseEnter: (e, cell) => {
-                                        //console.log("Enter-1, prev: ", cell.__dg__prevBgColor);
-                                        //console.log("Enter-1, cur: ", cell.getElement().style.backgroundColor);
                                         if (cell.getElement().style.backgroundColor !== "#fcfcfc") 
                                             cell.__dg__prevBgColor = cell.getElement().style.backgroundColor;
-                                        cell.getElement().style.backgroundColor = "#fcfcfc";
-                                        //console.log("Enter-2, prev: ", cell.__dg__prevBgColor);
-                                        //console.log("Enter-2, cur: ", cell.getElement().style.backgroundColor);
+                                        //cell.getElement().style.backgroundColor = "#fcfcfc";
                                     },
                                     cellMouseLeave: (e, cell) => {
-                                        //console.log("Leave-1, prev: ", cell.__dg__prevBgColor);
-                                        //console.log("Leave-1, cur: ", cell.getElement().style.backgroundColor);
-                                        cell.getElement().style.backgroundColor = cell.__dg__prevBgColor;
+                                        //cell.getElement().style.backgroundColor = cell.__dg__prevBgColor;
                                         delete cell.__dg__prevBgColor;
-                                        //console.log("Leave-2, prev: ", cell.__dg__prevBgColor);
-                                        //console.log("Leave-2, cur: ", cell.getElement().style.backgroundColor);
                                     },
                                     renderComplete: this.renderComplete
-                                    //rowContextMenu: [{ label: "Duplicate & Add", action: (e, row)=>{ e.preventDefault() }}, { label: "Delete row", action: (e, row) => { e.preventDefault() } }]
                                 }}
                                 innerref={this.recordRef}
                                 />
