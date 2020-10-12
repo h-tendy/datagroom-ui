@@ -62,6 +62,7 @@ class DsViewEdit extends Component {
         this.setHdrFilterType = this.setHdrFilterType.bind(this);
         this.setHdrFilterTypeToNumber = this.setHdrFilterTypeToNumber.bind(this);
         this.setHdrFilterTypeToText = this.setHdrFilterTypeToText.bind(this);
+        this.plusFiftyToWidth = this.plusFiftyToWidth.bind(this);
         this.editorParamsControl = this.editorParamsControl.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
     }
@@ -308,6 +309,12 @@ class DsViewEdit extends Component {
         this.setEditor(e, column, false);
     }
 
+    plusFiftyToWidth (e, column) {
+        console.log("Column: ", column.getWidth());
+        let curWidth = column.getWidth();
+        column.setWidth(curWidth + 50);
+    }
+
     markdownFormatter (cell, formatterParams) {
         let value = cell.getValue();
         if (typeof value != "string") return value;
@@ -524,6 +531,7 @@ class DsViewEdit extends Component {
         } catch (e) {}
         return epc;
     }
+
 
     step1 () {
         const { match, dsHome } = this.props;
@@ -747,6 +755,10 @@ class DsViewEdit extends Component {
                 label:"Set header filter type to text",
                 action: this.setHdrFilterTypeToText
             },
+            {
+                label:"Plus 50 to column width",
+                action: this.plusFiftyToWidth
+            },
         ];
         let headerMenuWithHide = [
             {
@@ -784,6 +796,10 @@ class DsViewEdit extends Component {
             {
                 label:"Set header filter type to text",
                 action: this.setHdrFilterTypeToText
+            },
+            {
+                label:"Plus 50 to column width",
+                action: this.plusFiftyToWidth
             },
         ];
         let s2 = '';
@@ -839,7 +855,7 @@ class DsViewEdit extends Component {
                                             row.getElement().style.backgroundColor = "white";
                                         }                               
                                     },
-                                    renderComplete: this.renderComplete
+                                    renderComplete: this.renderComplete,
                                 }}
                                 innerref={this.recordRef}
                             />

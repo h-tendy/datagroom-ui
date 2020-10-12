@@ -132,6 +132,7 @@ class DsView extends Component {
         this.isKey = this.isKey.bind(this);
         this.hideColumn = this.hideColumn.bind(this);
         this.showAllCols = this.showAllCols.bind(this);
+        this.hideColumnFromCell = this.hideColumnFromCell.bind(this);
         this.columnResized = this.columnResized.bind(this);
         this.columnVisibilityChanged = this.columnVisibilityChanged.bind(this);
         this.retainColumnAttrs = this.retainColumnAttrs.bind(this);
@@ -272,6 +273,12 @@ class DsView extends Component {
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
+        if (!this.isKey(column.getField()))
+            column.hide();
+    }
+
+    hideColumnFromCell (e, cell) {
+        let column = cell.getColumn();
         if (!this.isKey(column.getField()))
             column.hide();
     }
@@ -979,6 +986,14 @@ class DsView extends Component {
                 action: this.copyCellToClipboard
             },
             {
+                label:"<i class='fas fa-eye-slash'></i> Hide Column",
+                action: this.hideColumnFromCell
+            },            
+            {
+                label:"<i class='fas fa-eye'></i> Unhide all Columns",
+                action: this.showAllCols
+            },            
+            {
                 separator: true
             },
             /*
@@ -990,12 +1005,12 @@ class DsView extends Component {
                 separator: true
             },*/
             {
-                label:"Delete row...",
-                action: this.deleteRowHandler
-            },
-            {
                 label:"Delete all rows in view...",
                 action: this.deleteAllRowsInViewQuestion
+            },
+            {
+                label:"Delete row...",
+                action: this.deleteRowHandler
             },
         ];        
         let columns = [];
