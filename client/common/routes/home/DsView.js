@@ -144,14 +144,12 @@ class DsView extends Component {
         let singleClickEditFrmLocal = localStorage.getItem("singleClickEdit");
         singleClickEditFrmLocal = JSON.parse(singleClickEditFrmLocal);
         this.state.singleClickEdit = singleClickEditFrmLocal;
-        /*
         let showAllFiltersFrmLocal = localStorage.getItem("showAllFilters");
         showAllFiltersFrmLocal = JSON.parse(showAllFiltersFrmLocal);
         this.state.showAllFilters = showAllFiltersFrmLocal;
         let disableEditingFrmLocal = localStorage.getItem("disableEditing");
         disableEditingFrmLocal = JSON.parse(disableEditingFrmLocal);
         this.state.disableEditing = disableEditingFrmLocal;
-        */
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
