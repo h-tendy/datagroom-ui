@@ -189,7 +189,7 @@ class FilterControls extends React.Component {
             try {
                 if (dsHome.dsFilterAdds[dsView].status === 'success' && dsHome.dsFilterAdds[dsView].serverStatus.status === 'success' && this.state.saveAsNew) {
                     dispatch({ type: dsConstants.CLEAR_ADD_FILTER_TRACKER });
-                    this.setState({ saveAsNew: false });
+                    this.setState({ saveAsNew: false, saveAsNewName: '', saveAsNewDescription: '' });
                 }
             } catch (e) {}
 
