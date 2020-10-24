@@ -1054,32 +1054,37 @@ class DsView extends Component {
                 col.formatter = (cell, formatterParams) => {
                     let value = cell.getValue();
                     doConditionalFormatting(cell, formatterParams);
+                    if (value === undefined) return "";
                     return value;
                 }
+                /* // This loses conditional formatting!
                 col.formatterClipboard = (cell, formatterParams) => {
                     let value = cell.getValue();
                     doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
                     return value;
-                }
+                } */
             }
             if (col.editor === "textarea" || col.editor === "codemirror" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
                 col.formatter = (cell, formatterParams) => {
                     let value = cell.getValue();
                     doConditionalFormatting(cell, formatterParams);
+                    if (value === undefined) return "";
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
                     return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
                 }
+                /* // This loses conditional formatting!
                 col.formatterClipboard = (cell, formatterParams) => {
                     let value = cell.getValue();
+                    console.log("Coming to formatterClipboard");
                     doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
                     return `<div style="white-space:normal;word-wrap:break-word;">${value}</div>`;
-                }
+                }*/
                 col.variableHeight = true;
                 if (col.editor === "textarea" || col.editor === "codemirror") {
                     if (col.editor === "textarea")
