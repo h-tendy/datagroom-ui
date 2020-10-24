@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { dsActions } from '../../actions/ds.actions';
 import Select from 'react-select';
+import { dsConstants } from '../../constants';
 
 class FilterControls extends React.Component {
     constructor (props) {
@@ -34,6 +35,13 @@ class FilterControls extends React.Component {
         let name = this.props.defaultValue;
 
         if (this.state.deleteFilter) {
+            try {
+                if (dsHome.dsFilterDeletes[dsView].status === 'success' && dsHome.dsFilterDeletes[dsView].serverStatus.status === 'success' && this.state.deleteFilter) {
+                    dispatch({ type: dsConstants.CLEAR_DELETE_FILTER_TRACKER });
+                    this.setState({ deleteFilter: false });
+                }
+            } catch (e) {}
+
             returnJsx = 
             <>
             <Row>
@@ -84,6 +92,12 @@ class FilterControls extends React.Component {
                     let errMsg = 'save failed';
                     if (this.state.saveErrorMsg !== errMsg)
                         this.setState({ saveErrorMsg: errMsg });
+                }
+            } catch (e) {}
+            try {
+                if (dsHome.dsFilterEdits[dsView].status === 'success' && dsHome.dsFilterEdits[dsView].serverStatus.status === 'success' && this.state.save) {
+                    dispatch({ type: dsConstants.CLEAR_EDIT_FILTER_TRACKER });
+                    this.setState({ save: false });
                 }
             } catch (e) {}
             returnJsx = 
@@ -172,6 +186,13 @@ class FilterControls extends React.Component {
                         this.setState({ saveAsNewErrorMsg: errMsg });
                 }
             } catch (e) {}
+            try {
+                if (dsHome.dsFilterAdds[dsView].status === 'success' && dsHome.dsFilterAdds[dsView].serverStatus.status === 'success' && this.state.saveAsNew) {
+                    dispatch({ type: dsConstants.CLEAR_ADD_FILTER_TRACKER });
+                    this.setState({ saveAsNew: false });
+                }
+            } catch (e) {}
+
             returnJsx = 
             <>
             <Row>

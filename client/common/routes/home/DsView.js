@@ -707,6 +707,7 @@ class DsView extends Component {
         if (oldVal !== '')
             typeOfOldVal = typeof oldVal;
         console.log("Type of old val:", typeOfOldVal);
+        console.log("oldvalue is: ", oldVal);
         //if (oldVal !== '' && !Number.isNaN(Number(oldVal))) oldVal = Number(oldVal);
         let newVal = cell.getValue();
         if (newVal !== '' && !Number.isNaN(Number(newVal)))

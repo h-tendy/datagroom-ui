@@ -257,7 +257,12 @@ export function dsHome (state = initialState, action) {
                 newState.dsFilterAdds[action.dsView] = { ...newState.dsFilterAdds[action.dsView], status: action.status, error: action.message };
                 return newState
             }            
-
+        case dsConstants.CLEAR_ADD_FILTER_TRACKER:
+            {
+                let newState = {...state};
+                delete newState.dsFilterAdds;
+                return newState
+            }    
         case dsConstants.EDIT_FILTER_REQUEST: 
             {
                 let newState = {...state};
@@ -282,6 +287,12 @@ export function dsHome (state = initialState, action) {
                 newState.dsFilterEdits[action.dsView] = { ...newState.dsFilterEdits[action.dsView], status: action.status, error: action.message };
                 return newState
             }            
+        case dsConstants.CLEAR_EDIT_FILTER_TRACKER:
+            {
+                let newState = {...state};
+                delete newState.dsFilterEdits;
+                return newState
+            }
 
         case dsConstants.DELETE_FILTER_REQUEST: 
             {
@@ -307,7 +318,13 @@ export function dsHome (state = initialState, action) {
                 newState.dsFilterDeletes[action.dsView] = { ...newState.dsFilterDeletes[action.dsView], status: action.status, error: action.message };
                 return newState
             }            
-
+        case dsConstants.CLEAR_DELETE_FILTER_TRACKER:
+            {
+                let newState = {...state};
+                delete newState.dsFilterDeletes;
+                return newState
+            }
+    
         default:
             return state
     }
