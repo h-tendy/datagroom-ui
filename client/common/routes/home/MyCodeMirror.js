@@ -44,10 +44,14 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
             preventScroll: true
         });
         input.style.height = "100%";
+        window.CodeMirrorSpellChecker({
+            codeMirrorInstance: window.CodeMirror,
+        });        
         editor = window.CodeMirror.fromTextArea(input, {
             lineNumbers: true,
             lineWrapping: true,
-            mode: "markdown",
+            mode: "spell-checker",
+	        backdrop: "markdown",
             highlightFormatting: true
           });
         let initialHeight = cell._cell.element.style.height;
