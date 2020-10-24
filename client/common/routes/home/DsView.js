@@ -1187,7 +1187,19 @@ class DsView extends Component {
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
         let s2 = '';
-
+        let fixedHeight = false, vh = undefined;
+        try {
+            fixedHeight = dsHome.dsViews[dsView].otherTableAttrs.fixedHeight;
+        } catch (e) {};
+        if (fixedHeight) {
+            vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+            if (vh) { 
+                vh -= 50;
+                vh = vh + "px"; 
+            } else {
+                vh = undefined;
+            }
+        }
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let columns = this.setColumnDefinitions();
             s2 = <Row>
@@ -1231,7 +1243,7 @@ class DsView extends Component {
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
                                     //columnResized: this.columnResized,
                                     //columnVisibilityChanged: this.columnVisibilityChanged,
-                                    //height: "500px",
+                                    height: vh,
                                     //virtualDomBuffer: 500,
                                     //selectable: true,
                                     //persistence: { columns: true },

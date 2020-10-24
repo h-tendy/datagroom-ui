@@ -38,6 +38,7 @@ class DsViewEdit extends Component {
             jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "foundInRls", "created", "rrtTargetRls", "status" \n\n',
             dsDescription: null,
             widths: {},
+            fixedHeight: null,
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -236,10 +237,13 @@ class DsViewEdit extends Component {
         let dsDescription = {
             dsDescription: this.state.dsDescription
         }
+        let otherTableAttrs = {
+            fixedHeight: this.state.fixedHeight
+        }
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs));
     }
 
     isKey (field) {
@@ -882,6 +886,12 @@ class DsViewEdit extends Component {
                              });
             }
         } catch (e) {};
+        try {
+            if (this.state.fixedHeight === null && dsHome.dsViews[dsView].otherTableAttrs) {
+                this.setState({ fixedHeight: dsHome.dsViews[dsView].otherTableAttrs.fixedHeight, 
+                             });
+            }
+        } catch (e) {};
         let pushButton = ""
         try {
             if (dsHome.dsSetView.status === "setting") {
@@ -952,6 +962,14 @@ class DsViewEdit extends Component {
                             }} />
                         </Col>
                     }
+                </Row>
+                <Row>
+                    <Col md={2} sm={2} xs={2}> 
+                    <Form.Check inline type="checkbox" label="&nbsp;Fixed height" checked={this.state.fixedHeight} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({fixedHeight: checked}); 
+                                }}/>
+                    </Col>
                 </Row>
                 <br/>
                 <Row>

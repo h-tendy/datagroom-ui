@@ -165,15 +165,15 @@ function deleteManyDocs (dsName, dsView, dsUser, objects, rows) {
 }
 
 
-function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription) {
+function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs) {
     return async dispatch => {
         try {
             dispatch(request());
             let responseJson;
             if (jiraConfig)
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription});
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs});
             else 
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, dsDescription});
+                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs});
             if (responseJson)
                 dispatch(success(responseJson));
             else 
