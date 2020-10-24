@@ -1019,6 +1019,9 @@ class DsView extends Component {
                 col.headerMenu = headerMenuWithHide;
             } else {
                 col.headerMenu = headerMenuWithoutHide;
+                col.titleFormatter = (t, titleFormatterParams) => {
+                    return `<u>${t.getValue()}</u>`;
+                }
             }
             col.contextMenu = cellContextMenu;
             col.editable = this.cellEditCheck;
