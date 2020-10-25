@@ -304,7 +304,7 @@ class FilterControls extends React.Component {
                     <Col md={1} sm={1} xs={1}> 
                     <b>Filters:</b>
                     </Col>
-                    <Col md={4} sm={4} xs={4}> 
+                    <Col md={8} sm={8} xs={8}> 
                     <Select key={`my_unique_select_key__${JSON.stringify(filterOptions[defaultValueIdx])}`} className="basic-single" classNamePrefix="select" isClearable={true} name="sheetOptions" defaultValue={filterOptions[defaultValueIdx]} value={filterOptions[defaultValueIdx]} options={filterOptions} onChange={(value) => { 
                         // This is needed so that we set this again for new selection
                         me.setState({ saveName: null, saveDescription: null })

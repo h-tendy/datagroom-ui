@@ -1444,7 +1444,7 @@ class DsView extends Component {
                     </Col>
                 </Row>
                 <Row>
-                    <Col md={8} sm={8} xs={8}> 
+                    <Col md={10} sm={10} xs={10}> 
                         {dsDescription}
                     </Col>
                 </Row>
