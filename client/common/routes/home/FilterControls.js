@@ -318,9 +318,9 @@ class FilterControls extends React.Component {
                     </Col>
             </Row>
             <Row>
-                <button className="btn btn-link" onClick={() => { me.setState({ saveAsNew: !this.state.saveAsNew, save: false, deleteFilter: false }) }}> Save-as-new-filter </button> | 
-                <button className="btn btn-link" onClick={() => { me.setState({ save: !this.state.save, saveAsNew: false, deleteFilter: false }) }}> Save </button> | 
-                <button className="btn btn-link" onClick={() => { me.setState({ deleteFilter: !this.state.deleteFilter, save: false, saveAsNew: false }) }}> Delete-filter </button>
+                <button className="btn btn-link" onClick={() => { me.setState({ saveAsNew: !this.state.saveAsNew, save: false, deleteFilter: false }) }}> <i class='fas fa-filter'></i> Save-as-new-filter </button> | 
+                <button className="btn btn-link" onClick={() => { me.setState({ save: !this.state.save, saveAsNew: false, deleteFilter: false }) }}> <i class='fas fa-save'></i> Save </button> | 
+                <button className="btn btn-link" onClick={() => { me.setState({ deleteFilter: !this.state.deleteFilter, save: false, saveAsNew: false }) }}> <i class='fas fa-trash-alt'></i> Delete-filter </button>
             </Row>
             {this.saveAsNewControls()}
             {this.saveControls()}

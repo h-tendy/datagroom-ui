@@ -1451,12 +1451,16 @@ class DsView extends Component {
                 {this.step1()}
                 <br/>
                 <Row>
-                    <Button size="sm" onClick={this.downloadXlsx}> Get xlsx </Button>
+                    <button className="btn btn-link" onClick={this.downloadXlsx}> <i class='fas fa-file-export'></i> Get xlsx </button> | 
+                    <button className="btn btn-link" onClick={this.copyToClipboard}> <i class='fas fa-clipboard'></i> Copy-to-clipboard </button> | 
+                    <button className="btn btn-link" onClick={this.addRow}> <i class='fas fa-plus'></i> Add Row </button>
                     {/* 
+                    <Button size="sm" onClick={this.downloadXlsx}> Get xlsx </Button>
                     <Button size="sm" onClick={this.toggleFilters}> {this.state.filterButtonText} </Button>
-                    <Button size="sm" onClick={this.toggleEditing}> {this.state.editingButtonText} </Button> */}
+                    <Button size="sm" onClick={this.toggleEditing}> {this.state.editingButtonText} </Button>
                     <Button size="sm" onClick={this.copyToClipboard}> Copy-to-clipbard </Button>
                     <Button size="sm" onClick={this.addRow}> Add Row </Button>
+                    */}
                     {jiraRefreshButton}
                     {this.cellEditStatus()}
                     {this.addRowStatus()}
