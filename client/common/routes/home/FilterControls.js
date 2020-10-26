@@ -301,6 +301,7 @@ class FilterControls extends React.Component {
         // https://reactjs.org/blog/2017/11/28/react-v16.2.0-fragment-support.html
         return (
             <>
+            <br/>
             <Row>
                     <Col md={1} sm={1} xs={1}> 
                     <b>Filters:</b>

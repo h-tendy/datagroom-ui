@@ -1472,6 +1472,7 @@ class DsView extends Component {
                     {this.deleteAllRowsStatus()}
                     {this.jiraRefreshStatus()}
                 </Row>
+                {/* 
                 <Row>
                     <Col md={2} sm={2} xs={2}> 
                     <Form.Check inline type="checkbox" label="&nbsp;Desc order" checked={this.state.chronologyDescending} onChange={(event) => {
@@ -1505,6 +1506,43 @@ class DsView extends Component {
                                 }}/>
                     </Col>
                 </Row>
+                */}
+                <Row>
+                    <Col md={12} sm={12} xs={12}> 
+                    <input type="checkbox" checked={this.state.chronologyDescending} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    let initialHeaderFilter = me.ref.table.getHeaderFilters();
+                                    me.setState({chronologyDescending: checked, initialHeaderFilter});
+                                    localStorage.setItem("chronologyDescending", JSON.stringify(checked));
+                                }}/>
+                    &nbsp; Desc order <i class='fas fa-level-down-alt'></i>&nbsp;&nbsp;| &nbsp;
+
+                    <input type="checkbox" label="&nbsp;1-click editing" checked={this.state.singleClickEdit} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({singleClickEdit: checked});
+                                    localStorage.setItem("singleClickEdit", JSON.stringify(checked));
+                                }}/>
+                    &nbsp; 1-click editing <i class='fas fa-bolt'></i>&nbsp;&nbsp;| &nbsp;
+
+                    <input type="checkbox" label="&nbsp;Show filters" checked={this.state.showAllFilters} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({showAllFilters: checked});
+                                    localStorage.setItem("showAllFilters", JSON.stringify(checked));
+                                    me.toggleFilters();
+                                }}/>
+                    &nbsp; Show filters <i class='fas fa-filter'></i>&nbsp;&nbsp;| &nbsp;
+
+                    <input type="checkbox" label="&nbsp;Disable Editing" checked={this.state.disableEditing} onChange={(event) => {
+                                    let checked = event.target.checked;
+                                    me.setState({disableEditing: checked});
+                                    localStorage.setItem("disableEditing", JSON.stringify(checked));
+                                    me.toggleEditing();
+                                }}/>
+                    &nbsp; Disable Editing <i class='fas fa-ban'></i>&nbsp;&nbsp;
+
+                    </Col>
+                </Row>
+
                 {
                     <Route exact path={`${match.path}/:filter`} render={(props) => {
                         let filter = props.match.params.filter;
@@ -1513,12 +1551,13 @@ class DsView extends Component {
                         }
                     }} />
                 }
-                <FilterControls show={me.state.showAllFilters} dsName={dsName} dsView={dsView} tableRef={me.ref} onFilterChange={me.processFilterChange} defaultValue={me.state.filter}/>                
+                <FilterControls show={me.state.showAllFilters} dsName={dsName} dsView={dsView} tableRef={me.ref} onFilterChange={me.processFilterChange} defaultValue={me.state.filter}/>    
+                <br/>            
                 <Row>
                 <Col md={6} sm={6} xs={6}> 
-                    <b>Total records: {this.state.totalRecs} | </b>
-                    <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><b>Edit-log</b></Link> |&nbsp;
-                    <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><b>Edit-view</b></Link>
+                    <b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} | </b>
+                    <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Edit-log</b></Link> |&nbsp;
+                    <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link>
                 </Col>
                 </Row>
                 {this.step2()}
