@@ -1323,7 +1323,9 @@ class DsView extends Component {
             if (this.state.initialHeaderFilter.length === 0 && this.state.initialSort.length === 0 && Object.keys(this.state.filterColumnAttrs).length === 0) {
                 console.log("should not be coming here");
             } else /*if (this.state.initialHeaderFilter !== initialHeaderFilter || this.state.initialSort !== initialSort)*/ {
-                this.setState({ showAllFilters: true, filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
+                // Don't set showAllFilters to true here. This is the fix for
+                // navigating correctly when you click on 'show filters' checkbox. 
+                this.setState({ /*showAllFilters: true,*/ filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
             }
             //console.log("match:", match);
             //console.log("location:", this.props.location)
@@ -1424,9 +1426,11 @@ class DsView extends Component {
         console.log("In DsView render..");
         try {
             if (dsHome.dsViews[dsView].jiraConfig.jira) {
-                jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+                //jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+                jiraRefreshButton = <> | <button className="btn btn-link" onClick={this.jiraRefreshHandler}> <i class='fas fa-redo'></i> Refresh Jira </button> </>
                 if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
-                    jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler} disabled> Refresh Jira </Button>
+                    //jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
+                    jiraRefreshButton = <> | <button className="btn btn-link" onClick={this.jiraRefreshHandler} disabled> <i class='fas fa-redo'></i> Refresh Jira </button> </>
             }
         } catch (e) {};
         let dsDescription = ""; 
