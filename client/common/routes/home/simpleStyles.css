@@ -127,6 +127,9 @@ body blockquote>:last-child {
   margin-bottom: -10px;
 }
 
+pre > code {
+  font-size: 90%;
+}
 
 /* This is also needed, tweaks the code tag */
 code {
