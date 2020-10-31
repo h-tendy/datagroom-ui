@@ -35,10 +35,11 @@ class DsViewEdit extends Component {
             refreshAfterRender: false,
             jira: null,
             jql: "",
-            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "foundInRls", "created", "rrtTargetRls", "status" \n\n',
+            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "foundInRls", "created", "rrtTargetRls", "targetRls", "status" \n\n',
             dsDescription: null,
             widths: {},
             fixedHeight: null,
+            setViewStatus: '',
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -66,6 +67,7 @@ class DsViewEdit extends Component {
         this.plusFiftyToWidth = this.plusFiftyToWidth.bind(this);
         this.editorParamsControl = this.editorParamsControl.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
+        this.setViewStatus = this.setViewStatus.bind(this);
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -126,6 +128,7 @@ class DsViewEdit extends Component {
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
+        this.setState({ setViewStatus: '' });
         let currentDefs = JSON.parse(JSON.stringify(this.ref.table.getColumnDefinitions()));
         let cols = this.ref.table.getColumns();
         for (let i = 0; i < cols.length; i++) {
@@ -176,7 +179,7 @@ class DsViewEdit extends Component {
             "Work-id": false,
             "Description": false
         }; let jiraColumnsPresent = true;
-        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'status':1};
+        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'targetRls':1, 'status':1};
         let dsFields = {};
         for (let i = 0; i < currentDefs.length; i++) {
             for (let key in jiraColumns) {
@@ -219,12 +222,24 @@ class DsViewEdit extends Component {
                 if (m && (m.length >= 2)) {
                     let jiraKey = m[1], dsField = m[2];
                     jiraFieldMapping[jiraKey] = dsField;
+                    continue;
                 }
+                m = line.match(/^\s*'(.*?)'\s*->\s*'(.*?)'\s*$/);
+                if (m && (m.length >= 2)) {
+                    let jiraKey = m[1], dsField = m[2];
+                    jiraFieldMapping[jiraKey] = dsField;
+                    continue;
+                }
+
             }
             let ret = validateMapping(jiraFieldMapping);
             console.log("validate ret: ", ret);
             jiraColumnsPresent = ret.status;
-            if (!ret.status) { jiraFieldMapping = {};}
+            if (!ret.status) { 
+                this.setState({ setViewStatus: "Jira validation failed!" });
+                console.log("Validation failed")
+                return;
+            }
         }
         let jiraConfig = null;
         if (jiraColumnsPresent && this.state.jira && this.state.jql) {
@@ -244,6 +259,25 @@ class DsViewEdit extends Component {
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
         dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs));
+    }
+
+    setViewStatus () {
+        const { match, dsHome } = this.props;
+        let status = '';
+        try {
+            if (dsHome.dsSetView.status === "fail") {
+                status = dsHome.dsSetView.message;
+            }
+        } catch (e) {};
+        if (this.state.setViewStatus) status = this.state.setViewStatus;
+        if (status)
+            return <b style={{color: "red"}}> {status} </b>;
+        try {
+            if (dsHome.dsSetView.status === "success" && dsHome.dsSetView.serverStatus.status === "success") {
+                status = `success at ${new Date()}`;
+            }
+        } catch (e) {};
+        return <b style={{color: "green"}}> {status} </b>;
     }
 
     isKey (field) {
@@ -978,6 +1012,7 @@ class DsViewEdit extends Component {
                     {/*
                     <Button onClick={this.addCol}> Add Column </Button>
                      */}
+                    {this.setViewStatus()}
                 </Row>
                 {this.step2()}
             </div>
