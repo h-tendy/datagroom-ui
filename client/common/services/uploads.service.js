@@ -2,7 +2,10 @@ export const uploadService = {
     fileUpload,
     findHeadersInSheet,
     loadHdrsFromRange,
-    createDs
+    createDs, 
+
+    csvFileUpload,
+    createDsViaCsv
 };
 
 const config = {};
@@ -87,6 +90,50 @@ async function createDs (body) {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
         let response = await fetch(`${config.apiUrl}/upload/createDs`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished fetch")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('createDs ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+
+async function csvFileUpload(body) {
+    try {
+        const requestOptions = {
+            method: 'POST',
+            body
+        };
+        let responseJson = null;
+        let response = await fetch(`${config.apiUrl}/uploadCsv`, requestOptions);
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('uploaded csv', responseJson);
+        }
+        console.log(response);
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+async function createDsViaCsv (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/uploadCsv/createDs`, {
             method: "post",
             body: JSON.stringify(body),
             headers: {

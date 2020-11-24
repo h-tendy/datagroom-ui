@@ -8,7 +8,10 @@ export const newDsActions = {
     findHeadersInSheet,
     loadHdrsFromRange,
     setSelectedKeys,
-    createDs
+    createDs, 
+
+    uploadCsvFile,
+    createDsViaCsv
 }
 
 function clearReduxStore () {
@@ -104,5 +107,44 @@ function createDs (fileName, sheetName, selectedRange, selectedKeys, dsName, dsU
     }
     function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
     function success(createStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fileName, sheetName, selectedRange, selectedKeys, dsName, createStatus } }
+    function failure(message) { return { type: newDsConstants.CREATE_DS_FAILURE, message } }
+}
+
+
+
+function uploadCsvFile (fileName, formData) {
+    return async dispatch => {
+        dispatch(request(fileName));
+        try {
+            let responseJson = await uploadService.csvFileUpload(formData);
+            if (responseJson)
+                dispatch(success(fileName, responseJson));
+            else 
+                dispatch(failure("Upload failure"));
+        } catch (error) {
+            dispatch(failure("Uploading csv file failed"));
+        }
+    };
+
+    function request(fileName) { return { type: newDsConstants.UPLOAD_CSV_REQUEST, fileName } }
+    function success(fileName, hdrs) { return { type: newDsConstants.UPLOAD_CSV_SUCCESS, fileName, hdrs } }
+    function failure(message) { return { type: newDsConstants.UPLOAD_CSV_FAILURE, message } }
+}
+
+function createDsViaCsv (fileName, selectedKeys, dsName, dsUser) {
+    return async dispatch => {
+        try {
+            dispatch(request(dsName));
+            let responseJson = await uploadService.createDsViaCsv({fileName, selectedKeys, dsName, dsUser});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("Create Ds failure"));
+        } catch (error) {
+            dispatch(failure("Create Ds exception"));
+        }
+    }
+    function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
+    function success(createStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fileName, selectedKeys, dsName, createStatus } }
     function failure(message) { return { type: newDsConstants.CREATE_DS_FAILURE, message } }
 }

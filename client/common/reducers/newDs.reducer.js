@@ -7,6 +7,7 @@ export function newDs(state = initialState, action) {
     case newDsConstants.CLEAR_DS:
         return { };
     case newDsConstants.UPLOAD_XLS_REQUEST:
+    case newDsConstants.UPLOAD_CSV_REQUEST:
         return {
             uploadStatus: 'uploading',
             fileName: action.fileName
@@ -17,7 +18,15 @@ export function newDs(state = initialState, action) {
             fileName: action.fileName,
             sheetInfo: action.sheetInfo
         };
+    case newDsConstants.UPLOAD_CSV_SUCCESS:
+        return {
+            uploadStatus: 'success',
+            fileName: action.fileName,
+            hdrs: action.hdrs
+        };
+        
     case newDsConstants.UPLOAD_XLS_FAILURE:
+    case newDsConstants.UPLOAD_CSV_FAILURE:
         return {
             uploadStatus: 'fail',
             uploadError: action.message

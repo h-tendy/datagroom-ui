@@ -78,7 +78,8 @@ class AllDs extends Component {
                 </Row>
                 {this.dsList()}
                 <Row>
-                <Button onClick={() => {history.push('/newDs')}}> New Ds </Button> 
+                <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
+                <Button size="sm" onClick={() => {history.push('/newDsCsv')}}> New Ds (csv)</Button> 
                 </Row>
             </div>
         );
