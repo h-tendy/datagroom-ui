@@ -57,6 +57,17 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
         let initialHeight = cell._cell.element.style.height;
         initialHeight = initialHeight.replace('px', '');
         initialHeight = parseInt(initialHeight);
+
+        let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+        if (vh) { 
+            vh -= 50;
+        } else {
+            vh = undefined;
+        }
+        // Ensure the initialHeight is not more than the view port height. 
+        // codemirror has an issue if this is the case. 
+        initialHeight = Math.min(vh - 20, initialHeight);
+
         /*let h;
         if (editor.getDoc().lineCount() === 1)
             h = 25;
