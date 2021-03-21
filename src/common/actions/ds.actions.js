@@ -1,5 +1,5 @@
 import { dsConstants, allDsConstants } from '../constants';
-import { dsService } from '../services';
+import { dsService, uploadService } from '../services';
 
 export const dsActions = {
     loadColumnsForUserView,
@@ -14,7 +14,13 @@ export const dsActions = {
     refreshJira,
     addFilter,
     editFilter,
-    deleteFilter
+    deleteFilter, 
+
+    clearBulkEditStore,
+    uploadBulkEditXlsFile,
+    setSelectedSheet,
+    loadHdrsFromRange,
+    doBulkEditRequest,
 }
 
 
@@ -262,3 +268,75 @@ function deleteFilter (dsName, dsView, dsUser, filter) {
     function failure(message) { return { type: dsConstants.DELETE_FILTER__FAILURE, dsName, dsView, dsUser, status: 'fail', message } }
 }
 
+// For bulk-edit operations
+
+function clearBulkEditStore () {
+    return async dispatch => {
+        dispatch(clear());
+    };
+
+    function clear() { return { type: dsConstants.CLEAR_DS } }
+}
+
+function uploadBulkEditXlsFile (fileName, formData) {
+    return async dispatch => {
+        dispatch(request(fileName));
+        try {
+            let responseJson = await uploadService.fileUpload(formData);
+            if (responseJson)
+                dispatch(success(fileName, responseJson));
+            else 
+                dispatch(failure("Upload failure"));
+        } catch (error) {
+            dispatch(failure("Uploading xls file failed"));
+        }
+    };
+
+    function request(fileName) { return { type: dsConstants.UPLOAD_BULK_XLS_REQUEST, fileName } }
+    function success(fileName, sheetInfo) { return { type: dsConstants.UPLOAD_BULK_XLS_SUCCESS, fileName, sheetInfo } }
+    function failure(message) { return { type: dsConstants.UPLOAD_BULK_XLS_FAILURE, message } }
+}
+
+function setSelectedSheet (sheetName) {
+    return async dispatch => {
+        dispatch (setSheet(sheetName));
+    }
+    function setSheet (sheetName) { return { type: dsConstants.SET_BULK_SELECTED_SHEET, sheetName } }
+}
+
+function loadHdrsFromRange (fileName, sheetName, selectedRange) {
+    return async dispatch => {
+        try {
+            dispatch(request(selectedRange));
+            let responseJson = await uploadService.loadHdrsFromRange({fileName, sheetName, selectedRange});
+            if (responseJson)
+                dispatch(success(fileName, sheetName, responseJson));
+            else 
+                dispatch(failure("Load Data from Range failure"));
+        } catch (error) {
+            dispatch(failure("Load Data from Range failure"));
+        }
+    }
+    function request(selectedRange) { return { type: dsConstants.LOAD_BULK_FROM_RANGE_REQUEST, selectedRange } }
+    function success(fileName, sheetName, loadStatus) { return { type: dsConstants.LOAD_BULK_FROM_RANGE_SUCCESS, fileName, sheetName, loadStatus } }
+    function failure(message) { return { type: dsConstants.LOAD_BULK_FROM_RANGE_FAILURE, message } }
+}
+
+
+function doBulkEditRequest (dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet) {
+    return async dispatch => {
+        try {
+            dispatch(request(selectedRange));
+            let responseJson = await dsService.doBulkEditRequest({dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet});
+            if (responseJson)
+                dispatch(success(fileName, sheetName, responseJson));
+            else 
+                dispatch(failure("validate BulkEdit request failed"));
+        } catch (error) {
+            dispatch(failure("Validate BulkEdit request failure"));
+        }
+    }
+    function request(selectedRange) { return { type: dsConstants.BULK_EDIT_REQUEST, selectedRange } }
+    function success(fileName, sheetName, loadStatus) { return { type: dsConstants.BULK_EDIT_SUCCESS, fileName, sheetName, loadStatus } }
+    function failure(message) { return { type: dsConstants.BULK_EDIT_FAILURE, message } }
+}

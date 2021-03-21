@@ -1557,7 +1557,8 @@ class DsView extends Component {
                 <Col md={6} sm={6} xs={6}> 
                     <b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} | </b>
                     <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Edit-log</b></Link> |&nbsp;
-                    <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link>
+                    <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link> |&nbsp;
+                    <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link>
                 </Col>
                 </Row>
                 {this.step2()}

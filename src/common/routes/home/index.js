@@ -6,6 +6,7 @@ import DsHome from './DsHome';
 import DsView from './DsView';
 import DsViewEdit from './DsViewEdit';
 import DsEditLog from './DsEditLog';
+import DsBulkEdit from './DsBulkEdit';
 import HomeMenu from './Menu'
 import AllDs from './AllDs';
 import React from 'react'
@@ -18,5 +19,6 @@ export default [ <Route path="/newDsXlsx" exact component={NewDsFromXls}/>,
                  <Route path="/ds/:dsName/:dsView" component={DsView}/>,
                  <Route path="/dsViewEdit/:dsName/:dsView" exact component={DsViewEdit}/>,
                  <Route path="/dsEditLog/:dsName" exact component={DsEditLog}/>,
+                 <Route path="/dsBulkEdit/:dsName" exact component={DsBulkEdit}/>, 
                  ]
 export { HomeMenu }

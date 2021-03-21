@@ -324,7 +324,74 @@ export function dsHome (state = initialState, action) {
                 delete newState.dsFilterDeletes;
                 return newState
             }
-    
+ 
+        case dsConstants.CLEAR_DS:
+            {
+                let newState = {...state};
+                delete newState.dsBulkEdits;
+                return newState
+            }
+        case dsConstants.UPLOAD_BULK_XLS_REQUEST:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.uploadStatus = 'uploading';
+                newState.dsBulkEdits.fileName = action.fileName
+                return newState;
+            }
+        case dsConstants.UPLOAD_BULK_XLS_SUCCESS:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.uploadStatus = 'success';
+                newState.dsBulkEdits.fileName = action.fileName;
+                newState.dsBulkEdits.sheetInfo = action.sheetInfo;
+                return newState;
+            }
+        case dsConstants.UPLOAD_BULK_XLS_FAILURE:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.uploadStatus = 'fail';
+                newState.dsBulkEdits.uploadError = action.message;
+                return newState;
+            }
+        case dsConstants.SET_BULK_SELECTED_SHEET:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.selectedSheet = action.sheetName;
+                return newState;
+            }
+        case dsConstants.BULK_EDIT_REQUEST:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.selectedRange = action.selectedRange;
+                return newState;
+            }
+        case dsConstants.BULK_EDIT_SUCCESS:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.loadStatus = action.loadStatus;
+                return newState;
+            }
+        case dsConstants.BULK_EDIT_FAILURE:
+            {
+                let newState = {...state};
+                if (!newState.dsBulkEdits)
+                    newState.dsBulkEdits = {};
+                newState.dsBulkEdits.loadStatus = action.loadStatus;
+                return newState;
+            }
+        
         default:
             return state
     }
