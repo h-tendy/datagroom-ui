@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom'
+import { dsConstants } from '../../constants';
 import { dsActions } from '../../actions/ds.actions';
 import Select from 'react-select';
 
@@ -14,7 +15,9 @@ class DsBulkEdit extends Component {
             range: "",
             dsName: "",
             setColsFrmSheet: false,
-            setRowsFrmSheet: false
+            setRowsFrmSheet: false,
+            validate: false,
+            doIt: false
         };
         this.downloadXlsx = this.downloadXlsx.bind(this);
         this.onFileSelect = this.onFileSelect.bind(this);
@@ -114,10 +117,16 @@ class DsBulkEdit extends Component {
     rangeOnChange (event) {
         this.setState({ range: event.target.value });
     }
-    rangeSelectionDone () {
+    rangeSelectionDone (e, doIt = false) {
         const { dsHome, dispatch, match } = this.props;
         let dsName = match.params.dsName;
-        dispatch(dsActions.doBulkEditRequest(dsName, dsHome.dsBulkEdits.fileName, dsHome.dsBulkEdits.selectedSheet, this.state.range, this.state.setRowsFrmSheet, this.state.setColsFrmSheet));
+        if (doIt) {
+            this.setState({ doIt: true });
+        } else {
+            this.setState({ validate: true, doIt: false });
+            dispatch({ type: dsConstants.CLEAR_LOADSTATUS });
+        }
+        dispatch(dsActions.doBulkEditRequest(dsName, dsHome.dsBulkEdits.fileName, dsHome.dsBulkEdits.selectedSheet, this.state.range, this.state.setRowsFrmSheet, this.state.setColsFrmSheet, doIt));
     }
 
     step3 () {
@@ -133,7 +142,7 @@ class DsBulkEdit extends Component {
                     <Form.Control type="text" value={this.state.range} onChange={this.rangeOnChange} />
                     </Col>
                     <Col md={4} sm={4} xs={4}> 
-                    <Button onClick={this.rangeSelectionDone}> Do It! </Button> 
+                    <Button onClick={this.rangeSelectionDone}> Validate! </Button> 
                     </Col>
                  </Row>
                  <Row>
@@ -192,7 +201,80 @@ class DsBulkEdit extends Component {
                        </Row>
         } else if (success) {
             let url = `/ds/${dsName}/default`;
+            /*
             s3Status = <Row>
+                            <br/><br/>
+                            <Col md={6} sm={6} xs={6}> 
+                                <b style={{color: 'green'}}>Successfully updated: </b>
+                                <Link to={url}>Click here for your dataset</Link>
+                            </Col>
+                       </Row> */
+        }
+        return s3Status;
+    }
+
+    renderOprLog () {
+        const { dsHome } = this.props;
+        let s = "";
+        try {
+            let oprLog = dsHome.dsBulkEdits.loadStatus.oprLog;
+            s = <div><ol>
+                {
+                    oprLog.map(log => (<li>{log}</li>))
+                }
+            </ol></div>
+        } catch (e) {} 
+        return s;
+    }
+    step4 () {
+        const { dsHome } = this.props;
+        let s4 = '';
+        if (this.state.validate && dsHome && dsHome.dsBulkEdits && dsHome.dsBulkEdits.loadStatus && dsHome.dsBulkEdits.loadStatus.loadStatus) {
+            s4 = <Row>
+                <Col md={2} sm={2} xs={2}> 
+                </Col>
+                <Col md={4} sm={4} xs={4}>
+                    <b>Will perform the following operations:</b><br/>
+                    {this.renderOprLog()}
+                </Col>
+                <Col md={4} sm={4} xs={4}> 
+                <Button onClick={() => {this.rangeSelectionDone(null, true)}}> Do It! </Button> 
+                </Col>
+            </Row>
+        }
+        return s4;
+    }
+
+    step4Status () {
+        const { dsHome, match } = this.props;
+        let dsName = match.params.dsName;
+        let s4Status = '';
+        let errorJsx, success = false;
+        try {
+            if (this.state.doIt && dsHome.dsBulkEdits.loadStatus.loadStatus) {
+                success = true;
+            }
+        } catch (e) {}
+        try {
+            if (this.state.doIt && !dsHome.dsBulkEdits.loadStatus.loadStatus) {
+                if (Object.keys(dsHome.dsBulkEdits.loadStatus.hdrErrors).length) {
+                    errorJsx = Object.entries(dsHome.dsBulkEdits.loadStatus.hdrErrors).map ((kv) => {
+                        return <div>[ {kv[0]} ] : [ <b style={{color: 'red'}}> {kv[1]} </b> ] </div>
+                    })
+                } else {
+                    errorJsx = <b style={{color: 'red'}}> {dsHome.dsBulkEdits.loadStatus.error} </b>;
+                }
+            }
+        } catch (e) {}
+        if (errorJsx) {
+            s4Status = <Row>
+                            <Col md={12} sm={12} xs={12}> 
+                            <b>Error: </b>{errorJsx}
+                            </Col>                        
+                       </Row>
+        } else if (success) {
+            let url = `/ds/${dsName}/default`;
+            s4Status = <Row>
                             <br/><br/>
                             <Col md={6} sm={6} xs={6}> 
                                 <b style={{color: 'green'}}>Successfully updated: </b>
@@ -200,7 +282,7 @@ class DsBulkEdit extends Component {
                             </Col>
                        </Row>
         }
-        return s3Status;
+        return s4Status;
     }
 
 
@@ -232,6 +314,9 @@ class DsBulkEdit extends Component {
                 <br/>
                 {this.step3()}
                 {this.step3Status()}
+                <br/>
+                {this.step4()}
+                {this.step4Status()}
             </div>
         );
     }

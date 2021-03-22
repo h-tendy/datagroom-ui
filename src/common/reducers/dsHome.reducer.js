@@ -391,7 +391,13 @@ export function dsHome (state = initialState, action) {
                 newState.dsBulkEdits.loadStatus = action.loadStatus;
                 return newState;
             }
-        
+        case dsConstants.CLEAR_LOADSTATUS:
+            {
+                let newState = {...state};
+                delete newState.dsBulkEdits.loadStatus;
+                return newState
+            }
+            
         default:
             return state
     }
