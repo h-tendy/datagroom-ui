@@ -907,7 +907,10 @@ class DsViewEdit extends Component {
     render () {
         const { match, dsHome } = this.props;
         let dsView = match.params.dsView;
+        let dsName = match.params.dsName;
 
+        document.title = `Edit-view: ${dsName}`;
+        
         try {
             if (this.state.jira === null && dsHome.dsViews[dsView].jiraConfig) {
                 let jiraFieldMapping = this.state.jiraFieldMapping;

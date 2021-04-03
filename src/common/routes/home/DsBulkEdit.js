@@ -289,6 +289,7 @@ class DsBulkEdit extends Component {
     render () {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName;
+        document.title = `Bulk-edit: ${dsName}`;
 
         return (
             <div>

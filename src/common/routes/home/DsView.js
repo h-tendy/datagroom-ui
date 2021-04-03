@@ -1424,6 +1424,9 @@ class DsView extends Component {
         this.fixOneTimeLocalStorage();
         let jiraRefreshButton = "";
         console.log("In DsView render..");
+        if (document.title != dsName) {
+            document.title = dsName;
+        }        
         try {
             if (dsHome.dsViews[dsView].jiraConfig.jira) {
                 //jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>

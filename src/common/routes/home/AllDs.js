@@ -69,6 +69,7 @@ class AllDs extends Component {
     }
     
     render () {
+        document.title = "Datagroom - browse data-sets";
         return (
             <div>
                 <Row>

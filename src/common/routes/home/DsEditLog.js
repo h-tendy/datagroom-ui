@@ -297,6 +297,9 @@ class DsEditLog extends Component {
     render () {
         const { match } = this.props;
         let me = this;
+
+        document.title = `Edit-log: ${match.params.dsName}`;
+
         return (
             <div>
                 <Row>
