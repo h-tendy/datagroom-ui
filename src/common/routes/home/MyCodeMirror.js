@@ -55,7 +55,7 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
             highlightFormatting: true
           });
         window.inlineAttachment.editors.codemirror4.attach(editor, {
-            uploadUrl: 'uploadAttachments', 
+            uploadUrl: '/uploadAttachments', 
             urlText: '<img src="{filename}" alt="{filename}" width="100%" height="100%"/>', fileUrlText: '[{filename}]({filename})',
             allowedTypes: '*',
             extraParams: {
