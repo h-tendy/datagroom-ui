@@ -137,6 +137,7 @@ class DsView extends Component {
         this.columnVisibilityChanged = this.columnVisibilityChanged.bind(this);
         this.retainColumnAttrs = this.retainColumnAttrs.bind(this);
         this.applyFilterColumnAttrs = this.applyFilterColumnAttrs.bind(this);
+        this.normalizeAllImgRows = this.normalizeAllImgRows.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -211,6 +212,7 @@ class DsView extends Component {
             }
         })
         socket.on('unlocked', (unlockedObj) => {
+            let adjustTableHeight = false;
             try {
                 if (!me.ref || !me.ref.table) return;
                 if (dsName === unlockedObj.dsName && me.lockedByOthersCells[unlockedObj._id][unlockedObj.field]) {
@@ -219,14 +221,15 @@ class DsView extends Component {
                     if (unlockedObj.newVal) {
                         let update = { _id: unlockedObj._id };
                         update[unlockedObj.field] = unlockedObj.newVal;
-                        console.log('Update: ', update);
+                        //console.log('Update: ', update);
                         me.ref.table.updateData([ update ]);
+                        adjustTableHeight = true;
                     }
                     // Delete the 'lightGray', then restore correct formatting
                     cell.getElement().style.backgroundColor = '';
                     //Restore correctly.
                     let colDef = cell.getColumn().getDefinition();
-                    console.log("colDef is: ", colDef);
+                    //console.log("colDef is: ", colDef);
                     colDef.formatter(cell, colDef.formatterParams);
                 } else if (dsName === unlockedObj.dsName && unlockedObj.newVal) {
                     let rows = me.ref.table.searchRows("_id", "=", unlockedObj._id);
@@ -235,10 +238,23 @@ class DsView extends Component {
                     let cell = rows[0].getCell(unlockedObj.field);
                     let update = { _id: unlockedObj._id };
                     update[unlockedObj.field] = unlockedObj.newVal;
-                    console.log('Update: ', update);
+                    //console.log('Update: ', update);
                     me.ref.table.updateData([ update ]);
+                    adjustTableHeight = true;
                 }
             } catch (e) {}
+            if (adjustTableHeight && !me.cellImEditing) {
+                if (me.timers["post-cell-edited"]) {
+                    clearTimeout(me.timers["post-cell-edited"]);
+                    me.timers["post-cell-edited"] = null;
+                }
+                me.timers["post-cell-edited"] = setTimeout(() => {
+                    //cell.getRow().normalizeHeight();
+                    console.log("Doing adjusttablesize (unlockReq)... ");
+                    me.ref.table.rowManager.adjustTableSize(false);
+                    me.normalizeAllImgRows();
+                }, 500);                    
+            }
             console.log('Received unlocked: ', unlockedObj);
         })
     }
@@ -256,6 +272,38 @@ class DsView extends Component {
         //if (this.firstRenderCompleted) return;
         socket.emit('getActiveLocks', dsName);
         //this.firstRenderCompleted = true;
+        this.normalizeAllImgRows();
+        
+    }
+
+    normalizeAllImgRows() {
+        let me = this;
+        if (this.timers["normalizeAllImgRows"]) {
+            clearInterval(this.timers["normalizeAllImgRows"]);
+            this.timers["normalizeAllImgRows"] = null;
+        }
+        this.timers["normalizeAllImgRows"] = setInterval(function () {
+            if (document.readyState === 'complete') {
+                let imgList = document.querySelectorAll("img");
+                let allImgsRead = true;
+                for (let i = 0; i < imgList.length; i++) {
+                    //console.log(`imgList[${i}]: `, imgList[i].complete, imgList[i].naturalHeight);
+                    if (!(imgList[i].complete /*&& imgList[i].naturalHeight !== 0*/)) {
+                        allImgsRead = false;
+                        break;
+                    }
+                }
+                if (allImgsRead) {
+                    let rows = me.ref.table.getRows();
+                    for (let i = 0; i < rows.length; i++) {
+                        rows[i].normalizeHeight();
+                    }
+                    me.ref.table.rowManager.adjustTableSize(false);
+                    clearInterval(me.timers["normalizeAllImgRows"]);
+                    me.timers["normalizeAllImgRows"] = null;
+                }
+            }
+        }, 300);
     }
 
     showAllCols () {
@@ -358,6 +406,16 @@ class DsView extends Component {
         this.cellImEditing = null;
         let unlockReq = { _id, field: column, dsName, dsView }
         socket.emit('unlockReq', unlockReq);
+        if (this.timers["post-cell-edited"]) {
+            clearTimeout(this.timers["post-cell-edited"]);
+            this.timers["post-cell-edited"] = null;
+        }
+        this.timers["post-cell-edited"] = setTimeout(() => {
+            //cell.getRow().normalizeHeight();
+            console.log("Doing adjusttablesize (cellEditCancelled)... ");
+            this.ref.table.rowManager.adjustTableSize(false);
+            this.normalizeAllImgRows();
+        }, 500);
         this.ref.table.element.focus({preventScroll: false});
     }
 
@@ -655,12 +713,14 @@ class DsView extends Component {
         this.timers["post-cell-edited"] = setTimeout(() => {
             //cell.getRow().normalizeHeight();
             this.ref.table.rowManager.adjustTableSize(false);
+            this.normalizeAllImgRows();
         }, 500);
 
         //This maybe too expensive? Not good because it loses scrolling position
         //this.ref.table.redraw();
         // This is the correct routine to call which doesn't lose your scrolling. 
         //this.ref.table.rowManager.adjustTableSize();
+        //this.normalizeAllImgRows();
 
         let column = cell.getColumn().getField();
         let _id = cell.getRow().getData()['_id'];
@@ -1090,6 +1150,7 @@ class DsView extends Component {
                 }*/
                 col.variableHeight = true;
                 if (col.editor === "textarea" || col.editor === "codemirror") {
+                    col.editorParams.dsName = dsName;
                     if (col.editor === "textarea")
                         col.editor = MyTextArea;
                     else 
