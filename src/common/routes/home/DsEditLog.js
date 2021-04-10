@@ -240,6 +240,7 @@ class DsEditLog extends Component {
         let s2 = '';
 
         let columns = this.setColumnDefinitions();
+        console.log("Columns: ", columns);
         s2 = <Row>
                     <div>
                         <MyTabulator
@@ -265,7 +266,7 @@ class DsEditLog extends Component {
                                 index: "_id",
                                 ajaxSorting: true,
                                 ajaxFiltering: true,
-                                height: "500px",
+                                //height: "500px",
                                 //virtualDomBuffer: 500,
                                 clipboard: true,
                                 rowFormatter: (row) => {

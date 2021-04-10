@@ -102,6 +102,7 @@ class DsView extends Component {
         this.cellEdited = this.cellEdited.bind(this);
         this.cellEditCancelled = this.cellEditCancelled.bind(this);
         this.cellEditCheck = this.cellEditCheck.bind(this);
+        this.cellForceEditTrigger = this.cellForceEditTrigger.bind(this);
 
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
@@ -392,6 +393,18 @@ class DsView extends Component {
         if (!this.state.singleClickEdit)  return false;
         if (this.state.disableEditing) return false;
         return this.cellEditCheckForConflicts(cell);
+    }
+    cellForceEditTrigger (cell) {
+        console.log("In cellForceEditTrigger");
+        if (!this.state.singleClickEdit)  return false;
+        if (this.state.disableEditing) return false;
+        let noConcurrentEdits = this.cellEditCheckForConflicts(cell);
+        if (noConcurrentEdits) {
+            setImmediate(() => {
+                console.log("Going to call force edit");
+                cell.edit(true);
+            });
+        }        
     }
 
     cellEditCancelled (cell) {
@@ -1085,6 +1098,9 @@ class DsView extends Component {
             }
             col.contextMenu = cellContextMenu;
             col.editable = this.cellEditCheck;
+            // This handles all editing trigger logic. We always use 
+            // the force edit feature here. 
+            col.cellForceEditTrigger = this.cellForceEditTrigger;
 
             if (this.state.showAllFilters) {
                 col.headerFilter = "input";
@@ -1318,7 +1334,13 @@ class DsView extends Component {
                                     //selectable: true,
                                     //persistence: { columns: true },
                                     //persistenceID: `${dsName}_${dsView}`,
-                                    clipboard: true,
+                                    clipboard: "fullTableCopyOnly",
+                                    clipboardCopyFormatter: (type, output) => {
+                                        if (type === 'html') {
+                                            output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
+                                        }
+                                        return output;
+                                    },
                                     rowFormatter: (row) => {
                                         if(!row.getData()._id){
                                             row.getElement().style.backgroundColor = "lightGray";
