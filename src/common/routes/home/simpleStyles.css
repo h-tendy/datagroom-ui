@@ -20,7 +20,7 @@ h5 {
 }
 
 h1 {
-  color: black;
+  color: black !important;
 }
 
 body blockquote {
