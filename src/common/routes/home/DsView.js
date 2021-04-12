@@ -759,13 +759,17 @@ class DsView extends Component {
             console.log('Looks like new row edit... ');
             let { oldVal, newVal } = this.fixValueType(cell);
             if (dsHome.dsViews[dsView].keys && dsHome.dsViews[dsView].keys.length) {
+                let atLeastOneKeyNotEmpty = false;
                 for (let i = 0; i < dsHome.dsViews[dsView].keys.length; i++) {
                     let key = dsHome.dsViews[dsView].keys[i];
-                    if (cell.getRow().getData()[key] == null || cell.getRow().getData()[key] === '') {
-                        console.log('Not yet ready...');
-                        return;
+                    if (cell.getRow().getData()[key]) {
+                        atLeastOneKeyNotEmpty = true;
                     }
                     keyObj[key] = cell.getRow().getData()[key];
+                }
+                if (!atLeastOneKeyNotEmpty) {
+                    console.log("Not ready, all keys empty");
+                    return;
                 }
             }
             let rowData = cell.getRow().getData();
