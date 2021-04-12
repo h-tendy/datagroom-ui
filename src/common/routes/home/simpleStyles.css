@@ -131,6 +131,10 @@ body blockquote>:last-child {
   margin-bottom: -10px;
 }
 
+pre {
+  width: 90%;
+}
+
 pre > code {
   font-size: 90%;
 }

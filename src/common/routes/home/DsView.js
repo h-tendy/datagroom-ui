@@ -274,7 +274,8 @@ class DsView extends Component {
         socket.emit('getActiveLocks', dsName);
         //this.firstRenderCompleted = true;
         this.normalizeAllImgRows();
-        
+        // add HighlightJS-badge
+        window.highlightJsBadge();
     }
 
     normalizeAllImgRows() {
