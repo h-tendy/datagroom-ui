@@ -139,6 +139,7 @@ class DsView extends Component {
         this.retainColumnAttrs = this.retainColumnAttrs.bind(this);
         this.applyFilterColumnAttrs = this.applyFilterColumnAttrs.bind(this);
         this.normalizeAllImgRows = this.normalizeAllImgRows.bind(this);
+        this.applyHighlightJsBadge = this.applyHighlightJsBadge.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -254,7 +255,7 @@ class DsView extends Component {
                     console.log("Doing adjusttablesize (unlockReq)... ");
                     me.ref.table.rowManager.adjustTableSize(false);
                     me.normalizeAllImgRows();
-                    window.highlightJsBadge();
+                    me.applyHighlightJsBadge();
                 }, 500);                    
             }
             console.log('Received unlocked: ', unlockedObj);
@@ -276,7 +277,17 @@ class DsView extends Component {
         //this.firstRenderCompleted = true;
         this.normalizeAllImgRows();
         // add HighlightJS-badge
-        window.highlightJsBadge();
+        this.applyHighlightJsBadge();
+    }
+
+    applyHighlightJsBadge() {
+        let me = this;
+        if (this.timers["applyHighlightJsBadge"]) {
+            clearTimeout(this.timers["applyHighlightJsBadge"]);
+            this.timers["applyHighlightJsBadge"] = null;
+        }
+        this.timers["applyHighlightJsBadge"] = setTimeout(() => 
+            window.highlightJsBadge(), 1000);
     }
 
     normalizeAllImgRows() {
@@ -430,7 +441,7 @@ class DsView extends Component {
             console.log("Doing adjusttablesize (cellEditCancelled)... ");
             this.ref.table.rowManager.adjustTableSize(false);
             this.normalizeAllImgRows();
-            window.highlightJsBadge();
+            this.applyHighlightJsBadge();
         }, 500);
         this.ref.table.element.focus({preventScroll: false});
     }
@@ -730,7 +741,7 @@ class DsView extends Component {
             //cell.getRow().normalizeHeight();
             this.ref.table.rowManager.adjustTableSize(false);
             this.normalizeAllImgRows();
-            window.highlightJsBadge();
+            this.applyHighlightJsBadge();
         }, 500);
 
         //This maybe too expensive? Not good because it loses scrolling position
@@ -738,7 +749,7 @@ class DsView extends Component {
         // This is the correct routine to call which doesn't lose your scrolling. 
         //this.ref.table.rowManager.adjustTableSize();
         //this.normalizeAllImgRows();
-        //window.highlightJsBadge();
+        //this.applyHighlightJsBadge();
 
 
         let column = cell.getColumn().getField();
