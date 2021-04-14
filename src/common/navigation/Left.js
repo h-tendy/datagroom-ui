@@ -24,7 +24,7 @@ class Left extends Component {
             */}
             <div className="profile_info">
               <span>Welcome,</span>
-              <h2>{user.user}</h2>
+              <h5 style= {{ color: "white" }}>{user.user}</h5>
             </div>
           </div>
           { /* /menu profile quick info */ }
