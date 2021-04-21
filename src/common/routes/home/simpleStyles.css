@@ -151,6 +151,17 @@ code {
   /*font-family: monospace;*/
 }
 
+
+/* image title */
+.mermaid-title {
+  margin: auto;
+  font-weight: 900;
+  font-size: 2em;
+  color: black;
+  padding-bottom: 0.5em;
+}
+
+
 /* Tabulator v4.6.2 (c) Oliver Folkerd */
 .tabulator {
     position: relative;

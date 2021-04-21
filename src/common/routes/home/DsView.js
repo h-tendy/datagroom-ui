@@ -25,10 +25,11 @@ import QueryParsers from './QueryParsers';
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
 import './simpleStyles.css';
+import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
-}).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-highlightjs'));
+}).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-highlightjs')).use(markdownItMermaid).use(require('markdown-it-plantuml'), {imageFormat: 'png'});
 
 // From: https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
 // Remember old renderer, if overridden, or proxy to default renderer
@@ -296,7 +297,9 @@ class DsView extends Component {
             clearInterval(this.timers["normalizeAllImgRows"]);
             this.timers["normalizeAllImgRows"] = null;
         }
+        let extraIters = 0;
         this.timers["normalizeAllImgRows"] = setInterval(function () {
+            console.log("normalizeAllImgRows periodic fn...:", extraIters);
             if (document.readyState === 'complete') {
                 let imgList = document.querySelectorAll("img");
                 let allImgsRead = true;
@@ -308,13 +311,17 @@ class DsView extends Component {
                     }
                 }
                 if (allImgsRead) {
+                    extraIters++;
                     let rows = me.ref.table.getRows();
                     for (let i = 0; i < rows.length; i++) {
                         rows[i].normalizeHeight();
                     }
                     me.ref.table.rowManager.adjustTableSize(false);
-                    clearInterval(me.timers["normalizeAllImgRows"]);
-                    me.timers["normalizeAllImgRows"] = null;
+                    if (extraIters >= 10) {
+                        extraIters = 0;
+                        clearInterval(me.timers["normalizeAllImgRows"]);
+                        me.timers["normalizeAllImgRows"] = null;
+                    }
                 }
             }
         }, 300);
@@ -587,6 +594,17 @@ class DsView extends Component {
         document.body.removeChild(container)
     }
 
+    copyFormattedBetter (container) {
+        // Copy to clipboard
+        window.getSelection().removeAllRanges()    
+        var range = document.createRange()
+        range.selectNode(container)
+        window.getSelection().addRange(range)
+        document.execCommand('copy')    
+        window.getSelection().removeAllRanges();    
+    }
+
+
     copyCellToClipboard (e, cell) {
         let colDef = cell.getColumn().getDefinition();
         let html = colDef.formatter(cell, colDef.formatterParams);
@@ -595,8 +613,8 @@ class DsView extends Component {
         //let value = cell.getValue();
         //if (typeof value != "string") return value;
         //value = MarkdownIt.render(value);
-        this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
-
+        //this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
+        this.copyFormattedBetter(cell.getElement());
     }
 
     step1 () {
@@ -1175,7 +1193,23 @@ class DsView extends Component {
                     value = MarkdownIt.render(value);
                     return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
                 }
-                /* // This loses conditional formatting!
+                
+                col.formatterClipboard = (cell, formatterParams) => {
+                    //console.log("html: ", h);
+                    //console.log("cell element: ", cell.getElement());
+                    //console.log("cell field is: ", cell.getField());
+                    //console.log("cell cell is: ", cell.getRow().getCell(cell.getField())._cell.element);
+                    let h = cell.getRow().getCell(cell.getField())._cell.element;
+                    h = h.cloneNode(true);
+                    // Setting the color of the original cell on the encapsulating
+                    // element during copy-to-clipboard. 
+                    cell.getElement().style.backgroundColor = h.style.backgroundColor;
+                    cell.getElement().style.color = h.style.color;
+                    //console.log("Returning, h: ", h);
+                    return h;
+                }
+
+                /* // This loses conditional formatting! (Solved above!)
                 col.formatterClipboard = (cell, formatterParams) => {
                     let value = cell.getValue();
                     console.log("Coming to formatterClipboard");
@@ -1359,6 +1393,7 @@ class DsView extends Component {
                                     clipboardCopyFormatter: (type, output) => {
                                         if (type === 'html') {
                                             output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
+                                            //console.log("Output: ", output);
                                         }
                                         return output;
                                     },
