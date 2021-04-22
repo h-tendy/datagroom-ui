@@ -1396,6 +1396,10 @@ class DsView extends Component {
                                     clipboardCopyFormatter: (type, output) => {
                                         if (type === 'html') {
                                             output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
+                                            
+                                            output=output.replaceAll('<th>', '<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: darkgreen;color: white;">');
+                                            
+                                            output=output.replaceAll('<td>', '<td style="border: 1px solid #ddd; padding: 8px;">')
                                             //console.log("Output: ", output);
                                         }
                                         return output;
