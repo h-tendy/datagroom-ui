@@ -307,21 +307,24 @@ class DsView extends Component {
                     //console.log(`imgList[${i}]: `, imgList[i].complete, imgList[i].naturalHeight);
                     if (!(imgList[i].complete /*&& imgList[i].naturalHeight !== 0*/)) {
                         allImgsRead = false;
+                        extraIters = 0;
                         break;
                     }
                 }
                 if (allImgsRead) {
-                    extraIters++;
-                    let rows = me.ref.table.getRows();
-                    for (let i = 0; i < rows.length; i++) {
-                        rows[i].normalizeHeight();
+                    if (extraIters === 1) {
+                        let rows = me.ref.table.getRows();
+                        for (let i = 0; i < rows.length; i++) {
+                            rows[i].normalizeHeight();
+                        }
+                        me.ref.table.rowManager.adjustTableSize(false);
                     }
-                    me.ref.table.rowManager.adjustTableSize(false);
                     if (extraIters >= 10) {
                         extraIters = 0;
                         clearInterval(me.timers["normalizeAllImgRows"]);
                         me.timers["normalizeAllImgRows"] = null;
                     }
+                    extraIters++;
                 }
             }
         }, 300);
