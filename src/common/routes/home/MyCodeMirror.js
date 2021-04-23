@@ -102,7 +102,10 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
                 if (h > vh) h = vh;
                 cell._cell.setHeightSpecial(Math.max(h, initialHeight));
                 cell.getRow().normalizeHeight();
-                editor.refresh();
+                // refresh() was jarring the view sometimes. The scrollIntoView
+                // seems to be much more smoother. 
+                editor.scrollIntoView();
+                //editor.refresh();
             }
             return;
         });
