@@ -1400,6 +1400,9 @@ class DsView extends Component {
                                             output=output.replaceAll('<th>', '<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: darkgreen;color: white;">');
                                             
                                             output=output.replaceAll('<td>', '<td style="border: 1px solid #ddd; padding: 8px;">')
+                                            // To replace the markup due to the highlightjs badges. The regex arrived by looking at the generated markup and some clever regex as usual. 
+                                            //console.log("Output: ", output);
+                                            output=output.replace(/<pre class="code-badge-pre"[\s\S]*?(<code [\s\S]*?<\/code>)<\/pre>/gi, '<pre>$1</pre>');
                                             //console.log("Output: ", output);
                                         }
                                         return output;
