@@ -221,10 +221,10 @@ class DsView extends Component {
                 if (dsName === unlockedObj.dsName && me.lockedByOthersCells[unlockedObj._id][unlockedObj.field]) {
                     let cell = me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
                     delete me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
-                    if (unlockedObj.newVal) {
+                    if (unlockedObj.newVal !== null) {
                         let update = { _id: unlockedObj._id };
                         update[unlockedObj.field] = unlockedObj.newVal;
-                        //console.log('Update: ', update);
+                        //console.log('Update1: ', update);
                         me.ref.table.updateData([ update ]);
                         adjustTableHeight = true;
                     }
@@ -241,7 +241,7 @@ class DsView extends Component {
                     let cell = rows[0].getCell(unlockedObj.field);
                     let update = { _id: unlockedObj._id };
                     update[unlockedObj.field] = unlockedObj.newVal;
-                    //console.log('Update: ', update);
+                    //console.log('Update2: ', update);
                     me.ref.table.updateData([ update ]);
                     adjustTableHeight = true;
                 }
