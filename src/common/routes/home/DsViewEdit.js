@@ -35,7 +35,7 @@ class DsViewEdit extends Component {
             refreshAfterRender: false,
             jira: null,
             jql: "",
-            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "foundInRls", "created", "rrtTargetRls", "targetRls", "status" \n\n',
+            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status" \n\n',
             dsDescription: null,
             widths: {},
             fixedHeight: null,
