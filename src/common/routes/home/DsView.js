@@ -111,6 +111,7 @@ class DsView extends Component {
         this.toggleEditing = this.toggleEditing.bind(this);
         this.addRow = this.addRow.bind(this);
         this.deleteRowHandler = this.deleteRowHandler.bind(this);
+        this.deleteRowQuestion = this.deleteRowQuestion.bind(this);
         this.deleteAllRowsInViewQuestion = this.deleteAllRowsInViewQuestion.bind(this);
         this.deleteAllRowsInView = this.deleteAllRowsInView.bind(this);
         this.duplicateAndAddRowHandler = this.duplicateAndAddRowHandler.bind(this);
@@ -844,6 +845,7 @@ class DsView extends Component {
         //cell.setValue("");
     }
 
+    /* Start: Handling of single row delete */
     rowDeleteStatus () {
         const { dispatch, dsHome } = this.props;
         let status = ''
@@ -868,20 +870,34 @@ class DsView extends Component {
         return <b style={{color: "red"}}> {status} </b>;
     }
 
-    deleteRowHandler (e, cell) {
+    deleteRowHandler (e, cell, confirmed) {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
-        console.log("Delete row handler called...");
-        let _id = cell.getRow().getData()['_id'];
-        if (!_id) {
-            cell.getRow().delete();
-            return;
+        console.log("Delete row handler called...:", confirmed);
+        if (confirmed) {
+            let _id = cell.getRow().getData()['_id'];
+            if (!_id) {
+                cell.getRow().delete();
+                return;
+            }
+            dispatch(dsActions.deleteOneDoc(dsName, dsView, user.user, _id, cell.getRow()));
         }
-        // Delete logic
-        dispatch(dsActions.deleteOneDoc(dsName, dsView, user.user, _id, cell.getRow()));
+        this.setState({ showModal: !this.state.showModal });
     }
+
+    deleteRowQuestion (e, cell) {
+        let me = this;
+        this.setState({ modalTitle: "Delete current row?", 
+                        modalQuestion: `This will delete the current row. Please confirm. Undoing support is not yet available!`,
+                        modalCallback: (confirmed) => me.deleteRowHandler(e, cell, confirmed),
+                        showModal: !this.state.showModal });
+    }
+
+    /* End: Handling of single row delete */
+
+    /* Start: Handling of all rows in view */
 
     deleteAllRowsStatus () {
         const { dispatch, dsHome } = this.props;
@@ -927,10 +943,6 @@ class DsView extends Component {
     }
 
     deleteAllRowsInViewQuestion () {
-        const { dispatch, match, user, dsHome } = this.props;
-        let dsName = match.params.dsName; 
-        let dsView = match.params.dsView;
-
         let rows = this.ref.table.getRows();
         this.setState({ modalTitle: "Delete all rows in view?", 
                         modalQuestion: `This will delete ${rows.length} rows. Please confirm. Undoing support is not yet available!`,
@@ -938,6 +950,7 @@ class DsView extends Component {
                         showModal: !this.state.showModal });
     }
 
+    /* End: Handling of all rows in view */
 
     jiraRefreshStatus () {
         const { dispatch, dsHome } = this.props;
@@ -1124,7 +1137,7 @@ class DsView extends Component {
             },
             {
                 label:"Delete row...",
-                action: this.deleteRowHandler
+                action: this.deleteRowQuestion
             },
         ];        
         let columns = [];
