@@ -222,7 +222,7 @@ class DsView extends Component {
                 if (dsName === unlockedObj.dsName && me.lockedByOthersCells[unlockedObj._id][unlockedObj.field]) {
                     let cell = me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
                     delete me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
-                    if (unlockedObj.newVal !== null) {
+                    if (unlockedObj.newVal !== undefined && unlockedObj.newVal !== null) {
                         let update = { _id: unlockedObj._id };
                         update[unlockedObj.field] = unlockedObj.newVal;
                         //console.log('Update1: ', update);
