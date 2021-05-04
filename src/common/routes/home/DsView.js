@@ -253,11 +253,15 @@ class DsView extends Component {
                     me.timers["post-cell-edited"] = null;
                 }
                 me.timers["post-cell-edited"] = setTimeout(() => {
-                    //cell.getRow().normalizeHeight();
-                    console.log("Doing adjusttablesize (unlockReq)... ");
-                    me.ref.table.rowManager.adjustTableSize(false);
-                    me.normalizeAllImgRows();
-                    me.applyHighlightJsBadge();
+                    if (!me.cellImEditing) {
+                        //cell.getRow().normalizeHeight();
+                        console.log("Doing adjusttablesize (unlockReq)... ");
+                        me.ref.table.rowManager.adjustTableSize(false);
+                        me.normalizeAllImgRows();
+                        me.applyHighlightJsBadge();
+                    } else {
+                        console.log("Skipping adjusttablesie (unlockReq)... ");
+                    }
                 }, 500);                    
             }
             console.log('Received unlocked: ', unlockedObj);
@@ -300,7 +304,7 @@ class DsView extends Component {
         }
         let extraIters = 0;
         this.timers["normalizeAllImgRows"] = setInterval(function () {
-            console.log("normalizeAllImgRows periodic fn...:", extraIters);
+            //console.log("normalizeAllImgRows periodic fn...:", extraIters);
             if (document.readyState === 'complete') {
                 let imgList = document.querySelectorAll("img");
                 let allImgsRead = true;
@@ -314,11 +318,15 @@ class DsView extends Component {
                 }
                 if (allImgsRead) {
                     if (extraIters === 1) {
-                        let rows = me.ref.table.getRows();
-                        for (let i = 0; i < rows.length; i++) {
-                            rows[i].normalizeHeight();
+                        if (imgList.length && !me.cellImEditing) {
+                            let rows = me.ref.table.getRows();
+                            for (let i = 0; i < rows.length; i++) {
+                                rows[i].normalizeHeight();
+                            }
+                            me.ref.table.rowManager.adjustTableSize(false);
+                        } else {
+                            console.log("Skipping normalize as there are no images or some editing in progress...");
                         }
-                        me.ref.table.rowManager.adjustTableSize(false);
                     }
                     if (extraIters >= 10) {
                         extraIters = 0;
@@ -440,7 +448,12 @@ class DsView extends Component {
         if (!_id) {
             return;
         }
-        this.cellImEditing = null;
+        let me = this;
+        if (this.cellImEditing === cell) {
+            this.cellImEditing = null;
+        } else {
+            console.log("Not nullifying cellImEditing as it is not me!");
+        }
         let unlockReq = { _id, field: column, dsName, dsView }
         socket.emit('unlockReq', unlockReq);
         if (this.timers["post-cell-edited"]) {
@@ -448,11 +461,15 @@ class DsView extends Component {
             this.timers["post-cell-edited"] = null;
         }
         this.timers["post-cell-edited"] = setTimeout(() => {
-            //cell.getRow().normalizeHeight();
-            console.log("Doing adjusttablesize (cellEditCancelled)... ");
-            this.ref.table.rowManager.adjustTableSize(false);
-            this.normalizeAllImgRows();
-            this.applyHighlightJsBadge();
+            if (!me.cellImEditing) {
+                //cell.getRow().normalizeHeight();
+                console.log("Doing adjusttablesize (cellEditCancelled)... ");
+                this.ref.table.rowManager.adjustTableSize(false);
+                this.normalizeAllImgRows();
+                this.applyHighlightJsBadge();
+            } else {
+                console.log("Skipping adjusttablesize (cellEditCancelled)...");
+            }
         }, 500);
         this.ref.table.element.focus({preventScroll: false});
     }
@@ -1242,9 +1259,14 @@ class DsView extends Component {
                         col.editor = MyTextArea;
                     else 
                         col.editor = MyCodeMirror;
+                    let me = this;
                     col.cellEditCancelled = (cell) => {
-                        console.log("Inside second editcancelled..")
-                        cell.getRow().normalizeHeight();
+                        if (!me.cellImEditing) {
+                            console.log("Normalize, Inside second editcancelled..")
+                            cell.getRow().normalizeHeight();
+                        } else {
+                            console.log("Skipping normalize, Inside second editcancelled");
+                        }
                     }
                 }
             }
@@ -1719,11 +1741,12 @@ class DsView extends Component {
                 <FilterControls show={me.state.showAllFilters} dsName={dsName} dsView={dsView} tableRef={me.ref} onFilterChange={me.processFilterChange} defaultValue={me.state.filter}/>    
                 <br/>            
                 <Row>
-                <Col md={6} sm={6} xs={6}> 
+                <Col md={12} sm={12} xs={12}> 
                     <b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} | </b>
                     <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Edit-log</b></Link> |&nbsp;
                     <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link> |&nbsp;
-                    <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link>
+                    <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link> |&nbsp;
+                    <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link>                    
                 </Col>
                 </Row>
                 {this.step2()}

@@ -5,7 +5,10 @@ export const uploadService = {
     createDs, 
 
     csvFileUpload,
-    createDsViaCsv
+    createDsViaCsv,
+
+    uploadAttachment, 
+    deleteOneAttachment
 };
 
 const config = {};
@@ -146,6 +149,50 @@ async function createDsViaCsv (body) {
         if (response.ok) {
             responseJson = await response.json();
             console.log('createDs ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+async function uploadAttachment(body) {
+    try {
+        const requestOptions = {
+            method: 'POST',
+            body
+        };
+        let responseJson = null;
+        let response = await fetch(`${config.apiUrl}/uploadAttachments`, requestOptions);
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('uploaded', responseJson);
+        }
+        console.log(response);
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
+
+async function deleteOneAttachment (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/uploadAttachments/deleteAttachment`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('deleteOneAttachment: ', responseJson);
         }
         return responseJson;
     } catch(e) {

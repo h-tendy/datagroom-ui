@@ -43,10 +43,10 @@ function MyTextArea(cell, onRendered, success, cancel, editorParams) {
             if (success(input.value)) {
                 cellValue = input.value; //persist value if successfully validated incase editor is used as header filter
             }
-
+            /*
             setTimeout(function () {
                 cell.getRow().normalizeHeight();
-            }, 300)
+            }, 300) */
         } else {
             cancel();
         }

@@ -166,9 +166,11 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
             if (success(curValue)) {
                 cellValue = curValue; //persist value if successfully validated incase editor is used as header filter
             }
+            /*
             setTimeout(function () {
                 cell.getRow().normalizeHeight();
             }, 300)
+            */
         } else {
             cancel();
         }
