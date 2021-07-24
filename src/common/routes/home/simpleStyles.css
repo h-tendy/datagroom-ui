@@ -143,7 +143,8 @@ pre > code {
 code {
   /*background-color: rgb(253, 252, 224);*/
   /*background-color: rgb(190, 255, 188);*/
-  background-color: rgba(205, 134, 63, 0.329);
+  /*background-color: rgba(205, 134, 63, 0.329);*/
+  background-color: #ddd;
   color: black;
   border-radius: 5px; 
   font-weight: bold;
