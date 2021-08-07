@@ -271,7 +271,7 @@ class DsAttachments extends Component {
                     let origValue = value;
                     value = `Click to view: [${value}](${value})`;
                     value += `\n\nTo use this image, copy the text below and paste into your cell!:\n`;
-                    if (/(\.png$)|(\.jpg$)|(\.gif$)|(\.jpeg$)/.test(origValue)) {
+                    if (/(\.png$)|(\.jpg$)|(\.gif$)|(\.jpeg$)/i.test(origValue)) {
                         value += "\n\n``` md\n\n" + `<img src="${origValue}" alt="${origValue}" width="100%" height="100%" />` + `\n` + "```\n"; 
                         
                     } else {
