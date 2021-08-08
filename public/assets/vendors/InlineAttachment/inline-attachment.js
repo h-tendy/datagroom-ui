@@ -310,7 +310,7 @@
         if (typeof this.settings.urlText === 'function') {
           newValue = this.settings.urlText.call(this, filename, result);
         } else {
-          if (/\.png$|.jpg$|.jpeg$|.gif$/.test(filename))
+          if (/\.png$|.jpg$|.jpeg$|.gif$/i.test(filename))
             newValue = this.settings.urlText.replaceAll(this.filenameTag, filename);
           else 
             newValue = this.settings.fileUrlText.replaceAll(this.filenameTag, filename);
