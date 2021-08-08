@@ -107,6 +107,24 @@ body blockquote>:last-child {
   margin: 4px 2px;
 }
 
+.indent1 {
+  display: block;
+}
+.indent1 p {
+  margin-left: 30px;
+}
+.indent2 {
+  display: block;
+}
+.indent2 p {
+  margin-left: 60px;
+}
+.indent3 {
+  display: block;
+}
+.indent3 p {
+  margin-left: 90px;
+}
 /* this is also needed. This is a style */
 .code {
   display: block;
