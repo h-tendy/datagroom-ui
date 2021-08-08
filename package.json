@@ -20,7 +20,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.1.1",
     "react-select": "^3.1.0",
-    "react-tabulator": "github:h-tendy/react-tabulator",
+    "react-tabulator": "https://github.com/h-tendy/react-tabulator.git",
     "redux": "^4.0.5",
     "redux-form": "^8.3.6",
     "redux-logger": "^3.0.6",
