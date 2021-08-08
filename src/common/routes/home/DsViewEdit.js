@@ -57,6 +57,7 @@ class DsViewEdit extends Component {
         this.setEditorToInput = this.setEditorToInput.bind(this);
         this.setEditorToTextArea = this.setEditorToTextArea.bind(this);
         this.setEditorToCodeMirror = this.setEditorToCodeMirror.bind(this);
+        this.setEditorToDate = this.setEditorToDate.bind(this);
         this.setFormatter = this.setFormatter.bind(this);
         this.setFormatterToPlainText = this.setFormatterToPlainText.bind(this);
         this.setFormatterToTextArea = this.setFormatterToTextArea.bind(this)
@@ -317,7 +318,7 @@ class DsViewEdit extends Component {
             if (currentDefs[j].field === column.getField()) {
                 let width = column.getWidth(); // For some weird reason, width gets lost. Hence. 
                 this.editors[column.getField()] = editor;
-                if (editor === "codemirror") editor = "textarea";
+                if (editor === "codemirror" || editor === "date") editor = "textarea";
                 this.ref.table.updateColumnDefinition(currentDefs[j].field, {editor, width});
                 break;
             }
@@ -343,6 +344,9 @@ class DsViewEdit extends Component {
         this.setEditor(e, column, 'autocomplete');
     }
 
+    setEditorToDate (e, column) {
+        this.setEditor(e, column, 'date');
+    }
 
     setEditorToFalse (e, column) {
         this.setEditor(e, column, false);
@@ -579,7 +583,7 @@ class DsViewEdit extends Component {
         let dsView = match.params.dsView;
         let s1 = [];
         let editorOptions = [];
-        ['line', 'paragraph', 'codemirror', 'autocomplete'].map((v) => {
+        ['line', 'paragraph', 'codemirror', 'autocomplete', 'date'].map((v) => {
             let row = {};
             row.value = v;
             row.label = v;
@@ -628,6 +632,8 @@ class DsViewEdit extends Component {
                     editorCurVal = editorOptions[3];
                 } else if (col.editor === "codemirror") {
                     editorCurVal = editorOptions[2];
+                } else if (col.editor === "date") {
+                    editorCurVal = editorOptions[4];
                 }
                 let hdrFilterTypeCurVal = {};
                 if (col.headerFilterType === "input") {
@@ -696,6 +702,9 @@ class DsViewEdit extends Component {
                                     me.setEditorToInput("", column);
                                 else if (value.value === "autocomplete")
                                     me.setEditorToAutocomplete("", column);
+                                else if (value.value === "date")
+                                    me.setEditorToDate("", column);
+
                                 // trigger render again
                                 me.setState({somethingChanged: me.state.somethingChanged++});
                             }}
@@ -855,7 +864,7 @@ class DsViewEdit extends Component {
                 }
                 if (!this.editors[col.field])
                     this.editors[col.field] = col.editor;
-                if (col.editor === "codemirror") col.editor = "textarea";
+                if (col.editor === "codemirror" || col.editor === "date") col.editor = "textarea";
                 col.editable = () => { return false };
                 columns.push(col);
             }

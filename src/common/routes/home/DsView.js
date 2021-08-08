@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
 import MyCodeMirror from './MyCodeMirror';
+import DateEditor from "react-tabulator/lib/editors/DateEditor";
 import Select from 'react-select';
 //import 'highlight.js/styles/vs.css'
 //import 'highlight.js/styles/zenburn.css'
@@ -545,6 +546,8 @@ class DsView extends Component {
                         currentDefs[j].editor = MyTextArea;
                     } else if (currentDefs[j].editor === 'codemirror') {
                         currentDefs[j].editor = MyCodeMirror;
+                    } else if (currentDefs[j].editor === 'date') {
+                        currentDefs[j].editor = DateEditor;
                     }
                     console.log("Field: ", currentDefs[j].field, "editor: ", dsHome.dsViews[dsView].columnAttrs[j].editor);
                 }
@@ -1282,6 +1285,10 @@ class DsView extends Component {
                 if (!col.editorParams.verticalNavigation) {
                     col.editorParams.verticalNavigation = "table"
                 }
+            }
+            if (col.editor === "date") {
+                col.editor = DateEditor;
+                col.editorParams = { format: "MM/DD/YYYY" };
             }
             columns.push(col);
         }
