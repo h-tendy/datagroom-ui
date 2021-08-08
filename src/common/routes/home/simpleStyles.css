@@ -243,6 +243,11 @@ table th {
     -o-user-select: none;
   }
   
+/* https://stackoverflow.com/questions/65409348/html-input-date-how-to-decrease-space-between-date-and-icon */
+::-webkit-calendar-picker-indicator{
+  margin-left: -25px;
+}
+
   .tabulator .tabulator-header.tabulator-header-hidden {
     display: none;
   }
