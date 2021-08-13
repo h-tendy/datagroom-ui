@@ -98,7 +98,9 @@ class DsView extends Component {
         this.lockedByOthersCells = {};
         this.firstRenderCompleted = false;
         this.cellImEditing = null;
+        this.mouseDownOnHtmlLink = false;
 
+        this.applyHtmlLinkClickHandlers = this.applyHtmlLinkClickHandlers.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
         this.cellEditing = this.cellEditing.bind(this);
         this.cellEdited = this.cellEdited.bind(this);
@@ -287,6 +289,22 @@ class DsView extends Component {
         this.applyHighlightJsBadge();
     }
 
+    // Since we generate html after editing, we need to attach
+    // the handlers again. 
+    applyHtmlLinkClickHandlers() {
+        let me = this;
+        let linkElements = document.getElementsByTagName('a');
+        for(var i = 0, len = linkElements.length; i < len; i++) {
+            linkElements[i].onclick = function (e) {
+                me.mouseDownOnHtmlLink = true;
+                // Caution: This is a must, otherwise you are getting the click after returning to the tab!
+                e.stopPropagation();
+                // Caution: To clear this out after a second to ensure that the next click is honored properly. 
+                setTimeout(() => me.mouseDownOnHtmlLink = false, 1000);
+                return true;
+            }
+        }
+    }
     applyHighlightJsBadge() {
         let me = this;
         if (this.timers["applyHighlightJsBadge"]) {
@@ -295,6 +313,7 @@ class DsView extends Component {
         }
         this.timers["applyHighlightJsBadge"] = setTimeout(() => 
             window.highlightJsBadge(), 1000);
+        this.applyHtmlLinkClickHandlers();
     }
 
     normalizeAllImgRows() {
@@ -420,6 +439,9 @@ class DsView extends Component {
             if (this.lockedByOthersCells[_id][column])
                 return false;
         } catch (e) {}
+        if (this.mouseDownOnHtmlLink) {
+            return false;
+        }
         return true;
     }
     cellEditCheck (cell) {      
