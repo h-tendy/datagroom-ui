@@ -5,7 +5,7 @@ import { dsActions } from '../../actions/ds.actions';
 import { dsConstants } from '../../constants';
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
-import 'highlight.js/styles/solarized-light.css'
+//import 'highlight.js/styles/solarized-light.css'
 import MyAutoCompleter from './MyAutoCompleter';
 import MySingleAutoCompleter from './MySingleAutoCompleter';
 

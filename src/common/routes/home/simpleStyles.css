@@ -22,7 +22,12 @@ h5 {
 h1, h2 {
   color: black !important;
 }
-
+/* Without the below, clipboard always used to have dark background, 
+from god knows where. Finally decided to try this approach
+ */
+body {
+  background-color: white !important;
+}
 body blockquote {
   margin: 0;
   margin-top: 0;

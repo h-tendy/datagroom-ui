@@ -108,6 +108,7 @@ class DsView extends Component {
         this.cellEditCheck = this.cellEditCheck.bind(this);
         this.cellForceEditTrigger = this.cellForceEditTrigger.bind(this);
         this.fixImgSizeForClipboard = this.fixImgSizeForClipboard.bind(this);
+        this.copyFormatted = this.copyFormatted.bind(this);
 
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
@@ -631,6 +632,7 @@ class DsView extends Component {
     copyFormatted (html) {
         // Create container for the HTML
         var container = document.createElement('div')
+        html = this.fixImgSizeForClipboard(html);
         container.innerHTML = html
     
         // Hide element
@@ -643,6 +645,7 @@ class DsView extends Component {
         .filter(function (sheet) {
             return !sheet.disabled
         })
+        //console.log(`ActiveSheets: `, activeSheets);
     
         // Mount the container to the DOM to make `contentWindow` available
         document.body.appendChild(container)
@@ -654,12 +657,23 @@ class DsView extends Component {
         window.getSelection().addRange(range)
         document.execCommand('copy')
     
-        for (var i = 0; i < activeSheets.length; i++) activeSheets[i].disabled = true
-    
+        
+        for (var i = 0; i < activeSheets.length; i++) {
+            //if (activeSheets[i].title === "highlightJsBadge" || /bootstrap|datagroom/.test(activeSheets[i].href))
+            if (!/static\/css/.test(activeSheets[i].href))
+                activeSheets[i].disabled = true
+        }
+        
         document.execCommand('copy')
     
-        for (var i = 0; i < activeSheets.length; i++) activeSheets[i].disabled = false
-    
+        
+        for (var i = 0; i < activeSheets.length; i++) {
+            //if (activeSheets[i].title === "highlightJsBadge" || /bootstrap|datagroom/.test(activeSheets[i].href))
+            if (!/static\/css/.test(activeSheets[i].href))
+                activeSheets[i].disabled = false
+
+        }
+        
         // Remove the container
         document.body.removeChild(container)
     }
@@ -683,8 +697,8 @@ class DsView extends Component {
         //let value = cell.getValue();
         //if (typeof value != "string") return value;
         //value = MarkdownIt.render(value);
-        //this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
-        this.copyFormattedBetter(cell.getElement());
+        this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
+        //this.copyFormattedBetter(cell.getElement());
     }
 
     step1 () {
