@@ -295,7 +295,7 @@ class DsView extends Component {
     // the handlers again. 
     applyHtmlLinkClickHandlers() {
         let me = this;
-        let linkElements = document.getElementsByTagName('a');
+        let linkElements = document.getElementById("tabulator").getElementsByTagName('a');
         for(var i = 0, len = linkElements.length; i < len; i++) {
             linkElements[i].onclick = function (e) {
                 me.mouseDownOnHtmlLink = true;
@@ -1450,7 +1450,7 @@ class DsView extends Component {
             let columns = this.setColumnDefinitions();
             let me = this;
             s2 = <Row>
-                        <div>
+                        <div id="tabulator">
                             <MyTabulator
                                 columns={columns}
                                 data={[]}
