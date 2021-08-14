@@ -107,6 +107,7 @@ class DsView extends Component {
         this.cellEditCancelled = this.cellEditCancelled.bind(this);
         this.cellEditCheck = this.cellEditCheck.bind(this);
         this.cellForceEditTrigger = this.cellForceEditTrigger.bind(this);
+        this.fixImgSizeForClipboard = this.fixImgSizeForClipboard.bind(this);
 
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
@@ -314,6 +315,30 @@ class DsView extends Component {
         this.timers["applyHighlightJsBadge"] = setTimeout(() => 
             window.highlightJsBadge(), 1000);
         this.applyHtmlLinkClickHandlers();
+    }
+
+    fixImgSizeForClipboard(output) {
+
+        let imgList = document.querySelectorAll("img");
+        let imgSizes = {};
+        for (let i = 0; i < imgList.length; i++) {
+            //console.log(`imgList[${i}]: `, imgList[i], imgList[i].width, imgList[i].height, imgList[i].naturalWidth, imgList[i].naturalHeight, imgList[i].getAttribute("src"));
+            let img = {};
+            img.src = imgList[i].getAttribute("src");
+            img.width = imgList[i].width;
+            img.height = imgList[i].height;
+            imgSizes[img.src] = img;
+            console.log(`Adding key: ${img.src}`);
+        }
+        let e = [...output.matchAll(/<img src="(.*?)"/gi)];
+        for (let i = 0; i < e.length; i++) {
+            let key = e[i][1];
+            let str = `<img src="${key}" alt="${key}" width="100%" height="100%"`;
+            let rep = `<img src="${key}" alt="${key}" width=${imgSizes[key].width} height=${imgSizes[key].height}`;
+            output = output.replace(str, rep);
+        }
+        output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
+        return output;
     }
 
     normalizeAllImgRows() {
@@ -1410,6 +1435,7 @@ class DsView extends Component {
         }
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let columns = this.setColumnDefinitions();
+            let me = this;
             s2 = <Row>
                         <div>
                             <MyTabulator
@@ -1459,7 +1485,7 @@ class DsView extends Component {
                                     clipboard: "fullTableCopyOnly",
                                     clipboardCopyFormatter: (type, output) => {
                                         if (type === 'html') {
-                                            output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
+                                            output = me.fixImgSizeForClipboard(output);
                                             
                                             output=output.replaceAll('<th>', '<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: darkgreen;color: white;">');
                                             
