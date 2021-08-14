@@ -328,7 +328,6 @@ class DsView extends Component {
             img.width = imgList[i].width;
             img.height = imgList[i].height;
             imgSizes[img.src] = img;
-            console.log(`Adding key: ${img.src}`);
         }
         let e = [...output.matchAll(/<img src="(.*?)"/gi)];
         for (let i = 0; i < e.length; i++) {
