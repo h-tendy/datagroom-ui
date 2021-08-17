@@ -284,6 +284,7 @@ class FilterControls extends React.Component {
         }
         let filterOptions = [];
         let defaultValueIdx = -1;
+        let filterDescription = "";
         try {
             let keys = Object.keys(dsHome.dsViews[dsView].filters);
             for (let i = 0; i < keys.length; i++) {
@@ -294,6 +295,7 @@ class FilterControls extends React.Component {
                 if (this.props.defaultValue === keys[i]) {
                     defaultValueIdx = i - 1; // because we are skipping _id
                     console.log("Setting defaultValueIdx to:", defaultValueIdx);
+                    filterDescription = dsHome.dsViews[dsView].filters[keys[i]].description;
                 }
                 filterOptions.push(row);
             }
@@ -319,6 +321,20 @@ class FilterControls extends React.Component {
                     }}/>
                     </Col>
             </Row>
+            {filterDescription && <br/>}
+            <Row>
+                {filterDescription && 
+                    <Col md={1} sm={1} xs={1}> 
+                    <b>Filter Desc:</b>
+                    </Col>
+                }
+                {filterDescription &&
+                    <Col md={8} sm={8} xs={8}>
+                        {filterDescription}
+                    </Col>
+                }
+            </Row>
+            {filterDescription && <br/>}
             <Row>
                 <button className="btn btn-link" onClick={() => { me.setState({ saveAsNew: !this.state.saveAsNew, save: false, deleteFilter: false }) }}> <i class='fas fa-filter'></i> Save-as-new-filter </button> | 
                 <button className="btn btn-link" onClick={() => { me.setState({ save: !this.state.save, saveAsNew: false, deleteFilter: false }) }}> <i class='fas fa-save'></i> Save </button> | 
