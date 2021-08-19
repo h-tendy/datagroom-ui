@@ -1,5 +1,115 @@
-import { newDsConstants } from '../constants';
-import { uploadService } from '../services';
+import { uploadService } from '../../services';
+
+// Constants section
+
+export const newDsConstants = {
+    CLEAR_DS: 'CLEAR_DS',
+    UPLOAD_XLS_REQUEST: 'UPLOAD_XLS_REQUEST', 
+    UPLOAD_XLS_SUCCESS: 'UPLOAD_XLS_SUCCESS',
+    UPLOAD_XLS_FAILURE: 'UPLOAD_XLS_FAILURE',
+
+    UPLOAD_CSV_REQUEST: 'UPLOAD_CSV_REQUEST', 
+    UPLOAD_CSV_SUCCESS: 'UPLOAD_CSV_SUCCESS',
+    UPLOAD_CSV_FAILURE: 'UPLOAD_CSV_FAILURE',
+
+    SET_SELECTED_SHEET: 'SET_SELECTED_SHEET',
+    SET_SELECTED_KEYS: 'SET_SELECTED_KEYS', 
+    FIND_HDRS_INXLS_REQUEST: 'FIND_HDRS_INXLS_REQUEST',
+    FIND_HDRS_INXLS_SUCCESS: 'FIND_HDRS_INXLS_SUCCESS',
+    FIND_HDRS_INXLS_FAILURE: 'FIND_HDRS_INXLS_FAILURE',
+
+    LOAD_FROM_RANGE_REQUEST: 'LOAD_FROM_RANGE_REQUEST',
+    LOAD_FROM_RANGE_SUCCESS: 'LOAD_FROM_RANGE_SUCCESS',
+    LOAD_FROM_RANGE_FAILURE: 'LOAD_FROM_RANGE_FAILURE',
+
+    CREATE_DS_REQUEST: 'CREATE_DS_REQUEST',
+    CREATE_DS_SUCCESS: 'CREATE_DS_SUCCESS',
+    CREATE_DS_FAILURE: 'CREATE_DS_FAILURE'
+};
+
+
+// Reducer section
+
+const initialState = {};
+
+export function newDs(state = initialState, action) {
+  switch (action.type) {
+    case newDsConstants.CLEAR_DS:
+        return { };
+    case newDsConstants.UPLOAD_XLS_REQUEST:
+    case newDsConstants.UPLOAD_CSV_REQUEST:
+        return {
+            uploadStatus: 'uploading',
+            fileName: action.fileName
+        };
+    case newDsConstants.UPLOAD_XLS_SUCCESS:
+        return {
+            uploadStatus: 'success',
+            fileName: action.fileName,
+            sheetInfo: action.sheetInfo
+        };
+    case newDsConstants.UPLOAD_CSV_SUCCESS:
+        return {
+            uploadStatus: 'success',
+            fileName: action.fileName,
+            hdrs: action.hdrs
+        };
+        
+    case newDsConstants.UPLOAD_XLS_FAILURE:
+    case newDsConstants.UPLOAD_CSV_FAILURE:
+        return {
+            uploadStatus: 'fail',
+            uploadError: action.message
+        };
+    case newDsConstants.SET_SELECTED_SHEET:
+        return {
+            ...state,
+            selectedSheet: action.sheetName
+        }
+    case newDsConstants.LOAD_FROM_RANGE_REQUEST:
+        return {
+            ...state,
+            selectedRange: action.selectedRange
+        }
+    case newDsConstants.LOAD_FROM_RANGE_SUCCESS:
+        return {
+            ...state,
+            loadStatus: action.loadStatus
+        }
+    case newDsConstants.LOAD_FROM_RANGE_FAILURE:
+        return {
+            ...state,
+            loadStatus: action.loadStatus,
+        }
+    case newDsConstants.SET_SELECTED_KEYS:
+        return {
+            ...state,
+            selectedKeys: action.selectedKeys
+        }
+    case newDsConstants.CREATE_DS_REQUEST:
+        return {
+            ...state,
+            dsName: action.dsName
+        }
+    case newDsConstants.CREATE_DS_SUCCESS:
+        return {
+            ...state,
+            createStatus: action.createStatus
+        }
+    case newDsConstants.CREATE_DS_FAILURE:
+        return {
+            ...state,
+            createStatus: { status: 'fail', error: action.message }
+        }
+    
+    default:
+      return state
+  }
+}
+
+
+
+// Actions section 
 
 export const newDsActions = {
     clearReduxStore,
@@ -8,10 +118,10 @@ export const newDsActions = {
     findHeadersInSheet,
     loadHdrsFromRange,
     setSelectedKeys,
-    createDs, 
-
+    createDs,
     uploadCsvFile,
-    createDsViaCsv
+    createDsViaCsv,
+    createDsFromDs
 }
 
 function clearReduxStore () {
@@ -146,5 +256,24 @@ function createDsViaCsv (fileName, selectedKeys, dsName, dsUser) {
     }
     function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
     function success(createStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fileName, selectedKeys, dsName, createStatus } }
+    function failure(message) { return { type: newDsConstants.CREATE_DS_FAILURE, message } }
+}
+
+
+function createDsFromDs (fromDsName, toDsName, dsUser, retainData) {
+    return async dispatch => {
+        try {
+            dispatch(request(toDsName));
+            let responseJson = await uploadService.createDsFromDs({fromDsName, toDsName, dsUser, retainData});
+            if (responseJson)
+                dispatch(success(responseJson));
+            else 
+                dispatch(failure("Create DsFromDs failure"));
+        } catch (error) {
+            dispatch(failure("Create DsFromDs exception"));
+        }
+    }
+    function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
+    function success(createStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fromDsName, toDsName, createStatus } }
     function failure(message) { return { type: newDsConstants.CREATE_DS_FAILURE, message } }
 }

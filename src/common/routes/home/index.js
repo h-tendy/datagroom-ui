@@ -2,6 +2,7 @@ import { Route } from 'react-router';
 import Upload from './upload';
 import NewDsFromXls from './NewDsFromXls';
 import NewDsFromCsv from './NewDsFromCsv';
+import NewDsFromDs from './NewDsFromDs';
 import DsHome from './DsHome';
 import DsView from './DsView';
 import DsViewEdit from './DsViewEdit';
@@ -14,6 +15,7 @@ import React from 'react'
 
 export default [ <Route path="/newDsXlsx" exact component={NewDsFromXls}/>,
                  <Route path="/newDsCsv" exact component={NewDsFromCsv}/>,
+                 <Route path="/newDsFrmDs" exact component={NewDsFromDs}/>,
                  <Route path="/test" exact component={Upload}/>, 
                  <Route path="/" exact component={AllDs}/>, 
                  <Route path="/ds/:dsName" exact component={DsHome}/>, 

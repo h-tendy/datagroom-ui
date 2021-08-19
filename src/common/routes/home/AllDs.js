@@ -81,6 +81,7 @@ class AllDs extends Component {
                 <Row>
                 <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
                 <Button size="sm" onClick={() => {history.push('/newDsCsv')}}> New Ds (csv)</Button> 
+                <Button size="sm" onClick={() => {history.push('/newDsFrmDs')}}> Copy Ds</Button> 
                 </Row>
             </div>
         );

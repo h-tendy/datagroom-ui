@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom'
-import { newDsActions } from '../../actions/newDs.actions';
+import { newDsActions } from './NewDsStoreMgmt';
 import Select from 'react-select';
 
 class NewDsFromCsv extends Component {
@@ -57,7 +57,7 @@ class NewDsFromCsv extends Component {
                                 </Col>
                         </Row>
         }
-        if (newDs && newDs.uploadStatus === 'success' && !newDs.hdrs.length) {
+        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs && !newDs.hdrs.length) {
             s1Status = <Row>
                                 <Col md={6} sm={6} xs={6}> 
                                 <b style={{color: 'red'}}>Failed to read the hdrs!</b>

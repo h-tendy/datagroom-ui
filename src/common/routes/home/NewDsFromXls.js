@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Row, Col, Form, Button } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom'
-import { newDsActions } from '../../actions/newDs.actions';
+import { newDsActions } from './NewDsStoreMgmt';
 import Select from 'react-select';
 
 class NewDsFromXls extends Component {

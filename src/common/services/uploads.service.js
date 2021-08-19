@@ -2,7 +2,8 @@ export const uploadService = {
     fileUpload,
     findHeadersInSheet,
     loadHdrsFromRange,
-    createDs, 
+    createDs,
+    createDsFromDs,
 
     csvFileUpload,
     createDsViaCsv,
@@ -155,6 +156,31 @@ async function createDsViaCsv (body) {
         console.log(e);
     }
 }
+
+async function createDsFromDs (body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/createDsFromDs`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        console.log("Finished fetch")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('createDsFromDs: ', responseJson);
+        }
+        return responseJson;
+    } catch(e) {
+        console.log(e);
+    }
+}
+
 
 async function uploadAttachment(body) {
     try {
