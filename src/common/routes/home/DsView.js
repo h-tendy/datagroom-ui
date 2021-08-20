@@ -697,7 +697,7 @@ class DsView extends Component {
         //let value = cell.getValue();
         //if (typeof value != "string") return value;
         //value = MarkdownIt.render(value);
-        this.copyFormatted(`<div style="font-family:verdana; font-size:12px">${html}</div>`);
+        this.copyFormatted(`<div style="font-family:verdana; font-size:12px; background-color: white">${html}</div>`);
         //this.copyFormattedBetter(cell.getElement());
     }
 
