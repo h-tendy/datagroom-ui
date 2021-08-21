@@ -629,8 +629,15 @@ class DsView extends Component {
     // The procedure we do in copyFormatted preserves all the styling! 
     // Thus, we will use the same html generation function, but copy it 
     // to clipboard with the tweaks as in copyFormatted. 
+    // Ideally, the html for each cell should be copied from it's innerHTML. 
+    // That will preserve the dynamically generated images like plantuml. See 
+    // the copyCellToClipboard method. Since we don't have a hook, we are settling
+    // for now. Only plantuml images don't appear in table copy. 
+    // Now fixed. Setting colVisProp to "clipboard" will call the correct 
+    // formatter in which we clone and use the resolved images! See 
+    // col.formatterClipboard function below!
     myCopyToClipboard () {
-        let visible = true, style = true, colVisProp = null, 
+        let visible = true, style = true, colVisProp = "clipboard", 
             config = null;
         let html = this.ref.table.modules.export.getHtml(visible, style, config, colVisProp);
         this.copyFormatted(null, html);
@@ -650,6 +657,12 @@ class DsView extends Component {
         // didn't do the job. Also messed up the styling it seems. Background color is lost etc. 
         if (element) html = element.innerHTML;
         html = this.fixImgSizeForClipboard(html);
+        // To replace the markup due to the highlightjs badges. 
+        // The regex arrived by looking at the generated markup 
+        // and some clever regex as usual. 
+        // This mostly is needed when html comes from innerHTML!
+        html = html.replace(/<pre class="code-badge-pre"[\s\S]*?(<code [\s\S]*?<\/code>)<\/pre>/gi, '<pre>$1</pre>');
+
         container.innerHTML = html
     
         // Hide element
@@ -711,10 +724,9 @@ class DsView extends Component {
         let html = colDef.formatter(cell, colDef.formatterParams);
         //this.copyFormatted(html);
 
-        //let value = cell.getValue();
-        //if (typeof value != "string") return value;
-        //value = MarkdownIt.render(value);
-        this.copyFormatted(/*cell.getElement()*/ null, `<div style="font-family:verdana; font-size:12px; background-color: white">${html}</div>`);
+        // Now use the innerHTML! 
+        this.copyFormatted(/*cell.getElement()*/ null, `<div style="font-family:verdana; font-size:12px; background-color: white">${cell.getElement().innerHTML}</div>`);
+
         //this.copyFormattedBetter(cell.getElement());
     }
 
@@ -1299,6 +1311,7 @@ class DsView extends Component {
             if (col.editor === "textarea" || col.editor === "codemirror" || (col.editor === false && col.formatter === "textarea") || (col.editor === "autocomplete")) {
                 // By default, all textareas support markdown now. 
                 col.formatter = (cell, formatterParams) => {
+                    //console.log("html formatter");
                     let value = cell.getValue();
                     doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
@@ -1306,9 +1319,10 @@ class DsView extends Component {
                     value = MarkdownIt.render(value);
                     return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
                 }
-                
+                // Control comes here during full table clipboard copy.
+                // from this.myCopyToClipboard function call. 
                 col.formatterClipboard = (cell, formatterParams) => {
-                    //console.log("html: ", h);
+                    //console.log("html clipboard");
                     //console.log("cell element: ", cell.getElement());
                     //console.log("cell field is: ", cell.getField());
                     //console.log("cell cell is: ", cell.getRow().getCell(cell.getField())._cell.element);
