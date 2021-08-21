@@ -110,6 +110,7 @@ class DsView extends Component {
         this.fixImgSizeForClipboard = this.fixImgSizeForClipboard.bind(this);
         this.copyFormatted = this.copyFormatted.bind(this);
 
+        this.myCopyToClipboard = this.myCopyToClipboard.bind(this);
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
         this.toggleFilters = this.toggleFilters.bind(this);
@@ -333,9 +334,10 @@ class DsView extends Component {
         let e = [...output.matchAll(/<img src="(.*?)"/gi)];
         for (let i = 0; i < e.length; i++) {
             let key = e[i][1];
-            let str = `<img src="${key}" alt="${key}" width="100%" height="100%"`;
+            if (!imgSizes[key]) continue;
+            let str = `<img src="${key}" alt="${key}" width=".*" height=".*"`;
             let rep = `<img src="${key}" alt="${key}" width=${imgSizes[key].width} height=${imgSizes[key].height}`;
-            output = output.replace(str, rep);
+            output = output.replace(new RegExp(str), rep);
         }
         output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
         return output;
@@ -623,9 +625,20 @@ class DsView extends Component {
         console.log("Row is: ", row);
     }
 
+    // The procedure we do in copyFormatted preserves all the styling! 
+    // Thus, we will use the same html generation function, but copy it 
+    // to clipboard with the tweaks as in copyFormatted. 
+    myCopyToClipboard () {
+        let visible = true, style = true, colVisProp = null, 
+            config = null;
+        let html = this.ref.table.modules.export.getHtml(visible, style, config, colVisProp);
+        this.copyFormatted(html);
+    }
+
     copyToClipboard () {
         // You have to also set 'clipboard' to true in table options.
-        this.ref.table.copyToClipboard();
+        //this.ref.table.copyToClipboard();
+        this.myCopyToClipboard();
     }
 
     // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
