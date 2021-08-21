@@ -14,7 +14,8 @@ class MyTabulator extends Component {
         //console.log("Next options: ", nextProps.options);
         if (this.props.options.paginationSize !== nextProps.options.paginationSize || 
             this.props.options.chronology !== nextProps.options.chronology || 
-            this.props.options.forceRefresh !== nextProps.options.forceRefresh) {
+            this.props.options.forceRefresh !== nextProps.options.forceRefresh ||
+            this.props.options.height !== nextProps.options.height) {
             return true;
         }
         return false;
