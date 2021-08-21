@@ -365,18 +365,22 @@ class DsView extends Component {
                     }
                 }
                 if (allImgsRead) {
-                    if (extraIters === 1) {
+                    // Basically, give it 600 ms before the new image is fetching and
+                    // allImgsRead is false...
+                    if (extraIters === 2) {
                         if (imgList.length && !me.cellImEditing) {
                             let rows = me.ref.table.getRows();
                             for (let i = 0; i < rows.length; i++) {
                                 rows[i].normalizeHeight();
                             }
+                            //console.log("Adjusting table size now.");
                             me.ref.table.rowManager.adjustTableSize(false);
                         } else {
                             console.log("Skipping normalize as there are no images or some editing in progress...");
                         }
                     }
                     if (extraIters >= 10) {
+                        //console.log("Cancelling timer after extraIters!");
                         extraIters = 0;
                         clearInterval(me.timers["normalizeAllImgRows"]);
                         me.timers["normalizeAllImgRows"] = null;
