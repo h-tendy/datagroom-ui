@@ -335,6 +335,7 @@ class DsView extends Component {
         for (let i = 0; i < e.length; i++) {
             let key = e[i][1];
             if (!imgSizes[key]) continue;
+            if (/data:image/.test(key)) continue;
             let str = `<img src="${key}" alt="${key}" width=".*" height=".*"`;
             let rep = `<img src="${key}" alt="${key}" width=${imgSizes[key].width} height=${imgSizes[key].height}`;
             output = output.replace(new RegExp(str), rep);
@@ -632,7 +633,7 @@ class DsView extends Component {
         let visible = true, style = true, colVisProp = null, 
             config = null;
         let html = this.ref.table.modules.export.getHtml(visible, style, config, colVisProp);
-        this.copyFormatted(html);
+        this.copyFormatted(null, html);
     }
 
     copyToClipboard () {
@@ -642,9 +643,12 @@ class DsView extends Component {
     }
 
     // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
-    copyFormatted (html) {
+    copyFormatted (element, html) {
         // Create container for the HTML
         var container = document.createElement('div')
+        // XXX: Try to see if you can get the html from the element. But this
+        // didn't do the job. Also messed up the styling it seems. Background color is lost etc. 
+        if (element) html = element.innerHTML;
         html = this.fixImgSizeForClipboard(html);
         container.innerHTML = html
     
@@ -710,7 +714,7 @@ class DsView extends Component {
         //let value = cell.getValue();
         //if (typeof value != "string") return value;
         //value = MarkdownIt.render(value);
-        this.copyFormatted(`<div style="font-family:verdana; font-size:12px; background-color: white">${html}</div>`);
+        this.copyFormatted(/*cell.getElement()*/ null, `<div style="font-family:verdana; font-size:12px; background-color: white">${html}</div>`);
         //this.copyFormattedBetter(cell.getElement());
     }
 
