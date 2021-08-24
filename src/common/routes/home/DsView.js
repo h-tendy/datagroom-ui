@@ -22,6 +22,12 @@ import ColorPicker from './ColorPicker';
 import Modal from './Modal';
 import FilterControls from './FilterControls';
 import QueryParsers from './QueryParsers';
+import "reveal.js/dist/reveal.css";
+//import "reveal.js/dist/theme/white.css";
+import './rjs_white.css';
+import Reveal from 'reveal.js';
+import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
+import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
 
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
@@ -30,7 +36,7 @@ import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
-}).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-container'), 'indent1').use(require('markdown-it-container'), 'indent2').use(require('markdown-it-container'), 'indent3').use(require('markdown-it-highlightjs')).use(markdownItMermaid).use(require('markdown-it-plantuml'), {imageFormat: 'png'});
+}).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-container'), 'indent1').use(require('markdown-it-container'), 'indent2').use(require('markdown-it-container'), 'indent3').use(require('markdown-it-highlightjs')).use(markdownItMermaid).use(require('markdown-it-plantuml'), {imageFormat: 'png'}).use(require('markdown-it-container'), 'slide');
 
 // From: https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
 // Remember old renderer, if overridden, or proxy to default renderer
@@ -110,6 +116,7 @@ class DsView extends Component {
         this.fixImgSizeForClipboard = this.fixImgSizeForClipboard.bind(this);
         this.copyFormatted = this.copyFormatted.bind(this);
 
+        this.startPreso = this.startPreso.bind(this);
         this.myCopyToClipboard = this.myCopyToClipboard.bind(this);
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
@@ -628,6 +635,63 @@ class DsView extends Component {
         //let row = await this.ref.table.addRow({}, false, 20);
         let row = await this.ref.table.addRow(data, true);
         console.log("Row is: ", row);
+    }
+
+    startPreso () {
+        var container = document.querySelector("#revealDiv");
+        /*
+        container.innerHTML = `
+		<div style="display: flex; flex-direction: row;">
+			<div class="reveal deck1" style="width: 50%; height: 50vh; margin: 10px;">
+				<div class="slides">
+					<section>Deck 1, Slide 1</section>
+					<section>Deck 1, Slide 2</section>
+					<section>
+						<pre data-id="code-animation"><code class="hljs" data-trim data-line-numbers>
+							import React, { useState } from 'react';
+							function Example() {
+							  const [count, setCount] = useState(0);
+							}
+						</code></pre>
+					</section>
+                    <section data-markdown>
+                    #### IQNOS suspect pattern scanner - 7 - Specific scanner in \`IPsec/OSPFv3\` source folders
+
+                    During the CSP review, the \`Control-plane\` team identified a couple of instances of CSP logging within these two specific folders: \`IPsec\` and \`OSPFv3\`. Both the \`IPsec\` and \`OSPFv3\` functionality accept some password-like \`keys\` to be validated against the peer NEs. These \`keys\` are to be considered as CSP and they should not be logged. The team decided to comment out all instances of logging of \`rparameters\` (generic IPC message which holds all attributes of a message) in these directories. Note that, doing the same across all the code base would give you too many hits. 
+                    
+                    To achieve this, there is a scanner which flags these keyword logging in the said directories: \`/\bspi\b|rparams|rparameters|AKey|EKey/i\`
+                    
+                    All existing hits have been examined, fixed and validated appropriately.                     
+                    </section>
+                    </div>
+			</div>
+        </div>
+        `; */
+        let startHtml =  `<div style="display: flex; flex-direction: row;">
+			                    <div class="reveal deck1" style="width: 50%; height: 50vh; margin: 10px;">
+				                <div class="slides">`;
+        let endHtml = `</div></div></div>`;
+        let slideHtml = startHtml; let slideFound = false;
+        let slideList = document.querySelectorAll(".slide");
+        for (let i = 0; i < slideList.length; i++) {
+            let slide = slideList[i];
+            slideFound = true;
+            //console.log("Found a slide: ", slide.innerHTML);
+            slideHtml += `<section class="top">${slide.innerHTML}</section>`;
+        }
+        if (!slideFound) return;
+        slideHtml += endHtml;
+        container.innerHTML = slideHtml;
+        let deck1 = new Reveal( document.querySelector( '.deck1' ), {
+            embedded: true,
+            progress: false,
+            keyboardCondition: 'focused',
+            plugins: [ RevealHighlight, Markdown ]
+        } );
+        deck1.on( 'slidechanged', () => {
+            console.log( 'Deck 1 slide changed' );
+        } );
+        deck1.initialize();
     }
 
     // The procedure we do in copyFormatted preserves all the styling! 
@@ -1224,6 +1288,10 @@ class DsView extends Component {
             {
                 label:"Copy cell to clipboard...",
                 action: this.copyCellToClipboard
+            },
+            {
+                label:"Generate slides...",
+                action: this.startPreso
             },
             {
                 label:"<i class='fas fa-eye-slash'></i> Hide Column",
@@ -1842,7 +1910,11 @@ class DsView extends Component {
                     }} />
                 }
                 <FilterControls show={me.state.showAllFilters} dsName={dsName} dsView={dsView} tableRef={me.ref} onFilterChange={me.processFilterChange} defaultValue={me.state.filter}/>    
-                <br/>            
+                <br/>
+                <Row>
+                    <div id="revealDiv">
+                    </div>
+                </Row>
                 <Row>
                 <Col md={12} sm={12} xs={12}> 
                     <b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} | </b>

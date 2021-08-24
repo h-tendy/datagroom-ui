@@ -15,6 +15,10 @@
   height:100%;
 }
 
+/* For revealjs integration. Don't remove! */
+.slide {
+}
+
 h5 {
   font-weight: bold;
 }
