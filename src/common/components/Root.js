@@ -7,7 +7,7 @@ import App from "./App";
 import { LoginPage } from "./InfnLoginPage";
 import { PrivateRoute } from "./PrivateRoute";
 import { history } from '../helpers';
-
+import { RevealJsPage } from './revealjsPage';
 
 const Root = ({ store }) => (
     <Provider store={store}>
@@ -15,6 +15,7 @@ const Root = ({ store }) => (
             <div>
                 <Switch>
                     <Route path="/login" component={LoginPage}/>
+                    <Route path='/revealjs' component={ RevealJsPage }/>
                     <PrivateRoute path="/*" component={App} />
                 </Switch>
             </div>
