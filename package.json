@@ -10,6 +10,7 @@
     "markdown-it-attrs": "^3.0.3",
     "markdown-it-bracketed-spans": "^1.0.1",
     "markdown-it-container": "^3.0.0",
+    "markdown-it-fancy-lists": "^1.1.0",
     "markdown-it-highlightjs": "^3.2.0",
     "markdown-it-plantuml": "https://github.com/h-tendy/markdown-it-plantuml.git",
     "react": "^16.13.1",
