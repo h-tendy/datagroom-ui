@@ -44,7 +44,12 @@ class AllDs extends Component {
         let owner = ''
         for (let i = 0; i < allDs.dsList.dbList.length; i++) {
             if (allDs.dsList.dbList[i].name === dsName) {
-                owner = allDs.dsList.dbList[i].perms.owner;
+                try {
+                    owner = allDs.dsList.dbList[i].perms.owner;
+                } catch (e) {
+                    console.log(`Owner is not found for: ${dsName}`);
+                    owner = user.user;
+                }
                 break;
             }
         }
@@ -64,7 +69,9 @@ class AllDs extends Component {
                 return <li><Link to={url}>{v.name}</Link>{this.deleteControls(v.name)}</li>
             })
             return (<Row><Col md={12} sm={12} xs={12}><ul>{listItems}</ul></Col></Row>)
-        } catch (e) {}
+        } catch (e) {
+            console.log('dsList, exception: ', e);
+        }
         return '';
     }
     
