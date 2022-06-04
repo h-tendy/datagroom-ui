@@ -1537,7 +1537,7 @@ class DsView extends Component {
                                     },
                                     current_page: 1,
                                     paginationSize: this.state.pageSize,
-                                    paginationSizeSelector: [5, 10, 25, 30, 50, 100, 500, true],
+                                    paginationSizeSelector: [5, 10, 25, 30, 50, 100, 500, 1000, 2000, 5000, true],
                                     ajaxResponse: this.ajaxResponse,
                                     ajaxError: function (error) {
                                         console.log('ajaxError', error);
