@@ -106,8 +106,9 @@ class DsView extends Component {
         this.firstRenderCompleted = false;
         this.cellImEditing = null;
         this.mouseDownOnHtmlLink = false;
+        this.mouseDownOnBadgeCopyIcon = false;
 
-        this.applyHtmlLinkClickHandlers = this.applyHtmlLinkClickHandlers.bind(this);
+        this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
         this.cellEditing = this.cellEditing.bind(this);
         this.cellEdited = this.cellEdited.bind(this);
@@ -302,11 +303,11 @@ class DsView extends Component {
 
     // Since we generate html after editing, we need to attach
     // the handlers again. 
-    applyHtmlLinkClickHandlers() {
+    applyHtmlLinkAndBadgeClickHandlers() {
         let me = this;
-        let linkElements = document.getElementById("tabulator").getElementsByTagName('a');
-        for(var i = 0, len = linkElements.length; i < len; i++) {
-            linkElements[i].onclick = function (e) {
+        let splElements = document.getElementById("tabulator").getElementsByTagName('a');
+        for(var i = 0, len = splElements.length; i < len; i++) {
+            splElements[i].onclick = function (e) {
                 me.mouseDownOnHtmlLink = true;
                 // Caution: This is a must, otherwise you are getting the click after returning to the tab!
                 e.stopPropagation();
@@ -315,6 +316,24 @@ class DsView extends Component {
                 return true;
             }
         }
+        // This querySelectorAll is borrowed from highlightjs-badge.js code
+        splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
+        for(i = 0, len = splElements.length; i < len; i++) {
+            // Have to setup for 'focus' event because that fires first! And
+            // tabulator already has this setup on the cell.
+            splElements[i].setAttribute("tabindex", 0);
+            splElements[i].addEventListener("focus", 
+                function(e) {
+                    let clickedEl = e.srcElement;
+                    console.log(`Classlist is: ${clickedEl.classList}`);
+                    if (clickedEl.classList.contains("code-badge-copy-icon")) {    
+                        me.mouseDownOnBadgeCopyIcon = true;
+                        // Caution: To clear this out after a second to ensure that the next click is honored properly. 
+                        setTimeout(() => me.mouseDownOnBadgeCopyIcon = false, 1000);
+                        return true;
+                    }
+                });
+        }
     }
     applyHighlightJsBadge() {
         let me = this;
@@ -322,9 +341,10 @@ class DsView extends Component {
             clearTimeout(this.timers["applyHighlightJsBadge"]);
             this.timers["applyHighlightJsBadge"] = null;
         }
-        this.timers["applyHighlightJsBadge"] = setTimeout(() => 
-            window.highlightJsBadge(), 1000);
-        this.applyHtmlLinkClickHandlers();
+        this.timers["applyHighlightJsBadge"] = setTimeout(() => {
+            window.highlightJsBadge();
+            this.applyHtmlLinkAndBadgeClickHandlers();
+        }, 1000);
     }
 
     fixImgSizeForClipboard(output) {
@@ -479,7 +499,7 @@ class DsView extends Component {
             if (this.lockedByOthersCells[_id][column])
                 return false;
         } catch (e) {}
-        if (this.mouseDownOnHtmlLink) {
+        if (this.mouseDownOnHtmlLink || this.mouseDownOnBadgeCopyIcon) {
             return false;
         }
         return true;
