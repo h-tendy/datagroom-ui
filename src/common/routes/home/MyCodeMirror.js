@@ -84,6 +84,8 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
         */
         cell._cell.setHeightSpecial(initialHeight);
         cell.getRow().normalizeHeight();
+        editor.scrollIntoView({line: editor.getDoc().lineCount() - 1, ch: 0}, 50)
+        editor.getDoc().setCursor({line: editor.getDoc().lineCount() - 1, ch:0});
         editor.refresh();
         editor.on("keyup", function (cm, e) {
             if (true) {

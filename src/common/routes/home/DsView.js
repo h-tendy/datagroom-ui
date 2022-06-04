@@ -1047,9 +1047,12 @@ class DsView extends Component {
                     status += `Delete failed on server `
                 } else if (dsHome.dsDeletes[k].deleteStatus === 'done' && 
                     dsHome.dsDeletes[k].serverStatus.status === 'success') {
+                    /*
                     let rows = dsHome.dsDeletes[k].deleteTracker.rows;
                     for (let i = 0; i < rows.length; i++)
                         rows[i].delete();
+                    */
+                    this.ref.table.clearData();
                     dispatch({ type: dsConstants.DELETE_MANY_DELETE_TRACKER, _id: k })
                 } else if (dsHome.dsDeletes[k].deleteStatus === 'fail') {
                     status += `Delete API failed`;
