@@ -84,6 +84,11 @@ function MyTextArea(cell, onRendered, success, cancel, editorParams) {
     input.addEventListener("keydown", function (e) {
 
         switch (e.keyCode) {
+            case 13:
+                if (e.ctrlKey) {
+                    onChange(e);
+                }
+                break;
             case 27:
                 cancel();
                 break;

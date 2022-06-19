@@ -114,6 +114,11 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
         editor.on("keydown", function (cm, e) {
             let pos = cm.getCursor();
             switch (e.keyCode) {
+                case 13:
+                    if (e.ctrlKey) {
+                        onChange(e);
+                    }
+                    break;
                 case 27:
                     cancel();
                     break;    
