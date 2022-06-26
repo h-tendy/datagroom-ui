@@ -27,9 +27,13 @@ class LoginPage extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         this.setState({ submitted: true });
-        const { username, password } = this.state;
+        let { username, password } = this.state;
         const { dispatch } = this.props;
         if (username && password) {
+            let m = username.match(/(.*?)@(.*)/);
+            if (m && (m.length >= 2)) {
+                username = m[1];
+            }        
             dispatch(userActions.login(username, password));
         }
     }
