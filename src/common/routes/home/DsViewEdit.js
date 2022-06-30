@@ -35,7 +35,7 @@ class DsViewEdit extends Component {
             refreshAfterRender: false,
             jira: null,
             jql: "",
-            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature" \n\n',
+            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions" \n\n',
             dsDescription: null,
             widths: {},
             fixedHeight: null,
@@ -181,7 +181,7 @@ class DsViewEdit extends Component {
             "Work-id": false,
             "Description": false
         }; let jiraColumnsPresent = true;
-        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'targetRls':1, 'status':1, 'feature':1, 'rzFeature': 1};
+        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'targetRls':1, 'status':1, 'feature':1, 'rzFeature': 1, 'versions': 1};
         let dsFields = {};
         for (let i = 0; i < currentDefs.length; i++) {
             for (let key in jiraColumns) {
