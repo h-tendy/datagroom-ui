@@ -98,6 +98,8 @@ class DsView extends Component {
             colorPickerLeft: 0,
             colorPickerTop: 0,
             color: 0,
+
+            connectedState: false
         };
         this.ref = null;
         
@@ -157,6 +159,7 @@ class DsView extends Component {
         this.applyFilterColumnAttrs = this.applyFilterColumnAttrs.bind(this);
         this.normalizeAllImgRows = this.normalizeAllImgRows.bind(this);
         this.applyHighlightJsBadge = this.applyHighlightJsBadge.bind(this);
+        this.displayConnectedStatus = this.displayConnectedStatus.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -181,6 +184,10 @@ class DsView extends Component {
         let me = this;
         socket.on('connect', (data) => {
             socket.emit('Hello', { user: user.user});
+            me.setState({connectedState: true});
+        })
+        socket.on('disconnect', (data) => {
+            me.setState({connectedState: false});
         })
         socket.on('Hello', (helloObj) => {
             ;
@@ -507,12 +514,14 @@ class DsView extends Component {
     cellEditCheck (cell) {      
         if (!this.state.singleClickEdit)  return false;
         if (this.state.disableEditing) return false;
+        if (!this.state.connectedState) return false;
         return this.cellEditCheckForConflicts(cell);
     }
     cellForceEditTrigger (cell) {
         console.log("In cellForceEditTrigger");
         if (!this.state.singleClickEdit)  return false;
         if (this.state.disableEditing) return false;
+        if (!this.state.connectedState) return false;
         let noConcurrentEdits = this.cellEditCheckForConflicts(cell);
         if (noConcurrentEdits) {
             setImmediate(() => {
@@ -1753,6 +1762,14 @@ class DsView extends Component {
         }
     }
 
+    displayConnectedStatus () {
+        if (this.state.connectedState) {
+            return <span><i class='fas fa-server'></i> <b>Server connection:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b></span>
+        } else {
+            return <span><i class='fas fa-server'></i> <b>Server connection:</b> <b style={{ 'color': 'red' }}>Disconnected</b></span>
+        }
+    }
+
     render () {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -1900,7 +1917,8 @@ class DsView extends Component {
                     <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Edit-log</b></Link> |&nbsp;
                     <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link> |&nbsp;
                     <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link> |&nbsp;
-                    <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link>                    
+                    <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link> |&nbsp;
+                    {this.displayConnectedStatus()}
                 </Col>
                 </Row>
                 {this.step2()}
