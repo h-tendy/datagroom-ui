@@ -193,6 +193,7 @@ class DsView extends Component {
             ;
         })
         socket.on('activeLocks', (activeLocks) => {
+            me.setState({connectedState: true});
             activeLocks = JSON.parse(activeLocks);
             console.log("Active locks: ", activeLocks);
             let keys = Object.keys(activeLocks);
