@@ -24,25 +24,30 @@ class ModalWrapper extends React.Component {
     const modalStyle = {
         backgroundColor: '#fff',
         borderRadius: 5,
-        maxWidth: 300,
+        maxWidth: 600,
         /*minHeight: 300,*/
         margin: '0 auto',
         padding: 30
-  
-    };    
+    };
+    const bodyStyle = {
+      height: 250,
+      overflowY: 'auto'
+    }
     return (
         <div style={ backdropStyle }>
             <div style={ modalStyle }>
             <Modal.Header>
                 <Modal.Title>{this.props.title}</Modal.Title>
             </Modal.Header>
-            <Modal.Body>{this.props.children}</Modal.Body>
+            <div style={ bodyStyle }>
+              <Modal.Body>{this.props.children}</Modal.Body>
+            </div>
             <Modal.Footer>
                 <Button variant="secondary" onClick={() => this.props.onClose(false)}>
-                    Cancel
+                    {this.props.cancel ? this.props.cancel : "Cancel"}
                 </Button>
                 <Button variant="primary" onClick={() => this.props.onClose(true)}>
-                    Do it!
+                    {this.props.ok ? this.props.ok: "Do It!"}
                 </Button>
             </Modal.Footer>
             </div>

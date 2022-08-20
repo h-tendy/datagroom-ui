@@ -87,8 +87,11 @@ class DsView extends Component {
             frozenCol: "",
             showModal: false,
             modalTitle: "Title of modal",
-            modalQuestion: "This is the modal question",
+            modalQuestion: "",
             modalCallback: null,
+            modalStatus: '',
+            modalCancel: 'Cancel',
+            modalOk: 'Do It!',
 
             chronologyDescending: false,
             singleClickEdit: false,
@@ -721,8 +724,9 @@ class DsView extends Component {
         // This mostly is needed when html comes from innerHTML!
         html = html.replace(/<pre class="code-badge-pre"[\s\S]*?(<code [\s\S]*?<\/code>)<\/pre>/gi, '<pre>$1</pre>');
 
+        html = html.replace(/<code class="hljs">/gi, '<code class="hljs" style="background-color:white; font-size:12px">');
         container.innerHTML = html
-    
+
         // Hide element
         container.style.position = 'fixed'
         container.style.pointerEvents = 'none'
@@ -848,7 +852,8 @@ class DsView extends Component {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        let status = ''
+        let modalStatus = this.state.modalStatus;
+        let showModal = false;
         //console.log('In cellEditStatus');
         try {
             Object.entries(dsHome.dsEdits).map( (kv) => {
@@ -861,13 +866,14 @@ class DsView extends Component {
                     update[dsHome.dsEdits[k].serverStatus.column] = dsHome.dsEdits[k].serverStatus.value;
                     console.log('Update: ', update);
                     this.ref.table.updateData([ update ]);
-                    status += `Update failed, new [key, value]: [${dsHome.dsEdits[k].serverStatus.column}, ${dsHome.dsEdits[k].serverStatus.value}] `
-
+                    modalStatus += `Update <b style="color:red">failed</b>, [key, RejectedValue]: [${dsHome.dsEdits[k].serverStatus.column}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
+                    showModal = true;
                     // Release the lock
                     this.cellImEditing = null;
                     let column = dsHome.dsEdits[k].editTracker.field;
                     let unlockReq = { _id: k, field: column, dsName, dsView }
                     socket.emit('unlockReq', unlockReq);
+                    dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
                 } else if (dsHome.dsEdits[k].editStatus === 'done' && 
                     dsHome.dsEdits[k].serverStatus.status === 'fail' && 
                     dsHome.dsEdits[k].serverStatus.hasOwnProperty('error')) {
@@ -875,16 +881,19 @@ class DsView extends Component {
                     let update = { _id: k };
                     update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
                     this.ref.table.updateData([ update ]);
-                    status += `Update failed (error: ${dsHome.dsEdits[k].serverStatus.error}), reverted [key, value]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.oldVal}]`
+                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.dsEdits[k].serverStatus.error}), reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
 
+                    showModal = true;
                     // Release the lock
                     this.cellImEditing = null;
                     let column = dsHome.dsEdits[k].editTracker.field;
                     let unlockReq = { _id: k, field: column, dsName, dsView }
                     socket.emit('unlockReq', unlockReq);
+                    dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
                 } else if (dsHome.dsEdits[k].editStatus === 'done' && 
                     dsHome.dsEdits[k].serverStatus.status === 'success') {
 
+                    showModal = false;
                     // Release the lock and publish new value to everyone
                     this.cellImEditing = null;
                     let column = dsHome.dsEdits[k].editTracker.field;
@@ -897,19 +906,30 @@ class DsView extends Component {
                     let update = { _id: k };
                     update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
                     this.ref.table.updateData([ update ]);
-                    status += `Update failed, reverted [key, value]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.oldVal}] `;
-
+                    modalStatus += `Update <b style="color:red">failed</b>, reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`;
+                    showModal = true;
                     // Release the lock
                     this.cellImEditing = null;
                     let column = dsHome.dsEdits[k].editTracker.field;
                     let unlockReq = { _id: k, field: column, dsName, dsView }
                     socket.emit('unlockReq', unlockReq);
+                    dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
                 }
                 // Revert the value for other failures also. 
             })
         } catch (e) {}
         //console.log("Status: ", status);
-        return <b style={{color: "red"}}> {status} </b>;
+        if (showModal /* && !this.state.showModal*/) {
+            let self = this;
+            let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{__html: modalStatus}} /> : <div dangerouslySetInnerHTML={{__html: '<b style="color:green">Edit Success</b>'}} />;
+            this.setState({ modalTitle: "Edit Status", 
+                            modalQuestion: modalQuestion,
+                            modalStatus: modalStatus,
+                            modalOk: "Dismiss",
+                            modalCallback: (confirmed) => {self.setState({showModal: false, modalQuestion: '', modalStatus: ''})},
+                            showModal: true });
+        }
+        return <b style={{color: "red"}}> {''} </b>;
     }
 
     cellEdited (cell) {
@@ -1924,7 +1944,7 @@ class DsView extends Component {
                 </Row>
                 {this.step2()}
                 <Modal show={this.state.showModal}
-                    onClose={this.toggleModal} title={this.state.modalTitle}>
+                    onClose={this.toggleModal} title={this.state.modalTitle} cancel={this.state.modalCancel} ok={this.state.modalOk}>
                     {this.state.modalQuestion}
                 </Modal>
                 {this.state.showColorPicker ? <ColorPicker left={this.state.colorPickerLeft} top={this.state.colorPickerTop} color={this.state.color} onChangeComplete={this.handleColorPickerOnChangeComplete} handleClose={this.handleColorPickerClose}/>: ''}
