@@ -293,7 +293,7 @@ class DsAttachments extends Component {
     }
 
     step2 () {
-        const { match, dsHome } = this.props;
+        const { match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
         let s2 = '';
@@ -306,7 +306,7 @@ class DsAttachments extends Component {
                             columns={columns}
                             data={[]}
                             options={{
-                                ajaxURL: `${config.apiUrl}/ds/view/attachments/${this.props.match.params.dsName}`,
+                                ajaxURL: `${config.apiUrl}/ds/view/attachments/${this.props.match.params.dsName}/${dsView}/${user.user}`,
                                 pagination:"remote",
                                 paginationDataSent: {
                                     page: 'page',

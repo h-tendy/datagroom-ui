@@ -7,6 +7,7 @@ import MyTabulator from './MyTabulator';
 import './simpleStyles.css';
 import { dsHome } from '../../reducers/dsHome.reducer';
 import Select from 'react-select';
+import AccessCtrl from './DsViewEditAccessCtrl';
 
 
 let MarkdownIt = new require('markdown-it')({
@@ -40,6 +41,7 @@ class DsViewEdit extends Component {
             widths: {},
             fixedHeight: null,
             setViewStatus: '',
+            aclConfig: null,
 
             somethingChanged: 0,
             debounceTimers: {}
@@ -260,7 +262,7 @@ class DsViewEdit extends Component {
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig));
     }
 
     setViewStatus () {
@@ -768,7 +770,7 @@ class DsViewEdit extends Component {
     }
 
     step2 () {
-        const { match, dsHome } = this.props;
+        const { match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
         let headerMenuWithoutHide = [
@@ -874,7 +876,7 @@ class DsViewEdit extends Component {
                                 columns={columns}
                                 data={[]}
                                 options={{
-                                    ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}`,
+                                    ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
                                     pagination:"remote",
                                     paginationDataSent: {
                                         page: 'page',
@@ -1019,6 +1021,11 @@ class DsViewEdit extends Component {
                                 }}/>
                     </Col>
                 </Row>
+                <AccessCtrl dsName={dsName} dsView={dsView} onChange={(value) => {
+                    console.log(`Received access control as:`, value);
+                    me.setState({aclConfig: value});
+                }}>
+                </AccessCtrl>
                 <br/>
                 <Row>
                     <Button onClick={this.pushColumnDefs}> Set View </Button>

@@ -1545,7 +1545,7 @@ class DsView extends Component {
     }
 
     step2 () {
-        const { match, dsHome } = this.props;
+        const { match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
         let s2 = '';
@@ -1571,7 +1571,7 @@ class DsView extends Component {
                                 columns={columns}
                                 data={[]}
                                 options={{
-                                    ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}`,
+                                    ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
                                     ajaxURLGenerator:this.ajaxURLGenerator,
                                     chronology: this.state.chronologyDescending,
                                     forceRefresh: this.state.refresh,
