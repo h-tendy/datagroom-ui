@@ -134,6 +134,7 @@ class DsView extends Component {
         this.deleteRowQuestion = this.deleteRowQuestion.bind(this);
         this.deleteAllRowsInViewQuestion = this.deleteAllRowsInViewQuestion.bind(this);
         this.deleteAllRowsInView = this.deleteAllRowsInView.bind(this);
+        this.deleteAllRowsInQuery = this.deleteAllRowsInQuery.bind(this);
         this.duplicateAndAddRowHandler = this.duplicateAndAddRowHandler.bind(this);
         this.toggleSingleFilter = this.toggleSingleFilter.bind(this);
         this.freezeColumn = this.freezeColumn.bind(this);
@@ -1108,7 +1109,7 @@ class DsView extends Component {
 
     /* End: Handling of single row delete */
 
-    /* Start: Handling of all rows in view */
+    /* Start: Handling of delete all rows in view */
 
     deleteAllRowsStatus () {
         const { dispatch, dsHome } = this.props;
@@ -1165,6 +1166,58 @@ class DsView extends Component {
     }
 
     /* End: Handling of all rows in view */
+
+
+    /* Start: Handling of delete all rows in queries */
+    async deleteAllRowsInQuery() {
+        const { match, user } = this.props;
+        let dsName = match.params.dsName; 
+        let dsView = match.params.dsView;
+        let body = {};
+        let baseUrl = `${config.apiUrl}/ds/deleteFromQuery/${dsName}/${dsView}/${user.user}`
+        let filters = this.ref.table.getHeaderFilters();
+        let url = this.ajaxURLGenerator(baseUrl, {}, { filters, pretend: true });
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(url, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }     
+        });
+        let responseJson = null;
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('deleteFromQuery responseJson total: ', responseJson.total);
+            this.setState({ modalTitle: "Delete all Rows in query?", 
+                            modalQuestion: `This will delete ${responseJson.total} rows. Please confirm. Undoing support is not yet available!`,
+                            modalCallback: async (confirmed) => { 
+                                if (confirmed) {
+                                    url = this.ajaxURLGenerator(baseUrl, {}, { filters, pretend: false });
+                                    let dataLen = JSON.stringify(body).length.toString();
+                                    let response = await fetch(url, {
+                                        method: "post",
+                                        body: JSON.stringify(body),
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Content-Length": dataLen,
+                                        }     
+                                    });
+                                    if (response.ok) {
+                                        let delJson = await response.json();
+                                        if (delJson.count == responseJson.total) {
+                                            this.ref.table.clearData();
+                                        }
+                                    }
+                                }
+                            },
+                            showModal: !this.state.showModal });            
+        }
+        return responseJson;
+    }
+
+    /* End: Handling of delete all rows in queries */
 
     jiraRefreshStatus () {
         const { dispatch, dsHome } = this.props;
@@ -1352,6 +1405,10 @@ class DsView extends Component {
             {
                 label:"Delete all rows in view...",
                 action: this.deleteAllRowsInViewQuestion
+            },
+            {
+                label:"Delete all rows in query...",
+                action: this.deleteAllRowsInQuery
             },
             {
                 label:"Delete row...",
