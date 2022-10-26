@@ -966,7 +966,7 @@ class DsView extends Component {
         if (!_id) {
             let keyObj = {};
             console.log('Looks like new row edit... ');
-            let { oldVal, newVal } = this.fixValueType(cell);
+            let { oldVal, newVal } = this.fixValueType(cell, column, dsHome, dsView);
             if (dsHome.dsViews[dsView].keys && dsHome.dsViews[dsView].keys.length) {
                 let atLeastOneKeyNotEmpty = false;
                 for (let i = 0; i < dsHome.dsViews[dsView].keys.length; i++) {
@@ -988,7 +988,7 @@ class DsView extends Component {
             return;
         }
         // Edit logic
-        let { oldVal, newVal } = this.fixValueType(cell);
+        let { oldVal, newVal } = this.fixValueType(cell, column, dsHome, dsView);
 
         let selectorObj = {};
         selectorObj["_id"] = _id;
@@ -1004,7 +1004,7 @@ class DsView extends Component {
 
     }
     
-    fixValueType(cell) {
+    fixValueType(cell, column, dsHome, dsView) {
         let oldVal = cell.getOldValue();
         let typeOfOldVal = 'tbd';
         if (oldVal !== '')
@@ -1013,10 +1013,34 @@ class DsView extends Component {
         console.log("oldvalue is: ", oldVal);
         //if (oldVal !== '' && !Number.isNaN(Number(oldVal))) oldVal = Number(oldVal);
         let newVal = cell.getValue();
+        // Old logic, now overridden below. Will get rid of this
+        // once I confirm the new logic works fine. 
         if (newVal !== '' && !Number.isNaN(Number(newVal)))
             newVal = Number(newVal);
         if (typeOfOldVal == 'string')
             newVal = newVal.toString();
+
+        let configuredType = "string"; 
+        try {
+            for (let i = 0; i < dsHome.dsViews[dsView].columnAttrs.length; i++) {
+                let col = dsHome.dsViews[dsView].columnAttrs[i];
+                if (col.field == column) {
+                    if (col.headerFilterType == 'number') {
+                        configuredType = 'number';
+                    }
+                    break; 
+                }
+            }
+        } catch (e) {}
+
+        // This overrides the previous logic
+        if (configuredType == 'string') {
+            newVal = newVal.toString();
+        } else if (configuredType == 'number') {
+            if (newVal !== '' && !Number.isNaN(Number(newVal)))
+                newVal = Number(newVal);
+        }
+
         // XXX: Tabulator always sets the value to string. 
         // This fixes it correctly.
         cell.setValue(newVal);
