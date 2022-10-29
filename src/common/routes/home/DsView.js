@@ -655,7 +655,7 @@ class DsView extends Component {
         this.setState( { editingButtonText: newVal ? 'Disable Editing' : 'Enable Editing', initialHeaderFilter, refresh: this.state.refresh + 1 } );
     }
 
-    async addRow (e, cell, data) {
+    async addRow (e, cell, data, pos) {
         const { dispatch, match, dsHome } = this.props;
         //let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
@@ -668,12 +668,12 @@ class DsView extends Component {
         } catch (e) {}
         // XXX: 20 is pagination size. Make it a constant. 
         //let row = await this.ref.table.addRow({}, false, 20);
-        let rowPos = 0;
+        let rowIdx = 0;
         if (cell) {
             let _id = cell.getRow().getData()['_id'];
-            rowPos = _id;
+            rowIdx = _id;
         }
-        let row = await this.ref.table.addRow(data, true, rowPos);
+        let row = await this.ref.table.addRow(data, pos, rowIdx);
         console.log("Row is: ", row);
     }
 
@@ -1053,12 +1053,12 @@ class DsView extends Component {
         return { oldVal, newVal };
     }
 
-    duplicateAndAddRowHandler (e, cell) {
+    duplicateAndAddRowHandler (e, cell, pos) {
         console.log("Duplicate and add row called..");
         let newData = JSON.parse(JSON.stringify(cell.getData()));
         delete newData._id;
         console.log("newData: ", newData);
-        this.addRow(null, cell, newData);
+        this.addRow(null, cell, newData, pos);
         //cell.setValue("");
     }
 
@@ -1334,7 +1334,7 @@ class DsView extends Component {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-
+        let me = this;
         let headerMenuWithoutHide = [
             {
                 label:"Toggle Filters",
@@ -1373,8 +1373,16 @@ class DsView extends Component {
         ];
         let cellContextMenu = [
             {
-                label:"Duplicate row & add...",
-                action: this.duplicateAndAddRowHandler
+                label:"Duplicate row & add (above)",
+                action: function (e, cell) {
+                    me.duplicateAndAddRowHandler(e, cell, true)
+                }
+            },
+            {
+                label:"Duplicate row & add (below)",
+                action: function (e, cell) {
+                    me.duplicateAndAddRowHandler(e, cell, false)
+                }
             },
             {
                 label:"Add empty row...",
