@@ -673,7 +673,7 @@ class DsView extends Component {
             let _id = cell.getRow().getData()['_id'];
             rowPos = _id;
         }
-        let row = await this.ref.table.addRow(data, false, rowPos);
+        let row = await this.ref.table.addRow(data, true, rowPos);
         console.log("Row is: ", row);
     }
 
