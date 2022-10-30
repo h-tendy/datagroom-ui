@@ -668,11 +668,13 @@ class DsView extends Component {
         } catch (e) {}
         // XXX: 20 is pagination size. Make it a constant. 
         //let row = await this.ref.table.addRow({}, false, 20);
-        let rowIdx = 0;
+        let rowIdx = null;
         if (cell) {
             let _id = cell.getRow().getData()['_id'];
             rowIdx = _id;
         }
+        if (pos === undefined || pos === null)
+            pos = true;
         let row = await this.ref.table.addRow(data, pos, rowIdx);
         console.log("Row is: ", row);
     }
@@ -1386,7 +1388,9 @@ class DsView extends Component {
             },
             {
                 label:"Add empty row...",
-                action: this.addRow
+                action: function (e, cell) {
+                    me.addRow(e, cell, null, true)
+                }
             },
             {
                 label:"Copy cell to clipboard...",
