@@ -942,6 +942,24 @@ class DsViewEdit extends Component {
                              });
             }
         } catch (e) {};
+        try {
+            if (this.state.aclConfig === null && dsHome.dsViews[dsView].aclConfig) {
+                let acl = "";
+                if (typeof dsHome.dsViews[dsView].aclConfig.acl === "string") {
+                    acl = dsHome.dsViews[dsView].aclConfig.acl;
+                } else if (Array.isArray(dsHome.dsViews[dsView].aclConfig.acl)) {
+                    for (let i = 0; i < dsHome.dsViews[dsView].aclConfig.acl.length; i++) {
+                        acl += dsHome.dsViews[dsView].aclConfig.acl[i];
+                        if (i < dsHome.dsViews[dsView].aclConfig.acl.length - 1) 
+                            acl += ", ";
+                    }
+                }
+                let aclConfig = { accessCtrl: dsHome.dsViews[dsView].aclConfig.accessCtrl, 
+                    acl: acl
+                 }
+                this.setState({ aclConfig });
+            }
+        } catch (e) {};
         let pushButton = ""
         try {
             if (dsHome.dsSetView.status === "setting") {
