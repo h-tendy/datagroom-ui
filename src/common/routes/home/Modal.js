@@ -16,7 +16,7 @@ class ModalWrapper extends React.Component {
         left: 0,
         right: 0,
         backgroundColor: 'rgba(0,0,0,0.3)',
-        padding: 50
+        padding: 10
   
     };
   
@@ -27,10 +27,10 @@ class ModalWrapper extends React.Component {
         maxWidth: 600,
         /*minHeight: 300,*/
         margin: '0 auto',
-        padding: 30
+        padding: 5
     };
     const bodyStyle = {
-      height: 250,
+      height: 400,
       overflowY: 'auto'
     }
     return (

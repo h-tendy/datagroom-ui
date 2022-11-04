@@ -2,6 +2,8 @@ var Edit = function(table){
 	this.table = table; //hold Tabulator object
 	this.currentCell = false; //hold currently editing cell
 	this.mouseClick = false; //hold mousedown state to prevent click binding being overriden by editor opening
+	// J: change
+	this.ctrlKeyWithMouseDown = false;
 	this.recursionBlock = false; //prevent focus recursion
 	this.invalidEdit = false;
 	this.editedCells = [];
@@ -136,6 +138,10 @@ Edit.prototype.bindEditor = function(cell){
 			e.preventDefault();
 		}else{
 			self.mouseClick = true;
+			// J: change
+			if (e.ctrlKey) {
+				self.ctrlKeyWithMouseDown = true;
+			}
 		}
 	});
 
@@ -321,8 +327,12 @@ Edit.prototype.edit = function(cell, e, forceEdit){
 
 			component = cell.getComponent();
 
+			// J: change
+			let ctrlKeyWithMouseDown = this.ctrlKeyWithMouseDown;
 			if(this.mouseClick){
 				this.mouseClick = false;
+				// J: change
+				this.ctrlKeyWithMouseDown = false;
 
 				if(cell.column.cellEvents.cellClick){
 					cell.column.cellEvents.cellClick.call(this.table, e, component);
@@ -337,7 +347,8 @@ Edit.prototype.edit = function(cell, e, forceEdit){
 
 			params = typeof cell.column.modules.edit.params === "function" ? cell.column.modules.edit.params(component) : cell.column.modules.edit.params;
 
-			cellEditor = cell.column.modules.edit.editor.call(self, component, onRendered, success, cancel, params);
+			// J: change
+			cellEditor = cell.column.modules.edit.editor.call(self, component, onRendered, success, cancel, params, ctrlKeyWithMouseDown);
 
 			//if editor returned, add to DOM, if false, abort edit
 			if(cellEditor !== false){
@@ -373,11 +384,15 @@ Edit.prototype.edit = function(cell, e, forceEdit){
 			return true;
 		}else{
 			this.mouseClick = false;
+			// J: change
+			this.ctrlKeyWithMouseDown = false;
 			element.blur();
 			return false;
 		}
 	}else{
 		this.mouseClick = false;
+		// J: change
+		this.ctrlKeyWithMouseDown = false;
 		element.blur();
 		return false;
 	}

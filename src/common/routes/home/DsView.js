@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
 import MyCodeMirror from './MyCodeMirror';
+import MyModalCodeMirror from './MyModalCodeMirror';
 import DateEditor from "react-tabulator/lib/editors/DateEditor";
 import Select from 'react-select';
 //import 'highlight.js/styles/vs.css'
@@ -20,6 +21,7 @@ import MyAutoCompleter from './MyAutoCompleter';
 import MySingleAutoCompleter from './MySingleAutoCompleter';
 import ColorPicker from './ColorPicker';
 import Modal from './Modal';
+import ModalEditor from './ModalEditor';
 import FilterControls from './FilterControls';
 import QueryParsers from './QueryParsers';
 import "reveal.js/dist/reveal.css";
@@ -93,6 +95,14 @@ class DsView extends Component {
             modalCancel: 'Cancel',
             modalOk: 'Do It!',
 
+            modalEditorOk: 'Done',
+            modalEditorCancel: 'Cancel',
+            modalEditorTitle: 'Edit cell', 
+            modalEditorText: '',
+            modalEditorCallback: null,
+            showModalEditor: false,
+
+
             chronologyDescending: false,
             singleClickEdit: false,
             showAllFilters: false,
@@ -152,6 +162,7 @@ class DsView extends Component {
         this.jiraRefreshHandler = this.jiraRefreshHandler.bind(this);
         this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
         this.toggleModal = this.toggleModal.bind(this);
+        this.toggleModalEditor = this.toggleModalEditor.bind(this);
         this.processFilterChange = this.processFilterChange.bind(this);
         this.isKey = this.isKey.bind(this);
         this.hideColumn = this.hideColumn.bind(this);
@@ -497,6 +508,10 @@ class DsView extends Component {
         this.state.modalCallback(confirmed);
         this.setState({ showModal: !this.state.showModal });
     }
+    toggleModalEditor (confirmed, value) {
+        this.state.modalEditorCallback(confirmed, value);
+        this.setState({ showModalEditor: !this.state.showModalEditor });
+    }
 
     cellClickEvents (e, cell) {
         if (e.type === "dblclick" && !this.state.singleClickEdit && !this.state.disableEditing && this.cellEditCheckForConflicts(cell)) {
@@ -530,8 +545,27 @@ class DsView extends Component {
         let noConcurrentEdits = this.cellEditCheckForConflicts(cell);
         if (noConcurrentEdits) {
             setImmediate(() => {
-                console.log("Going to call force edit");
                 cell.edit(true);
+                if (true) {
+                    /*
+                    let self = this, curValue = cell.getValue();
+                    this.setState({ modalEditorText: curValue,
+                                    modalEditorCallback: (confirmed, value) => {
+                                        self.setState({ showModalEditor: false });
+                                        if (confirmed) {
+                                            console.log("Value is: ", value);
+                                            cell.setValue(value);
+                                        } else {
+                                            cell.setValue(curValue);
+                                        }
+                                        //self.cellEdited(cell);
+                                    },
+                                    showModalEditor: true });
+                    
+                    this.cellEditing(cell);
+                    return false;
+                    */
+                }
             });
         }        
     }
@@ -592,6 +626,23 @@ class DsView extends Component {
             clearTimeout(this.timers["post-cell-edited"]);
             this.timers["post-cell-edited"] = null;
         }
+        
+        /*
+        {
+            let self = this, curValue = cell.getValue();
+            this.setState({ modalEditorText: curValue,
+                            modalEditorCallback: (confirmed, value) => {
+                                self.setState({ showModalEditor: false });
+                                if (confirmed) {
+                                    console.log("Value is: ", value);
+                                    cell.setValue(value);
+                                } else {
+                                    cell.setValue(curValue);
+                                }
+                                //self.cellEdited(cell);
+                            },
+                            showModalEditor: true });
+        } */
     }
 
     toggleFilters () {
@@ -668,11 +719,13 @@ class DsView extends Component {
         } catch (e) {}
         // XXX: 20 is pagination size. Make it a constant. 
         //let row = await this.ref.table.addRow({}, false, 20);
-        let rowIdx = 0;
+        let rowIdx = null;
         if (cell) {
             let _id = cell.getRow().getData()['_id'];
             rowIdx = _id;
         }
+        if (pos === undefined || pos === null)
+            pos = true;
         let row = await this.ref.table.addRow(data, pos, rowIdx);
         console.log("Row is: ", row);
     }
@@ -1386,7 +1439,9 @@ class DsView extends Component {
             },
             {
                 label:"Add empty row...",
-                action: this.addRow
+                action: function (e, cell) {
+                    me.addRow(e, cell, null, true)
+                }
             },
             {
                 label:"Copy cell to clipboard...",
@@ -1532,6 +1587,7 @@ class DsView extends Component {
                         col.editor = MyTextArea;
                     else 
                         col.editor = MyCodeMirror;
+                    //col.editor = MyModalCodeMirror;
                     let me = this;
                     col.cellEditCancelled = (cell) => {
                         if (!me.cellImEditing) {
@@ -2041,6 +2097,10 @@ class DsView extends Component {
                     onClose={this.toggleModal} title={this.state.modalTitle} cancel={this.state.modalCancel} ok={this.state.modalOk}>
                     {this.state.modalQuestion}
                 </Modal>
+                <ModalEditor show={this.state.showModalEditor} 
+                            title={this.state.modalEditorTitle} text={this.state.modalEditorText} onClose={this.toggleModalEditor}
+                            cancel={this.state.modalEditorCancel} ok={this.state.modalEditorOk}>
+                </ModalEditor>
                 {this.state.showColorPicker ? <ColorPicker left={this.state.colorPickerLeft} top={this.state.colorPickerTop} color={this.state.color} onChangeComplete={this.handleColorPickerOnChangeComplete} handleClose={this.handleColorPickerClose}/>: ''}
             </div>
         );

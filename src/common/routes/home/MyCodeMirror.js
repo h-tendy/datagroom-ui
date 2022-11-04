@@ -1,4 +1,8 @@
-function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
+import ModalEditor from './ModalEditor';
+const React = require('react');
+const ReactDOM = require('react-dom');
+
+function MyCodeMirror(cell, onRendered, success, cancel, editorParams, ctrlKey) {
     var self = this,
         cellValue = cell.getValue(),
         vertNav = editorParams.verticalNavigation || "hybrid",
@@ -30,6 +34,34 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
 
     if (!value) value = "";
     input.value = value;
+
+    if (ctrlKey) {
+        let div = document.createElement("div");
+        document.body.appendChild(div);
+        let cmRef = {};
+        const PopupContent = () => {
+            return (
+                <ModalEditor show={true} 
+                    title={"Edit"} text={value} onClose={clear} editorParams={editorParams}
+                    cancel={"Cancel"} ok={"Done"} cmRef={cmRef}>
+                </ModalEditor>
+            );
+        };
+        
+        const clear = (ok, value) => {
+            ReactDOM.unmountComponentAtNode(div);
+            div.remove();
+            if (ok && (input.value != value)) {
+                success(value);
+                cellValue = value;
+            } else {
+                cancel();
+            }
+        }
+        ReactDOM.render(<PopupContent/>, div);
+    }
+
+
     /*
     var editor = window.CodeMirror(document.body, {
         lineNumbers: true
@@ -40,9 +72,11 @@ function MyCodeMirror(cell, onRendered, success, cancel, editorParams) {
       });
     */
    onRendered(function () {
-        input.focus({
-            preventScroll: true
-        });
+        if (!ctrlKey) {
+            input.focus({
+                preventScroll: true
+            });
+        }
         input.style.height = "100%";
         window.CodeMirrorSpellChecker({
             codeMirrorInstance: window.CodeMirror,
