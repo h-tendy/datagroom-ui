@@ -40,7 +40,8 @@ class ModalEditor extends React.Component {
                 lineWrapping: true,
                 mode: "spell-checker",
                 backdrop: "markdown",
-                highlightFormatting: true
+                highlightFormatting: true,
+                scrollbarStyle: "null"
             });
             window.inlineAttachment.editors.codemirror4.attach(this.codeMirror, {
                 uploadUrl: '/uploadAttachments', 
