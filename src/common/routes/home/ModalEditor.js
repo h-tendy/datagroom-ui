@@ -63,10 +63,7 @@ class ModalEditor extends React.Component {
                 this.props.cmRef.ref = this.codeMirror;
             }
             this.codeMirror.on("keyup", function (cm, e) {
-                if (me.codeMirror.getDoc().lineCount() === 1)
-                    h = 25;
-                else 
-                    h = (me.codeMirror.getDoc().lineCount() + 10) * 18;
+                h = (me.codeMirror.getDoc().lineCount() + 10) * 18;
                 //if (h > vh) h = vh;
                 me.codeMirror.setSize("100%", `${h}px`);
                 // refresh() was jarring the view sometimes. The scrollIntoView
