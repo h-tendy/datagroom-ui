@@ -121,7 +121,11 @@ class ModalEditor extends React.Component {
     const textareaStyle = {
         // Makes no difference
     }
-
+    let width = this.props.width.replace('px', '');
+    width = Number(width);
+    if (width > 300) {
+        modalStyle.maxWidth = `${width}px`;
+    }
     return (
         <div style={ backdropStyle }>
             <div style={ modalStyle }>

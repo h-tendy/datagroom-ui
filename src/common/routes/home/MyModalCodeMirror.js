@@ -23,6 +23,7 @@ function MyModalCodeMirror(cell, onRendered, success, cancel, editorParams, ctrl
 
     console.log("ctrlKey: ", ctrlKey);
     if (ctrlKey) {
+        let cellWidth = cell._cell.element.style.width;
         let div = document.createElement("div");
         document.body.appendChild(div);
         let cmRef = {};
@@ -30,7 +31,7 @@ function MyModalCodeMirror(cell, onRendered, success, cancel, editorParams, ctrl
             return (
                 <ModalEditor show={true} 
                     title={"Edit"} text={value} onClose={clear} editorParams={editorParams}
-                    cancel={"Cancel"} ok={"Done"} cmRef={cmRef}>
+                    cancel={"Cancel"} ok={"Done"} cmRef={cmRef} width={cellWidth}>
                 </ModalEditor>
             );
         };
