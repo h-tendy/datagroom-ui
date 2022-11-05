@@ -50,8 +50,8 @@ class ModalEditor extends React.Component {
                     dsName: this.props.editorParams.dsName
                 }
             });
-            
-            this.codeMirror.setSize("100%", 400);
+            let h = (this.codeMirror.getDoc().lineCount() + 10) * 18;
+            this.codeMirror.setSize("100%", `${h}px`);
             this.codeMirror.scrollIntoView({line: this.codeMirror.getDoc().lineCount() - 1, ch: 0}, 50)
             this.codeMirror.getDoc().setCursor({line: this.codeMirror.getDoc().lineCount() - 1, ch:0});
             //let me = this;
@@ -76,16 +76,7 @@ class ModalEditor extends React.Component {
                         e.stopPropagation();        
                         break;    
                 }
-            });
-    
-            /*
-            this.codeMirror.on('change', this.codemirrorValueChanged);
-            this.codeMirror.on('cursorActivity', this.cursorActivity);
-            this.codeMirror.on('focus', this.focusChanged.bind(this, true));
-            this.codeMirror.on('blur', this.focusChanged.bind(this, false));
-            this.codeMirror.on('scroll', this.scrollChanged);
-            */
-            //this.codeMirror.setValue(this.props.text || '');
+            });    
         }
     }
 
@@ -105,21 +96,17 @@ class ModalEditor extends React.Component {
     const modalStyle = {
         backgroundColor: '#fff',
         borderRadius: 5,
-        maxWidth: "90%",
-        /*minHeight: 300,*/
+        maxWidth: "55%",
+        height: "100%",
         margin: '0 auto',
         padding: 5
     };
     const bodyStyle = {
-      height: 400,
+      height: "80%",
       overflowY: 'auto'
     }
     const textareaStyle = {
-        display: "block",
-        boxSizing: "border-box",
-        whiteSpace: "pre-wrap",
-        width: "100%",
-        height: "370px"
+        // Makes no difference
     }
 
     return (
