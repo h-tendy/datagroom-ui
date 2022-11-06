@@ -10,7 +10,7 @@ class ModalEditor extends React.Component {
             value: "",
             textareaRef: null
         }
-        this.inactivityTimeout = 10 * 1000;
+        this.inactivityTimeout = 300 * 1000;
         this.inactivityTimer = null;    
     }
 	componentDidMount () {
