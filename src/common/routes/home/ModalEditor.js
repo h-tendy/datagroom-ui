@@ -148,7 +148,7 @@ class ModalEditor extends React.Component {
                                       style={ textareaStyle } value={ this.props.text } onChange={ (e) => {me.setState({value: e.target.value})} }></textarea></Modal.Body>
             </div>
             <Modal.Footer>
-                <span><b style={{ 'color': 'green' }}>ESC</b> to cancel. <b style={{ 'color': 'green' }}>Ctrl+Enter</b> to close. </span>
+                <span><b style={{ 'color': 'green' }}>ESC</b> to cancel. <b style={{ 'color': 'green' }}>Ctrl+Enter</b> to save and close. </span>
                 <Button variant="secondary" onClick={() => me.props.onClose(false, me.codeMirror.getValue())}>
                     {this.props.cancel ? this.props.cancel : "Cancel"}
                 </Button>
