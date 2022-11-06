@@ -130,7 +130,8 @@ class ModalEditor extends React.Component {
     }
     let width = this.props.width.replace('px', '');
     width = Number(width);
-    if (width > 300) {
+    if (width > 450) {
+        console.log(`Width is: `, width);
         modalStyle.maxWidth = `${width}px`;
     }
     return (
@@ -147,7 +148,7 @@ class ModalEditor extends React.Component {
                                       style={ textareaStyle } value={ this.props.text } onChange={ (e) => {me.setState({value: e.target.value})} }></textarea></Modal.Body>
             </div>
             <Modal.Footer>
-                <span><b style={{ 'color': 'green' }}>ESC</b> to cancel. <b style={{ 'color': 'green' }}>Ctrl+Enter</b> to save and close. </span>
+                <span><b style={{ 'color': 'green' }}>ESC</b> to cancel. <b style={{ 'color': 'green' }}>Ctrl+Enter</b> to close. </span>
                 <Button variant="secondary" onClick={() => me.props.onClose(false, me.codeMirror.getValue())}>
                     {this.props.cancel ? this.props.cancel : "Cancel"}
                 </Button>
