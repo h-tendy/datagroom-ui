@@ -10,6 +10,8 @@ class ModalEditor extends React.Component {
             value: "",
             textareaRef: null
         }
+        this.inactivityTimeout = 10 * 1000;
+        this.inactivityTimer = null;    
     }
 	componentDidMount () {
         if (this.codeMirror) {
@@ -62,8 +64,12 @@ class ModalEditor extends React.Component {
             if (this.props.cmRef) {
                 this.props.cmRef.ref = this.codeMirror;
             }
-            let inactivityTimeout = 300 * 1000;
-            let inactivityTimer = setTimeout(() => me.props.onClose(true, me.codeMirror.getValue()), inactivityTimeout);
+            me.inactivityTimer = setTimeout(() => {
+                                    if (me.inactivityTimer) {
+                                        me.props.onClose(true, me.codeMirror.getValue());
+                                        me.inactivityTimer = null;
+                                    }
+                                }, me.inactivityTimeout);
             this.codeMirror.on("keyup", function (cm, e) {
                 h = (me.codeMirror.getDoc().lineCount() + 10) * 18;
                 //if (h > vh) h = vh;
@@ -72,30 +78,47 @@ class ModalEditor extends React.Component {
                 // seems to be much more smoother. 
                 me.codeMirror.scrollIntoView(me.codeMirror.getDoc().getCursor(), 10);
                 //me.codeMirror.refresh();
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => me.props.onClose(true, me.codeMirror.getValue()), inactivityTimeout);
             });    
             this.codeMirror.on("keydown", function (cm, e) {
+                clearTimeout(me.inactivityTimer);
                 switch (e.keyCode) {
                     case 13:
                         if (e.ctrlKey) {
-                            me.props.onClose(true, me.codeMirror.getValue())
+                            me.props.onClose(true, me.codeMirror.getValue());
+                            me.inactivityTimer = null;
+                        } else {
+                            me.inactivityTimer = setTimeout(() => {
+                                if (me.inactivityTimer) {
+                                    me.props.onClose(true, me.codeMirror.getValue());
+                                    me.inactivityTimer = null;
+                                }
+                            }, me.inactivityTimeout);
                         }
                         break;
                     case 27:
                         me.props.onClose(false, me.codeMirror.getValue())
+                        me.inactivityTimer = null;
                         break;    
                     default:
                         e.stopImmediatePropagation();
                         e.stopPropagation();        
+                        me.inactivityTimer = setTimeout(() => {
+                            if (me.inactivityTimer) {
+                                me.props.onClose(true, me.codeMirror.getValue());
+                                me.inactivityTimer = null;
+                            }
+                        }, me.inactivityTimeout);
                         break;    
                 }
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => me.props.onClose(true, me.codeMirror.getValue()), inactivityTimeout);
             });
             this.codeMirror.on("scroll", function(cm, e){
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => me.props.onClose(true, me.codeMirror.getValue()), inactivityTimeout);
+                clearTimeout(me.inactivityTimer);
+                me.inactivityTimer = setTimeout(() => {
+                    if (me.inactivityTimer) {
+                        me.props.onClose(true, me.codeMirror.getValue());
+                        me.inactivityTimer = null;
+                    }
+                }, me.inactivityTimeout);
             });
         }
     }
@@ -149,10 +172,20 @@ class ModalEditor extends React.Component {
             </div>
             <Modal.Footer>
                 <span><b style={{ 'color': 'green' }}>ESC</b> to cancel. <b style={{ 'color': 'green' }}>Ctrl+Enter</b> to save and close. </span>
-                <Button variant="secondary" onClick={() => me.props.onClose(false, me.codeMirror.getValue())}>
+                <Button variant="secondary" onClick={() => 
+                    {
+                        clearTimeout(me.inactivityTimer);
+                        me.props.onClose(false, me.codeMirror.getValue());
+                        me.inactivityTimer = null;
+                    }}>
                     {this.props.cancel ? this.props.cancel : "Cancel"}
                 </Button>
-                <Button variant="primary" onClick={() => me.props.onClose(true, me.codeMirror.getValue())}>
+                <Button variant="primary" onClick={() => 
+                    {
+                        clearTimeout(me.inactivityTimer);
+                        me.props.onClose(true, me.codeMirror.getValue());
+                        me.inactivityTimer = null;
+                    }}>
                     {this.props.ok ? this.props.ok: "Do It!"}
                 </Button>
             </Modal.Footer>
