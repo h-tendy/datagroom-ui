@@ -199,6 +199,7 @@ class DsView extends Component {
         let me = this;
         socket.on('connect', (data) => {
             socket.emit('Hello', { user: user.user});
+            socket.emit('getActiveLocks', dsName);
             me.setState({connectedState: true});
         })
         socket.on('disconnect', (data) => {
