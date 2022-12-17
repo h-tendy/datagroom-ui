@@ -122,6 +122,7 @@ class DsView extends Component {
         this.cellImEditing = null;
         this.mouseDownOnHtmlLink = false;
         this.mouseDownOnBadgeCopyIcon = false;
+        this.reqCount = 0;
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
@@ -1642,8 +1643,12 @@ class DsView extends Component {
     }
 
     ajaxResponse (url, params, response) {
-        //console.log('ajaxResponse: ', response);
-        this.setState({ totalRecs: response.total});
+        //console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
+        if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
+            this.setState({ totalRecs: response.total});
+        } else {
+            console.log(`In ajaxResponse, avoided stale setting of response.total!`);
+        }
         return response; 
     }
 
@@ -1685,6 +1690,7 @@ class DsView extends Component {
             if(params && Object.keys(params).length) {
                 // Pick this from a checkbox. 
                 params.chronology = this.state.chronologyDescending ? 'desc' : 'asc';
+                params.reqCount = ++(this.reqCount);
                 if(!config.method || config.method.toLowerCase() == "get"){
                     config.method = "get";
     
