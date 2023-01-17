@@ -70,6 +70,17 @@ body blockquote>:last-child {
   /*margin: 4px 2px;*/
 }
 
+.bg {
+  background-color: rgb(190, 255, 188);
+  color: black;
+  border-radius: 5px; 
+  font-weight: bold;
+  font-size: 150%;
+  text-decoration: none;
+  display: inline-block;
+}
+
+
 .y {
   /*background-color: rgb(253, 252, 224);*/
   background-color: yellow;
