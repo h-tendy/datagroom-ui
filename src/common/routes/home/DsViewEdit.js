@@ -86,6 +86,9 @@ class DsViewEdit extends Component {
     componentWillUnmount () {
         const { dispatch } = this.props;
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
+        if (this.timer) {
+            clearTimeout(this.timer)
+        }
     }
 
     recordRef (ref) {
@@ -329,6 +332,9 @@ class DsViewEdit extends Component {
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
         dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig));
+        this.timer = setTimeout(() => {
+            dispatch(dsActions.clearViewDefs())
+        }, 2000)
     }
 
     setViewStatus () {
