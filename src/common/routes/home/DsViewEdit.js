@@ -313,9 +313,9 @@ class DsViewEdit extends Component {
         let jiraAgileConfig = null;
         if (jiraColumnsPresent && this.state.jiraAgile && this.state.jiraAgileJql) {
             jiraAgileConfig = {
-                jiraAgile: true,
-                jiraAgileJql: this.state.jiraAgileJql,
-                jiraAgileFieldMapping
+                jira: true,
+                jql: this.state.jiraAgileJql,
+                jiraFieldMapping: jiraAgileFieldMapping
             }
         }
 
@@ -1002,6 +1002,19 @@ class DsViewEdit extends Component {
                              });
             }
         } catch (e) {};
+        try {
+            if (this.state.jiraAgile === null && dsHome.dsViews[dsView].jiraAgileConfig) {
+                let jiraAgileFieldMapping = this.state.jiraAgileFieldMapping;
+                for (let key in dsHome.dsViews[dsView].jiraAgileConfig.jiraFieldMapping) {
+                    jiraAgileFieldMapping += `"${key}" -> "${dsHome.dsViews[dsView].jiraAgileConfig.jiraFieldMapping[key]}"` + '\n';
+                }
+                this.setState({
+                    jiraAgile: dsHome.dsViews[dsView].jiraAgileConfig.jira,
+                    jiraAgileJql: dsHome.dsViews[dsView].jiraAgileConfig.jql,
+                    jiraAgileFieldMapping: jiraAgileFieldMapping
+                });
+            }
+        } catch (e) { };
         try {
             if (this.state.fixedHeight === null && dsHome.dsViews[dsView].otherTableAttrs) {
                 this.setState({ fixedHeight: dsHome.dsViews[dsView].otherTableAttrs.fixedHeight, 

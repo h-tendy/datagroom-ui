@@ -1961,7 +1961,7 @@ class DsView extends Component {
             document.title = dsName;
         }        
         try {
-            if (dsHome.dsViews[dsView].jiraConfig.jira) {
+            if ((dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira) || (dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira)) {
                 //jiraRefreshButton = <Button size="sm" onClick={this.jiraRefreshHandler}> Refresh Jira </Button>
                 jiraRefreshButton = <> | <button className="btn btn-link" onClick={this.jiraRefreshHandler}> <i class='fas fa-redo'></i> Refresh Jira </button> </>
                 if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'refreshing')
