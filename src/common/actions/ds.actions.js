@@ -3,6 +3,7 @@ import { dsService, uploadService } from '../services';
 
 export const dsActions = {
     loadColumnsForUserView,
+    clearViewDefs,
     editSingleAttribute,
     insertOneDoc,
     downloadXlsx, 
@@ -40,6 +41,12 @@ function loadColumnsForUserView (dsName, dsView, dsUser) {
     function request() { return { type: dsConstants.LOAD_COLUMNS_REQUEST, dsName, dsView, dsUser } }
     function success(columnsAndKeys) { return { type: dsConstants.LOAD_COLUMNS_SUCCESS, dsName, dsView, dsUser, columnsAndKeys } }
     function failure(message) { return { type: dsConstants.LOAD_COLUMNS_FAILURE, dsName, dsView, dsUser, message } }
+}
+
+function clearViewDefs() {
+    return async dispatch => {
+        dispatch({ type: dsConstants.CLEAR_VIEW_DEFS_TRACER })
+    }
 }
 
 function editSingleAttribute (dsName, dsView, dsUser, _id, column, oldVal, newVal, selectorObj, editObj) {
@@ -171,13 +178,17 @@ function deleteManyDocs (dsName, dsView, dsUser, objects, rows) {
 }
 
 
-function setViewDefinitions (dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig) {
+function setViewDefinitions(dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig) {
     return async dispatch => {
         try {
             dispatch(request());
             let responseJson;
-            if (jiraConfig)
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig});
+            if (jiraConfig && jiraAgileConfig)
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig });
+            else if (jiraConfig)
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig });
+            else if (jiraAgileConfig)
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig });
             else 
                 responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig});
             if (responseJson)

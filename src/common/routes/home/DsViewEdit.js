@@ -35,8 +35,11 @@ class DsViewEdit extends Component {
             editingButtonText: 'Disable Editing',
             refreshAfterRender: false,
             jira: null,
+            jiraAgile: null,
             jql: "",
-            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions", "parent", "subtasks", "subtasksDetails", "dependsLinks", "implementLinks", "packageLinks", "relatesLinks", "testLinks", "coversLinks", "defectLinks", "automatesLinks", "updated", "votes", "systemFeature", "labels", "phaseBugFound", "phaseBugIntroduced"\n\n',
+            jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions", "parentKey", "parentSummary", "parent", "subtasks", "subtasksDetails", "dependsLinks", "implementLinks", "packageLinks", "relatesLinks", "testLinks", "coversLinks", "defectLinks", "automatesLinks", "updated", "votes", "systemFeature", "labels", "phaseBugFound", "phaseBugIntroduced", "epic", "description"\n\n',
+            jiraAgileJql: "",
+            jiraAgileFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions", "parentKey", "parentSummary", "parent", "subtasks", "subtasksDetails", "dependsLinks", "implementLinks", "packageLinks", "relatesLinks", "testLinks", "coversLinks", "defectLinks", "automatesLinks", "updated", "votes", "systemFeature", "labels", "phaseBugFound", "phaseBugIntroduced", "epic", "description"\n\n',
             dsDescription: null,
             widths: {},
             fixedHeight: null,
@@ -83,6 +86,9 @@ class DsViewEdit extends Component {
     componentWillUnmount () {
         const { dispatch } = this.props;
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
+        if (this.timer) {
+            clearTimeout(this.timer)
+        }
     }
 
     recordRef (ref) {
@@ -183,7 +189,7 @@ class DsViewEdit extends Component {
             "Work-id": false,
             "Description": false
         }; let jiraColumnsPresent = true;
-        let jiraFields = { 'key': 1, 'summary':1, 'type':1, 'assignee':1, 'severity':1, 'priority':1, 'foundInRls':1, 'reporter':1, 'created':1, 'rrtTargetRls':1, 'targetRls':1, 'status':1, 'feature':1, 'rzFeature': 1, 'versions': 1, 'parent': 1, 'subtasks': 1, 'subtasksDetails': 1, 'dependsLinks': 1, 'implementLinks': 1, 'packageLinks': 1, 'relatesLinks': 1, 'testLinks': 1, 'coversLinks': 1, "defectLinks": 1, "automatesLinks": 1, 'updated': 1, 'votes': 1, 'systemFeature': 1, 'labels': 1, 'phaseBugFound': 1, 'phaseBugIntroduced': 1};
+        let jiraFields = { 'key': 1, 'summary': 1, 'type': 1, 'assignee': 1, 'severity': 1, 'priority': 1, 'foundInRls': 1, 'reporter': 1, 'created': 1, 'rrtTargetRls': 1, 'targetRls': 1, 'status': 1, 'feature': 1, 'rzFeature': 1, 'versions': 1, 'parentKey': 1, 'parentSummary': 1, 'parent': 1, 'subtasks': 1, 'subtasksDetails': 1, 'dependsLinks': 1, 'implementLinks': 1, 'packageLinks': 1, 'relatesLinks': 1, 'testLinks': 1, 'coversLinks': 1, "defectLinks": 1, "automatesLinks": 1, 'updated': 1, 'votes': 1, 'systemFeature': 1, 'labels': 1, 'phaseBugFound': 1, 'phaseBugIntroduced': 1, 'epic': 1, 'description': 1 };
         let dsFields = {};
         for (let i = 0; i < currentDefs.length; i++) {
             for (let key in jiraColumns) {
@@ -200,6 +206,7 @@ class DsViewEdit extends Component {
                 break;
             }
         }
+
         function validateMapping (jiraFieldMapping) {
             let ret = { status: true, error: '' };
             for (let key in jiraFieldMapping) {
@@ -253,6 +260,47 @@ class DsViewEdit extends Component {
                 jiraFieldMapping
             }
         }
+
+        // Jira Agile config 
+
+        let jiraAgileFieldMapping = {};
+        if (this.state.jiraAgileFieldMapping) {
+            let lines = this.state.jiraAgileFieldMapping.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                if (/^\s*#/.test(line)) continue;
+                let m = line.match(/^\s*"(.*?)"\s*->\s*"(.*?)"\s*$/);
+                if (m && (m.length >= 2)) {
+                    let jiraAgileKey = m[1], dsField = m[2];
+                    jiraAgileFieldMapping[jiraAgileKey] = dsField;
+                    continue;
+                }
+                m = line.match(/^\s*'(.*?)'\s*->\s*'(.*?)'\s*$/);
+                if (m && (m.length >= 2)) {
+                    let jiraAgileKey = m[1], dsField = m[2];
+                    jiraAgileFieldMapping[jiraAgileKey] = dsField;
+                    continue;
+                }
+
+            }
+            let ret = validateMapping(jiraAgileFieldMapping);
+            console.log("validate ret: ", ret);
+            jiraColumnsPresent = ret.status;
+            if (!ret.status) {
+                this.setState({ setViewStatus: "Jira validation failed!" });
+                console.log("Validation failed")
+                return;
+            }
+        }
+        let jiraAgileConfig = null;
+        if (jiraColumnsPresent && this.state.jiraAgile && this.state.jiraAgileJql) {
+            jiraAgileConfig = {
+                jira: true,
+                jql: this.state.jiraAgileJql,
+                jiraFieldMapping: jiraAgileFieldMapping
+            }
+        }
+
         let dsDescription = {
             dsDescription: this.state.dsDescription
         }
@@ -262,7 +310,10 @@ class DsViewEdit extends Component {
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig));
+        this.timer = setTimeout(() => {
+            dispatch(dsActions.clearViewDefs())
+        }, 2000)
     }
 
     setViewStatus () {
@@ -937,6 +988,19 @@ class DsViewEdit extends Component {
             }
         } catch (e) {};
         try {
+            if (this.state.jiraAgile === null && dsHome.dsViews[dsView].jiraAgileConfig) {
+                let jiraAgileFieldMapping = this.state.jiraAgileFieldMapping;
+                for (let key in dsHome.dsViews[dsView].jiraAgileConfig.jiraFieldMapping) {
+                    jiraAgileFieldMapping += `"${key}" -> "${dsHome.dsViews[dsView].jiraAgileConfig.jiraFieldMapping[key]}"` + '\n';
+                }
+                this.setState({
+                    jiraAgile: dsHome.dsViews[dsView].jiraAgileConfig.jira,
+                    jiraAgileJql: dsHome.dsViews[dsView].jiraAgileConfig.jql,
+                    jiraAgileFieldMapping: jiraAgileFieldMapping
+                });
+            }
+        } catch (e) { };
+        try {
             if (this.state.fixedHeight === null && dsHome.dsViews[dsView].otherTableAttrs) {
                 this.setState({ fixedHeight: dsHome.dsViews[dsView].otherTableAttrs.fixedHeight, 
                              });
@@ -1026,6 +1090,55 @@ class DsViewEdit extends Component {
                                     //me.setState({somethingChanged: me.state.somethingChanged++});        
                                     if (!value) return;
                                     me.setState({jiraFieldMapping: value});
+                                }, 1000)
+                            }} />
+                        </Col>
+                    }
+                </Row>
+                <br />
+                <br />
+                <Row>
+                    <Col md={2} sm={2} xs={2}>
+                        <Form.Check inline type="checkbox" label="&nbsp;Add Jira Agile Query" checked={this.state.jiraAgile} onChange={(event) => {
+                            let checked = event.target.checked;
+                            me.setState({ jiraAgile: checked });
+                        }} />
+                    </Col>
+                    {this.state.jiraAgile &&
+                        <Col md={6} sm={6} xs={6}>
+                            <Form.Control type="text" defaultValue={this.state.jiraAgileJql} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    if (!value) return;
+                                    me.setState({ jiraAgileJql: value });
+                                }, 1000)
+                            }} />
+                        </Col>
+                    }
+                </Row>
+                <Row>
+                    {this.state.jiraAgile &&
+                        <Col md={2} sm={2} xs={2}>
+                            <b>Jira Agile field mapping: </b>
+                        </Col>
+                    }
+                    {this.state.jiraAgile &&
+                        <Col md={6} sm={6} xs={6}>
+                            <Form.Control as="textarea" rows="3" defaultValue={this.state.jiraAgileFieldMapping} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    // trigger render again no matter what changed. 
+                                    //me.setState({somethingChanged: me.state.somethingChanged++});        
+                                    if (!value) return;
+                                    me.setState({ jiraAgileFieldMapping: value });
                                 }, 1000)
                             }} />
                         </Col>
