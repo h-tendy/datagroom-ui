@@ -207,27 +207,6 @@ class DsViewEdit extends Component {
             }
         }
 
-        // let jiraAgileColumns = {
-        //     "Work-id": false,
-        //     "Description": false
-        // }; let jiraAgileColumnsPresent = true;
-        // let jiraAgileFields = { 'key': 1, 'summary': 1, 'type': 1, 'assignee': 1, 'severity': 1, 'priority': 1, 'foundInRls': 1, 'reporter': 1, 'created': 1, 'rrtTargetRls': 1, 'targetRls': 1, 'status': 1, 'feature': 1, 'rzFeature': 1, 'versions': 1, 'parent': 1, 'subtasks': 1, 'subtasksDetails': 1, 'dependsLinks': 1, 'implementLinks': 1, 'packageLinks': 1, 'relatesLinks': 1, 'testLinks': 1, 'coversLinks': 1, "defectLinks": 1, "automatesLinks": 1, 'updated': 1, 'votes': 1, 'systemFeature': 1, 'labels': 1, 'phaseBugFound': 1, 'phaseBugIntroduced': 1 };
-        // for (let i = 0; i < currentDefs.length; i++) {
-        //     for (let key in jiraAgileColumns) {
-        //         if (currentDefs[i].field === key) {
-        //             jiraAgileColumns[key] = true;
-        //         }
-        //     }
-        //     dsFields[currentDefs[i].field] = 1;
-        // }
-        // for (let key in jiraAgileColumns) {
-        //     if (!jiraAgileColumns[key]) {
-        //         console.log("Unknown jira column: ", key);
-        //         jiraColumnsPresent = false;
-        //         break;
-        //     }
-        // }
-
         function validateMapping (jiraFieldMapping) {
             let ret = { status: true, error: '' };
             for (let key in jiraFieldMapping) {
