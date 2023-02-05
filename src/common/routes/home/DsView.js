@@ -1061,7 +1061,9 @@ class DsView extends Component {
 
         let editObj = {};
         editObj[column] = newVal;
-        dispatch(dsActions.editSingleAttribute(dsName, dsView, user.user, _id, column, oldVal, newVal, selectorObj, editObj));
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        dispatch(dsActions.editSingleAttribute(dsName, dsView, user.user, _id, column, oldVal, newVal, selectorObj, editObj, jiraConfig, jiraAgileConfig));
 
     }
     

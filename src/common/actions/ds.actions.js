@@ -49,7 +49,7 @@ function clearViewDefs() {
     }
 }
 
-function editSingleAttribute (dsName, dsView, dsUser, _id, column, oldVal, newVal, selectorObj, editObj) {
+function editSingleAttribute(dsName, dsView, dsUser, _id, column, oldVal, newVal, selectorObj, editObj, jiraConfig, jiraAgileConfig) {
     return async dispatch => {
         let editTracker = { _id, field: column, oldVal, newVal }
         try {
@@ -59,7 +59,7 @@ function editSingleAttribute (dsName, dsView, dsUser, _id, column, oldVal, newVa
             //let editObj = {};
             //editObj[column] = newVal;
             dispatch(request(_id, editTracker));
-            let responseJson = await dsService.editSingleAttribute({dsName, dsView, dsUser, column, selectorObj, editObj});
+            let responseJson = await dsService.editSingleAttribute({ dsName, dsView, dsUser, column, selectorObj, editObj, jiraConfig, jiraAgileConfig });
             if (responseJson)
                 dispatch(success(_id, editTracker, responseJson));
             else 
