@@ -27,6 +27,7 @@ import QueryParsers from './QueryParsers';
 import "reveal.js/dist/reveal.css";
 //import "reveal.js/dist/theme/white.css";
 import './rjs_white.css';
+import JiraForm from './jiraForm.js'
 import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
@@ -112,7 +113,7 @@ class DsView extends Component {
             colorPickerTop: 0,
             color: 0,
 
-            connectedState: false
+            connectedState: false,
         };
         this.ref = null;
         
@@ -123,6 +124,14 @@ class DsView extends Component {
         this.mouseDownOnHtmlLink = false;
         this.mouseDownOnBadgeCopyIcon = false;
         this.reqCount = 0;
+
+        this.jiraFormData = {
+            JIRA_AGILE_ID: "None",
+            Summary: "",
+            Size: "",
+            Type: "Epic",
+            Status: "None",
+        }
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
@@ -189,6 +198,11 @@ class DsView extends Component {
         let disableEditingFrmLocal = localStorage.getItem("disableEditing");
         disableEditingFrmLocal = JSON.parse(disableEditingFrmLocal);
         this.state.disableEditing = disableEditingFrmLocal;
+
+
+        this.convertToJiraRow = this.convertToJiraRow.bind(this)
+        this.handleJiraFormChange = this.handleJiraFormChange.bind(this)
+        this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -1369,6 +1383,43 @@ class DsView extends Component {
         //this.ref.table.setColumns(currentDefs);
     }
 
+    /**Start convert to JIRA row */
+    handleJiraFormChange(event) {
+        this.jiraFormData = {
+            ...this.jiraFormData,
+            [event.target.name]: event.target.value,
+        }
+    }
+
+    submitJiraFormChange() {
+        console.log("Jira form data", this.jiraFormData)
+    }
+
+    convertToJiraRow() {
+        let self = this
+        const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
+        if ((dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira) || (dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Jira row specifications:- ",
+                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} />,
+                modalCallback: () => {
+                    this.submitJiraFormChange()
+                },
+                showModal: !this.state.showModal
+            })
+        } else {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `<b>Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row</b>`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+        }
+    }
+    /**End convert to JIRA row */
+
     handleColorPickerClose () {
         this.setState({ showColorPicker: false });
     }
@@ -1486,6 +1537,10 @@ class DsView extends Component {
                 label:"Delete row...",
                 action: this.deleteRowQuestion
             },
+            {
+                label: "Convert to JIRA row...",
+                action: this.convertToJiraRow
+            }
         ];        
         let columns = [];
         for (let i = 0; i < dsHome.dsViews[dsView].columnAttrs.length; i++) {
