@@ -127,10 +127,11 @@ class DsView extends Component {
 
         this.jiraFormData = {
             JIRA_AGILE_ID: "None",
-            Summary: "",
-            Size: "",
-            Type: "Epic",
+            Type: "",
             Status: "None",
+            Size: "",
+            Summary: "",
+            Description: ""
         }
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
@@ -1395,14 +1396,23 @@ class DsView extends Component {
         console.log("Jira form data", this.jiraFormData)
     }
 
-    convertToJiraRow() {
+    convertToJiraRow(e, cell) {
         let self = this
         const { match, dsHome } = this.props;
         let dsView = match.params.dsView;
-        if ((dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira) || (dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira)) {
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
+            let jiraAgileBoard = null
+            try {
+                let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
+                if (matchArr && matchArr.length >= 4) {
+                    jiraAgileBoard = matchArr[3].trim()
+                }
+            } catch (e) { }
             this.setState({
                 modalTitle: "Jira row specifications:- ",
-                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} />,
+                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} />,
                 modalCallback: () => {
                     this.submitJiraFormChange()
                 },
@@ -1418,6 +1428,13 @@ class DsView extends Component {
             })
         }
     }
+
+    // formInitialJiraForm(rowData) {
+    //     for (let keys of Object.keys(rowData)) {
+    //         if (!rowData[keys]) continue
+
+    //     }
+    // }
     /**End convert to JIRA row */
 
     handleColorPickerClose () {

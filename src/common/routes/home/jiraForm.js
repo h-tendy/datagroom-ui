@@ -26,37 +26,20 @@ const JiraForm = (props) => {
             <Row className="justify-content-md-center">
                 <Col md={6}>
                     <Form>
-                        <Form.Group controlId="formJIRA_AGILE_ID">
-                            <Form.Label>JIRA AGILE ID:</Form.Label>
-                            <Form.Control
-                                as="select"
-                                name="JIRA_AGILE_ID"
-                                value={formData.JIRA_AGILE_ID}
-                                onChange={handleChange}
-                            >
-                                <option value="None">None</option>
-                                <option value="THANOS-21364">THANOS-21364</option>
-                            </Form.Control>
-                        </Form.Group>
-                        <Form.Group controlId="formSummary">
-                            <Form.Label>Summary:</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows="3"
-                                name="Summary"
-                                value={formData.Summary}
-                                onChange={handleChange}
-                            />
-                        </Form.Group>
-                        <Form.Group controlId="formSize">
-                            <Form.Label>Size:</Form.Label>
-                            <Form.Control
-                                type="number"
-                                name="Size"
-                                value={formData.Size}
-                                onChange={handleChange}
-                            />
-                        </Form.Group>
+                        {props.jiraAgileEnabled && (
+                            <Form.Group controlId="formJIRA_AGILE_ID">
+                                <Form.Label>JIRA AGILE ID:</Form.Label>
+                                <Form.Control
+                                    as="select"
+                                    name="JIRA_AGILE_ID"
+                                    value={formData.JIRA_AGILE_ID}
+                                    onChange={handleChange}
+                                >
+                                    <option value="None">None</option>
+                                    {props.jiraAgileBoard && <option value={`${props.jiraAgileBoard}`}>{props.jiraAgileBoard}</option>}
+                                </Form.Control>
+                            </Form.Group>
+                        )}
                         <Form.Group controlId="formType">
                             <Form.Label>Type:</Form.Label>
                             <Form.Control
@@ -65,10 +48,10 @@ const JiraForm = (props) => {
                                 value={formData.Type}
                                 onChange={handleChange}
                             >
-                                <option value="Epic">Epic</option>
-                                <option value="User Story">User Story</option>
-                                <option value="Sub-task">Sub-task</option>
-                                <option value="Bug">Bug</option>
+                                {props.jiraAgileEnabled && (<option value="Epic">Epic</option>)}
+                                {props.jiraAgileEnabled && (<option value="User Story">User Story</option>)}
+                                {props.jiraAgileEnabled && (<option value="Sub-task">Sub-task</option>)}
+                                {props.jiraEnabled && (<option value="Bug">Bug</option>)}
                             </Form.Control>
                         </Form.Group>
                         {formData.Type === "Bug" && (
@@ -86,6 +69,37 @@ const JiraForm = (props) => {
                                 </Form.Control>
                             </Form.Group>
                         )}
+                        {formData.Type !== "Bug" && (
+                            <Form.Group controlId="formSize">
+                                <Form.Label>Size:</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    name="Size"
+                                    value={formData.Size}
+                                    onChange={handleChange}
+                                />
+                            </Form.Group>
+                        )}
+                        <Form.Group controlId="formSummary">
+                            <Form.Label>Summary:</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows="3"
+                                name="Summary"
+                                value={formData.Summary}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+                        <Form.Group controlId="formDescription">
+                            <Form.Label>Description:</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows="3"
+                                name="Summary"
+                                value={formData.Description}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
                         {/* <Button variant="primary" type="Submit">Submit</Button> */}
                     </Form>
                 </Col>
