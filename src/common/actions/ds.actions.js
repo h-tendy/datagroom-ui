@@ -4,6 +4,7 @@ import { dsService, uploadService } from '../services';
 export const dsActions = {
     loadColumnsForUserView,
     clearViewDefs,
+    getProjectsMetaData,
     editSingleAttribute,
     insertOneDoc,
     downloadXlsx, 
@@ -47,6 +48,24 @@ function clearViewDefs() {
     return async dispatch => {
         dispatch({ type: dsConstants.CLEAR_VIEW_DEFS_TRACER })
     }
+}
+
+function getProjectsMetaData(dsName, dsView, dsUser) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.getProjectsMetaData({ dsName, dsView, dsUser });
+            if (responseJson)
+                dispatch(success(responseJson));
+            else
+                dispatch(failure("getProjectsMetaData failure"));
+        } catch (error) {
+            dispatch(failure("getProjectsMetaData failure"));
+        }
+    }
+    function request() { return { type: dsConstants.GET_PROJECTS_METADATA_REQUEST, dsName, dsView, dsUser } }
+    function success(projectsMetaData) { return { type: dsConstants.GET_PROJECTS_METADATA_SUCCESS, dsName, dsView, dsUser, projectsMetaData } }
+    function failure(message) { return { type: dsConstants.GET_PROJECTS_METADATA_FAILURE, dsName, dsView, dsUser, message } }
 }
 
 function editSingleAttribute(dsName, dsView, dsUser, _id, column, oldVal, newVal, selectorObj, editObj, jiraConfig, jiraAgileConfig) {

@@ -28,6 +28,32 @@ export function dsHome (state = initialState, action) {
                 newState.dsViews[action.dsView] = { status: 'fail', error: action.message };
                 return newState
             }
+
+        case dsConstants.GET_PROJECTS_METADATA_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'loading' };
+                return newState
+            }
+        case dsConstants.GET_PROJECTS_METADATA_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'success', projectsMetaData: action.projectsMetaData };
+                return newState
+            }
+        case dsConstants.GET_PROJECTS_METADATA_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'fail', error: action.message };
+                return newState
+            }
+
         case dsConstants.EDIT_SINGLE_REQUEST:
             {
                 let newState = {...state};
