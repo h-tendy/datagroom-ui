@@ -1,22 +1,15 @@
 import React, { Component, useState } from "react";
 import Select from 'react-select'
-import { Form, Button, Col, Row, Container, FormControl, DropdownButton, Dropdown } from "react-bootstrap";
+import { Button, Col, Row, Container, FormControl, DropdownButton, Dropdown } from "react-bootstrap";
+import Form from 'react-bootstrap/Form'
 
 class JiraForm extends Component {
     constructor(props) {
         super(props)
         this.state = {
             formData: {
-                Project: "",
-                JIRA_AGILE_ID: "None",
-                Type: "Epic",
-                Status: "None",
-                Size: "",
-                summary: "",
-                Description: ""
-            },
-            searchTerm: '',
-            selectedValue: ''
+                ...this.props.formData
+            }
         }
         this.projectsMetaData = null
         this.projects = []
@@ -47,12 +40,9 @@ class JiraForm extends Component {
                 break
             }
         }
-        let event = {};
-        event.target = {};
-        event.target.name = "Project";
-        event.target.value = this.projectsMetaData.projects[0].name;
-        this.props.handleChange(event)
-
+        let obj = {};
+        obj["Project"] = this.projectsMetaData.projects[0].name
+        this.props.handleChange(obj)
         this.setState({
             ...this.state,
             formData: {
@@ -63,7 +53,6 @@ class JiraForm extends Component {
     }
 
     handleChange = (event) => {
-        console.log("EVENTXXX", event.target.name, event.target.value)
         if (event.target.name == "Project") {
             this.projectName = event.target.value
         } else if (event.target.name == "Type") {
@@ -87,16 +76,29 @@ class JiraForm extends Component {
                 }
             }
         }
-        console.log("Fields", this.fields)
-        console.log("FieldsKey", this.fieldsKey)
-        this.props.handleChange(event)
-        this.setState({
-            ...this.state,
-            formData: {
-                ...this.state.formData,
-                [event.target.name]: event.target.value
-            }
-        })
+        let obj = {}
+        obj[event.target.name] = event.target.value;
+        this.props.handleChange(obj)
+        if (event.target.name == "Project" || event.target.name == "JIRA_AGILE_ID" || event.target.name == "Type") {
+            this.setState({
+                ...this.state,
+                formData: {
+                    ...this.state.formData,
+                    [event.target.name]: event.target.value
+                }
+            })
+        } else {
+            this.setState({
+                ...this.state,
+                formData: {
+                    ...this.state.formData,
+                    [this.state.formData.Type]: {
+                        ...this.state.formData[this.state.formData.Type],
+                        [event.target.name]: event.target.value
+                    }
+                }
+            })
+        }
     };
 
     handleMultiChange = (e, b, c, d) => {
@@ -104,11 +106,9 @@ class JiraForm extends Component {
         for (let i = 0; i < e.length; i++) {
             values.push(e[i].value)
         }
-        let event = {};
-        event.target = {};
-        event.target.name = b.name;
-        event.target.value = values;
-        this.props.handleChange(event)
+        let obj = {};
+        obj[b.name] = values;
+        this.props.handleChange(obj)
         this.setState({
             ...this.state,
             formData: {
@@ -118,47 +118,9 @@ class JiraForm extends Component {
         })
     }
 
-    handleSearch = (e) => {
-        this.setState({
-            searchTerm: e.target.value
-        })
-    };
 
-    handleSelect = (value) => {
-        this.setState({
-            selectedValue: value
-        })
-    };
 
-    // const [formData, setFormData] = useState({
-    //     JIRA_AGILE_ID: "None",
-    //     Summary: "",
-    //     Size: "",
-    //     Type: "Epic",
-    //     Status: "None",
-    // });
 
-    // const handleChange = (event) => {
-    //     if (event.target.name === "Type") {
-    //         let options = event.target.options;
-    //         let value = [];
-    //         for (let i = 0, l = options.length; i < l; i++) {
-    //             if (options[i].selected) {
-    //                 value.push(options[i].value);
-    //             }
-    //         }
-    //         setFormData({
-    //             ...formData,
-    //             [event.target.name]: value,
-    //         });
-    //     } else {
-    //         setFormData({
-    //             ...formData,
-    //             [event.target.name]: event.target.value,
-    //         });
-    //     }
-    //     props.handleChange(event)
-    // };
 
     render() {
     return (
@@ -206,7 +168,6 @@ class JiraForm extends Component {
                                     <Form.Control
                                         as="select"
                                         name="Type"
-                                        defaultValue={""}
                                         value={this.state.formData.Type}
                                         onChange={this.handleChange}
                                     >
@@ -220,31 +181,63 @@ class JiraForm extends Component {
                         </Form.Group>
                         {this.state.formData.Type != "" && this.fieldsKey && this.fieldsKey.map((key) =>
                         (
-                            <Form.Group controlId={`form${key}`}>
+                            <Form.Group key={`form${key}`} controlId={`form${key}`}>
                                 <Form.Row style={{ paddingBottom: "45px" }}>
                                     <Form.Label column sm="4">{this.fields[key].name}:</Form.Label>
                                     <Col sm="8">
+                                        {key === "customfield_25578" && <Form.Control
+                                            as="textarea"
+                                            rows="1"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />}
+                                        {key === "parent" && <Form.Control
+                                            as="textarea"
+                                            rows="1"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />}
                                         {this.fields[key].type === "string" && <Form.Control
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
-                                            value={this.state.formData.summary}
+                                            value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
                                         {this.fields[key].type === "option" && <Form.Control
                                             as="select"
                                             name={`${key}`}
-                                            value={this.state.formData[key] ? this.state.formData[key] : this.fields[key].allowedValues && this.fields[key].allowedValues[0]}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        >
+                                            {this.fields[key].allowedValues && this.fields[key].allowedValues.map((value) => <option key={value} value={`${value}`}>{value}</option>)}
+                                        </Form.Control>
+                                        }
+                                        {this.fields[key].type === "number" && <Form.Control
+                                            type="number"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />
+                                        }
+                                        {this.fields[key].type === "priority" && <Form.Control
+                                            as="select"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         >
                                             {this.fields[key].allowedValues && this.fields[key].allowedValues.map((value) => <option key={value} value={`${value}`}>{value}</option>)}
                                         </Form.Control>
                                         }
                                         {
-                                            this.fields[key].type === "array" &&
+                                            this.fields[key].type === "array" && this.allowedValues[key] &&
                                             <Select
                                                 onChange={this.handleMultiChange}
-                                                defaultValue={[]}
+                                                defaultValue={this.state.formData[this.state.formData.Type][key].map((entry) => {
+                                                    return { label: entry, value: entry }
+                                                })}
                                                 isMulti
                                                 name={`${key}`}
                                                 options={this.allowedValues[key]}
@@ -257,54 +250,6 @@ class JiraForm extends Component {
                             </Form.Group>
                         )
                         )}
-
-                        {/* {formData.Type === "Bug" && (
-                                <Form.Group controlId="formStatus">
-                                    <Form.Label>Status:</Form.Label>
-                                    <Form.Control
-                                        as="select"
-                                        name="Status"
-                                        value={formData.Status}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="None">None</option>
-                                        <option value="A new issue">A new issue</option>
-                                        <option value="Resolved">Resolved</option>
-                                    </Form.Control>
-                                </Form.Group>
-                            )}
-                            {formData.Type !== "Bug" && (
-                                <Form.Group controlId="formSize">
-                                    <Form.Label>Size:</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        name="Size"
-                                        value={formData.Size}
-                                        onChange={handleChange}
-                                    />
-                                </Form.Group>
-                            )}
-                            <Form.Group controlId="formSummary">
-                                <Form.Label>Summary:</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows="3"
-                                    name="Summary"
-                                    value={formData.Summary}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group>
-                            <Form.Group controlId="formDescription">
-                                <Form.Label>Description:</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows="3"
-                                    name="Summary"
-                                    value={formData.Description}
-                                    onChange={handleChange}
-                                />
-                            </Form.Group> */}
-                        {/* <Button variant="primary" type="Submit">Submit</Button> */}
                     </Form>
                 </Col>
             </Row>

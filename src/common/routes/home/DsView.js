@@ -129,10 +129,40 @@ class DsView extends Component {
             Project: "",
             JIRA_AGILE_ID: "None",
             Type: "Epic",
-            Status: "None",
-            Size: "",
-            Summary: "",
-            Description: ""
+            "Bug": {
+                "summary": "",
+                "description": "",
+                "customfield_25563": "SW",
+                "customfield_25716": "Application SW",
+                "customfield_25558": ["L0 Application"],
+                "customfield_25570": "L0 CP Restoration",
+                "customfield_11504": "3-Minor",
+                "priority": "Medium",
+                "versions": ["TH7.0"],
+                "customfield_21295": ["TH7.0"],
+                "customfield_25578": "11.11.22",
+                "customfield_25555": ["TH7.0"],
+                "customfield_25518": "Development Testing"
+            },
+            "User Story": {
+                "summary": "",
+                "description": "",
+                "priority": "Medium",
+                "customfield_11890": 0,
+            },
+            "Sub-task": {
+                "summary": "",
+                "priority": "Medium",
+                "description": "",
+                "customfield_11890": 0,
+                "parent": ""
+            },
+            "Epic": {
+                "customfield_12791": "",
+                "summary": "",
+                "description": "",
+                "priority": "Medium"
+            }
         }
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
@@ -1387,15 +1417,29 @@ class DsView extends Component {
     }
 
     /**Start convert to JIRA row */
-    handleJiraFormChange(event) {
-        this.jiraFormData = {
-            ...this.jiraFormData,
-            [event.target.name]: event.target.value,
+    handleJiraFormChange(obj) {
+        let key = Object.keys(obj)[0]
+        if (key && key === "Project" || key == "JIRA_AGILE_ID" || key == "Type") {
+            this.jiraFormData = {
+                ...this.jiraFormData,
+                [key]: obj[key]
+            }
+        } else {
+            this.jiraFormData = {
+                ...this.jiraFormData,
+                [this.jiraFormData.Type]: {
+                    ...this.jiraFormData[this.jiraFormData.Type],
+                    ...obj
+                }
+            }
         }
+        console.log(this.jiraFormData)
     }
 
     submitJiraFormChange() {
+        //TODO: Just before sending change the value of key customfield_25578 to array
         console.log("Jira form data", this.jiraFormData)
+        // console.log(this.jiraFormRef.current.onSubmit())
     }
 
     convertToJiraRow(e, cell) {
