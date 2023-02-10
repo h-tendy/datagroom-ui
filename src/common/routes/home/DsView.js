@@ -129,40 +129,40 @@ class DsView extends Component {
             Project: "",
             JIRA_AGILE_ID: "None",
             Type: "Epic",
-            "Bug": {
-                "summary": "",
-                "description": "",
-                "customfield_25563": "SW",
-                "customfield_25716": "Application SW",
-                "customfield_25558": ["L0 Application"],
-                "customfield_25570": "L0 CP Restoration",
-                "customfield_11504": "3-Minor",
-                "priority": "Medium",
-                "versions": ["TH7.0"],
-                "customfield_21295": ["TH7.0"],
-                "customfield_25578": "11.11.22",
-                "customfield_25555": ["TH7.0"],
-                "customfield_25518": "Development Testing"
-            },
-            "User Story": {
-                "summary": "",
-                "description": "",
-                "priority": "Medium",
-                "customfield_11890": 0,
-            },
-            "Sub-task": {
-                "summary": "",
-                "priority": "Medium",
-                "description": "",
-                "customfield_11890": 0,
-                "parent": ""
-            },
-            "Epic": {
-                "customfield_12791": "",
-                "summary": "",
-                "description": "",
-                "priority": "Medium"
-            }
+            // "Bug": {
+            //     "summary": "",
+            //     "description": "",
+            //     "customfield_25563": "SW",
+            //     "customfield_25716": "Application SW",
+            //     "customfield_25558": ["L0 Application"],
+            //     "customfield_25570": "L0 CP Restoration",
+            //     "customfield_11504": "3-Minor",
+            //     "priority": "Medium",
+            //     "versions": ["TH7.0"],
+            //     "customfield_21295": ["TH7.0"],
+            //     "customfield_25578": "11.11.22",
+            //     "customfield_25555": ["TH7.0"],
+            //     "customfield_25518": "Development Testing"
+            // },
+            // "User Story": {
+            //     "summary": "",
+            //     "description": "",
+            //     "priority": "Medium",
+            //     "customfield_11890": 0,
+            // },
+            // "Sub-task": {
+            //     "summary": "",
+            //     "priority": "Medium",
+            //     "description": "",
+            //     "customfield_11890": 0,
+            //     "parent": ""
+            // },
+            // "Epic": {
+            //     "customfield_12791": "",
+            //     "summary": "",
+            //     "description": "",
+            //     "priority": "Medium"
+            // }
         }
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
@@ -242,7 +242,8 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         if ( !Object.keys(dsHome).length || !dsHome.dsViews || !dsHome.dsViews[dsView] ) {
             dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));
-            dispatch(dsActions.getProjectsMetaData(dsName, dsView, user.user)); 
+            dispatch(dsActions.getProjectsMetaData(dsName, dsView, user.user));
+            dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
         socket.on('connect', (data) => {
@@ -1433,7 +1434,6 @@ class DsView extends Component {
                 }
             }
         }
-        console.log(this.jiraFormData)
     }
 
     submitJiraFormChange() {
@@ -1449,6 +1449,10 @@ class DsView extends Component {
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
         let projectsMetaData = dsHome.projectsMetaData.projectsMetaData
+        this.jiraFormData = {
+            ...this.jiraFormData,
+            ...dsHome.defaultTypeFieldsAndValues.value
+        }
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
             let jiraAgileBoard = null
             try {

@@ -54,6 +54,31 @@ export function dsHome (state = initialState, action) {
                 return newState
             }
 
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'loading' };
+                return newState
+            }
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'success', value: action.defaultTypeFieldsAndValues };
+                return newState
+            }
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'fail', error: action.message };
+                return newState
+            }
+
         case dsConstants.EDIT_SINGLE_REQUEST:
             {
                 let newState = {...state};

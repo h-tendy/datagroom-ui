@@ -5,6 +5,7 @@ export const dsActions = {
     loadColumnsForUserView,
     clearViewDefs,
     getProjectsMetaData,
+    getDefaultTypeFieldsAndValues,
     editSingleAttribute,
     insertOneDoc,
     downloadXlsx, 
@@ -66,6 +67,24 @@ function getProjectsMetaData(dsName, dsView, dsUser) {
     function request() { return { type: dsConstants.GET_PROJECTS_METADATA_REQUEST, dsName, dsView, dsUser } }
     function success(projectsMetaData) { return { type: dsConstants.GET_PROJECTS_METADATA_SUCCESS, dsName, dsView, dsUser, projectsMetaData } }
     function failure(message) { return { type: dsConstants.GET_PROJECTS_METADATA_FAILURE, dsName, dsView, dsUser, message } }
+}
+
+function getDefaultTypeFieldsAndValues(dsName, dsView, dsUser) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await dsService.getDefaultTypeFieldsAndValues({ dsName, dsView, dsUser });
+            if (responseJson)
+                dispatch(success(responseJson));
+            else
+                dispatch(failure("getDefaultTypeFieldsAndValues failure"));
+        } catch (error) {
+            dispatch(failure("getDefaultTypeFieldsAndValues failure"));
+        }
+    }
+    function request() { return { type: dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_REQUEST, dsName, dsView, dsUser } }
+    function success(defaultTypeFieldsAndValues) { return { type: dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_SUCCESS, dsName, dsView, dsUser, defaultTypeFieldsAndValues } }
+    function failure(message) { return { type: dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_FAILURE, dsName, dsView, dsUser, message } }
 }
 
 function editSingleAttribute(dsName, dsView, dsUser, _id, column, oldVal, newVal, selectorObj, editObj, jiraConfig, jiraAgileConfig) {
