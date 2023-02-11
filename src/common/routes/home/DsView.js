@@ -70,6 +70,11 @@ if (process.env.NODE_ENV === 'development') {
     config.apiUrl = ""
 }
 
+//TODO: should come from backend
+const jiraCustomFieldMapping = {
+    estimate: "customfield_11890"
+}
+
 var socket = require('socket.io-client').connect(config.apiUrl);
 
 class DsView extends Component {
@@ -1453,6 +1458,8 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...dsHome.defaultTypeFieldsAndValues.value
         }
+        let rowData = cell.getRow().getData()
+        this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
             let jiraAgileBoard = null
             try {
@@ -1480,12 +1487,78 @@ class DsView extends Component {
         }
     }
 
-    // formInitialJiraForm(rowData) {
-    //     for (let keys of Object.keys(rowData)) {
-    //         if (!rowData[keys]) continue
+    formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
+        try {
+            let fieldMapping = null
+            if (jiraConfig.jira) {
+                fieldMapping = jiraConfig.jiraFieldMapping
+            }
+            if (jiraAgileConfig.jira) {
+                fieldMapping = {
+                    ...fieldMapping,
+                    ...jiraAgileConfig.jiraFieldMapping
+                }
+            }
+            if (!fieldMapping) return
+            let summary = ""
+            let description = ""
+            let type = ""
+            let estimate = 0
+            if (fieldMapping["summary"]) {
+                let value = rowData[fieldMapping["summary"]]
+                let arr = value.split("\n")
+                if (arr.length >= 2) {
+                    let summaryLine = arr[0]
+                    let matchArr = summaryLine.match((/#+(.*)/))
+                    if (matchArr && matchArr.length >= 2) {
+                        summary = matchArr[1].trim()
+                    } else {
+                        summary = summaryLine
+                    }
+                    arr.shift()
+                    description = arr.join("\n").trim()
+                } else if (arr.length == 1) {
+                    let summaryLine = arr[0]
+                    let matchArr = summaryLine.match((/#+(.*)/))
+                    if (matchArr && matchArr.length >= 2) {
+                        summary = matchArr[1].trim()
+                    } else {
+                        summary = summaryLine
+                    }
+                }
+            }
+            if (fieldMapping["type"]) {
+                if (rowData[fieldMapping["type"]].match(/(t|T)ask/))
+                    type = "Sub-task"
+                else if (rowData[fieldMapping["type"]].match(/(b|B)ug/))
+                    type = "Bug"
+                else if (rowData[fieldMapping["type"]].match(/(e|E)pic/))
+                    type = "Epic"
+                else if (rowData[fieldMapping["type"]].match(/(s|S)tory/))
+                    type = "User Story"
+            }
+            if (description == "" && fieldMapping["description"]) {
+                description = rowData[fieldMapping["description"]].trim()
+            }
+            if (fieldMapping["estimate"]) {
+                if (typeof rowData[fieldMapping["estimate"]] == 'number')
+                    estimate = rowData[fieldMapping["estimate"]]
+            }
 
-    //     }
-    // }
+            if (type == "Epic" || type == "User Story" || type == "Bug" || type == "Sub-task") {
+                this.jiraFormData["Type"] = type
+            }
+
+            for (let key of Object.keys(this.jiraFormData)) {
+                if (typeof this.jiraFormData[key] != 'object') continue
+                if (this.jiraFormData[key]['summary'] == "") this.jiraFormData[key]['summary'] = summary
+                if (this.jiraFormData[key]['description'] == "") this.jiraFormData[key]['description'] = description
+                if (estimate != 0 && jiraCustomFieldMapping['estimate']) {
+                    if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
+                }
+            }
+        } catch (e) { }
+    }
     /**End convert to JIRA row */
 
     handleColorPickerClose () {
