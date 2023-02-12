@@ -41,13 +41,13 @@ class JiraForm extends Component {
             }
         }
         let obj = {};
-        obj["Project"] = this.projectsMetaData.projects[0].name
+        obj["Project"] = this.projectsMetaData.projects[0].key
         this.props.handleChange(obj)
         this.setState({
             ...this.state,
             formData: {
                 ...this.state.formData,
-                Project: this.projectsMetaData.projects[0].name
+                Project: this.projectsMetaData.projects[0].key
             }
         })
     }
@@ -138,7 +138,7 @@ class JiraForm extends Component {
                                         value={this.state.formData.Project}
                                         onChange={this.handleChange}
                                     >
-                                        {this.props.projectsMetaData.projects.map((item) => <option key={item.name} value={`${item.name}`}>{item.name}</option>)}
+                                        {this.props.projectsMetaData.projects.map((item) => <option key={item.key} value={`${item.key}`}>{item.key}</option>)}
                                     </Form.Control>
                                 </Col>
                             </Form.Row>
