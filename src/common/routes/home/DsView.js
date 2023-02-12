@@ -1627,6 +1627,8 @@ class DsView extends Component {
             if (fieldMapping["estimate"]) {
                 if (typeof rowData[fieldMapping["estimate"]] == 'number')
                     estimate = rowData[fieldMapping["estimate"]]
+                else if (typeof rowData[fieldMapping["estimate"]] == 'string')
+                    estimate = parseInt(rowData[fieldMapping["estimate"]])
             }
 
             if (type == "Epic" || type == "User Story" || type == "Bug" || type == "Sub-task") {
@@ -1638,7 +1640,7 @@ class DsView extends Component {
                 if (this.jiraFormData[key]['summary'] == "") this.jiraFormData[key]['summary'] = summary
                 if (this.jiraFormData[key]['description'] == "") this.jiraFormData[key]['description'] = description
                 if (estimate != 0 && jiraCustomFieldMapping['estimate']) {
-                    if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
+                    if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
                 }
             }
         } catch (e) { }
