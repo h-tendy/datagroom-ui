@@ -16,7 +16,8 @@ export const dsService = {
     deleteFilter,
     doBulkEditRequest,
     getProjectsMetaData,
-    getDefaultTypeFieldsAndValues
+    getDefaultTypeFieldsAndValues,
+    convertToJira
 };
 
 const config = {};
@@ -403,6 +404,30 @@ async function getDefaultTypeFieldsAndValues(body) {
         if (response.ok) {
             responseJson = await response.json();
             console.log('getDefaultTypeFieldsAndValues: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+async function convertToJira(body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/convertToJira`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('convertToJira: ', responseJson);
         }
         return responseJson;
     } catch (e) {

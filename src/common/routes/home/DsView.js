@@ -1441,10 +1441,32 @@ class DsView extends Component {
         }
     }
 
-    submitJiraFormChange() {
-        //TODO: Just before sending change the value of key customfield_25578 to array
-        console.log("Jira form data", this.jiraFormData)
-        // console.log(this.jiraFormRef.current.onSubmit())
+    submitJiraFormChange(confirmed, _id, selectorObj) {
+        if (confirmed) {
+            const { dispatch, match, user, dsHome } = this.props;
+            let dsName = match.params.dsName;
+            let dsView = match.params.dsView;
+            let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+            let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+            let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            if (jiraFormData.Type == "Bug") {
+                //Just before sending change the value of key customfield_25578 to array
+                jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
+            }
+            dispatch(dsActions.convertToJira(dsName, dsView, user.user, _id, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig));
+            //reset the jiraFormData value
+            let obj = {
+                Project: "",
+                JIRA_AGILE_ID: "None",
+                Type: "Epic",
+            }
+            this.jiraFormData = obj
+            this.jiraFormData = {
+                ...this.jiraFormData,
+                ...dsHome.defaultTypeFieldsAndValues.value
+            }
+        }
+        this.setState({ showModal: !this.state.showModal });
     }
 
     convertToJiraRow(e, cell) {
@@ -1453,14 +1475,21 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData
-        this.jiraFormData = {
-            ...this.jiraFormData,
-            ...dsHome.defaultTypeFieldsAndValues.value
-        }
-        let rowData = cell.getRow().getData()
-        this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
+            let projectsMetaData = dsHome.projectsMetaData.projectsMetaData
+            this.jiraFormData = {
+                ...this.jiraFormData,
+                ...dsHome.defaultTypeFieldsAndValues.value
+            }
+            let rowData = cell.getRow().getData()
+            this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
+            let _id = cell.getRow().getData()['_id'];
+            let selectorObj = {};
+            selectorObj["_id"] = _id;
+            for (let i = 0; i < dsHome.dsViews[dsView].keys.length; i++) {
+                let key = dsHome.dsViews[dsView].keys[i];
+                selectorObj[key] = cell.getRow().getData()[key];
+            }
             let jiraAgileBoard = null
             try {
                 let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
@@ -1470,9 +1499,10 @@ class DsView extends Component {
             } catch (e) { }
             this.setState({
                 modalTitle: "Jira row specifications:- ",
+                modalOk: "Convert",
                 modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
-                modalCallback: () => {
-                    this.submitJiraFormChange()
+                modalCallback: (confirmed) => {
+                    self.submitJiraFormChange(confirmed, _id, selectorObj)
                 },
                 showModal: !this.state.showModal
             })
@@ -1485,6 +1515,60 @@ class DsView extends Component {
                 showModal: true
             })
         }
+    }
+
+    convertToJiraRowStatus() {
+        const { dispatch, match, user, dsHome } = this.props;
+        let dsName = match.params.dsName;
+        let dsView = match.params.dsView;
+        let modalStatus = this.state.modalStatus;
+        let showModal = false;
+        let jiraIssueKey = ''
+        try {
+            Object.entries(dsHome.converToJira).map((kv) => {
+                let k = kv[0];
+                if (dsHome.converToJira[k].editStatus === 'done' &&
+                    dsHome.converToJira[k].response.status === 'fail' &&
+                    dsHome.converToJira[k].response.hasOwnProperty('error')) {
+                    // when you are editing a key. You simply get an error. Restore old value. 
+                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.converToJira[k].response.error})<br/><br/>`
+                    showModal = true;
+                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
+                } else if (dsHome.converToJira[k].editStatus === 'done' &&
+                    dsHome.converToJira[k].response.status === 'success') {
+                    let fullUpdatedRec = dsHome.converToJira[k].response.record
+                    let update = {
+                        _id: k,
+                        ...fullUpdatedRec
+                    }
+                    this.ref.table.updateData([update]);
+                    jiraIssueKey = dsHome.converToJira[k].response.key
+                    modalStatus += `Update <b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${dsHome.converToJira[k].response.key}<br/><br/>`
+                    showModal = true;
+                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
+
+                } else if (dsHome.converToJira[k].editStatus === 'fail') {
+                    modalStatus += `Update <b style="color:red">failed</b><br/><br/>`
+                    showModal = true;
+                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
+                }
+                // Revert the value for other failures also. 
+            })
+        } catch (e) { }
+        //console.log("Status: ", status);
+        if (showModal /* && !this.state.showModal*/) {
+            let self = this;
+            let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Edit Success</b>' }} />;
+            this.setState({
+                modalTitle: "Edit Status",
+                modalQuestion: modalQuestion,
+                modalStatus: modalStatus,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            });
+        }
+        return <b style={{ color: "red" }}> {''} </b>;
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -2205,6 +2289,7 @@ class DsView extends Component {
                     {this.rowDeleteStatus()}
                     {this.deleteAllRowsStatus()}
                     {this.jiraRefreshStatus()}
+                    {this.convertToJiraRowStatus()}
                 </Row>
                 {/* 
                 <Row>

@@ -449,6 +449,41 @@ export function dsHome (state = initialState, action) {
                 return newState
             }
             
+
+        case dsConstants.CONVERT_TO_JIRA_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'editing' };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'done', response: action.response };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'fail', error: action.message };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                delete newState.converToJira[action._id];
+                return newState
+            }
+
+
         default:
             return state
     }
