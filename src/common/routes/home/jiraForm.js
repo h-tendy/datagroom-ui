@@ -199,6 +199,13 @@ class JiraForm extends Component {
                                             value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
+                                        {key === "assignee" && <Form.Control
+                                            as="textarea"
+                                            rows="1"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />}
                                         {this.fields[key].type === "string" && <Form.Control
                                             as="textarea"
                                             rows="1"
