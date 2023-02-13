@@ -43,10 +43,10 @@ class ModalWrapper extends React.Component {
               <Modal.Body>{this.props.children}</Modal.Body>
             </div>
             <Modal.Footer>
-                <Button variant="secondary" onClick={() => this.props.onClose(false)}>
+            <Button variant="secondary" onClick={() => this.props.onClose(false, this.props.toggleModalOnClose)}>
                     {this.props.cancel ? this.props.cancel : "Cancel"}
                 </Button>
-                <Button variant="primary" onClick={() => this.props.onClose(true)}>
+            <Button variant="primary" onClick={() => this.props.onClose(true, this.props.toggleModalOnClose)}>
                     {this.props.ok ? this.props.ok: "Do It!"}
                 </Button>
             </Modal.Footer>
