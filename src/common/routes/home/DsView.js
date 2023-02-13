@@ -1486,13 +1486,33 @@ class DsView extends Component {
             })
             return
         }
+        this.jiraFormData = {
+            ...this.jiraFormData,
+            ...dsHome.defaultTypeFieldsAndValues.value
+        }
+        let rowData = cell.getRow().getData()
+        this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
+        if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to convert Bug type without enabling the Jira. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "User Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to convert ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
-            this.jiraFormData = {
-                ...this.jiraFormData,
-                ...dsHome.defaultTypeFieldsAndValues.value
-            }
-            let rowData = cell.getRow().getData()
-            this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
             let _id = cell.getRow().getData()['_id'];
             let selectorObj = {};
             selectorObj["_id"] = _id;
@@ -1584,10 +1604,10 @@ class DsView extends Component {
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
         try {
             let fieldMapping = null
-            if (jiraConfig.jira) {
+            if (jiraConfig && jiraConfig.jira) {
                 fieldMapping = jiraConfig.jiraFieldMapping
             }
-            if (jiraAgileConfig.jira) {
+            if (jiraAgileConfig && jiraAgileConfig.jira) {
                 fieldMapping = {
                     ...fieldMapping,
                     ...jiraAgileConfig.jiraFieldMapping
