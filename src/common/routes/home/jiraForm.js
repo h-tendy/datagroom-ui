@@ -79,7 +79,7 @@ class JiraForm extends Component {
         let obj = {}
         obj[event.target.name] = event.target.value;
         this.props.handleChange(obj)
-        if (event.target.name == "Project" || event.target.name == "JIRA_AGILE_ID" || event.target.name == "Type") {
+        if (event.target.name == "Project" || event.target.name == "JIRA_AGILE_LABEL" || event.target.name == "Type") {
             this.setState({
                 ...this.state,
                 formData: {
@@ -144,14 +144,14 @@ class JiraForm extends Component {
                             </Form.Row>
                         </Form.Group>
                         {this.props.jiraAgileEnabled && (
-                            <Form.Group controlId="formJIRA_AGILE_ID">
+                            <Form.Group controlId="formJIRA_AGILE_LABEL">
                                 <Form.Row style={{ paddingBottom: "45px" }}>
-                                    <Form.Label column sm="4">JIRA AGILE ID:</Form.Label>
+                                    <Form.Label column sm="4">JIRA AGILE LABEL:</Form.Label>
                                     <Col sm="8">
                                         <Form.Control
                                             as="select"
-                                            name="JIRA_AGILE_ID"
-                                            value={this.state.formData.JIRA_AGILE_ID}
+                                            name="JIRA_AGILE_LABEL"
+                                            value={this.state.formData.JIRA_AGILE_LABEL}
                                             onChange={this.handleChange}
                                         >
                                             <option key={"None"} value="None">None</option>

@@ -132,7 +132,7 @@ class DsView extends Component {
 
         this.jiraFormData = {
             Project: "",
-            JIRA_AGILE_ID: "None",
+            JIRA_AGILE_LABEL: "None",
             Type: "Epic",
             // "Bug": {
             //     "summary": "",
@@ -1425,7 +1425,7 @@ class DsView extends Component {
     /**Start convert to JIRA row */
     handleJiraFormChange(obj) {
         let key = Object.keys(obj)[0]
-        if (key && key === "Project" || key == "JIRA_AGILE_ID" || key == "Type") {
+        if (key && key === "Project" || key == "JIRA_AGILE_LABEL" || key == "Type") {
             this.jiraFormData = {
                 ...this.jiraFormData,
                 [key]: obj[key]
@@ -1457,7 +1457,7 @@ class DsView extends Component {
             //reset the jiraFormData value
             let obj = {
                 Project: "",
-                JIRA_AGILE_ID: "None",
+                JIRA_AGILE_LABEL: "None",
                 Type: "Epic",
             }
             this.jiraFormData = obj
@@ -1475,8 +1475,18 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
-            let projectsMetaData = dsHome.projectsMetaData.projectsMetaData
             this.jiraFormData = {
                 ...this.jiraFormData,
                 ...dsHome.defaultTypeFieldsAndValues.value
