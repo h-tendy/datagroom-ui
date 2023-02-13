@@ -36,6 +36,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
 import './simpleStyles.css';
 import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
+import { dsService } from '../../services';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -100,6 +101,15 @@ class DsView extends Component {
             modalStatus: '',
             modalCancel: 'Cancel',
             modalOk: 'Do It!',
+            toggleModalOnClose: true,
+
+            showSecondaryModal: false,
+            secondaryModalTitle: "Title of modal",
+            secondaryModalQuestion: "",
+            secondaryModalCallback: null,
+            secondaryModalStatus: '',
+            secondaryModalCancel: 'Cancel',
+            secondaryModalOk: 'Do It!',
 
             modalEditorOk: 'Done',
             modalEditorCancel: 'Cancel',
@@ -175,6 +185,7 @@ class DsView extends Component {
         this.jiraRefreshHandler = this.jiraRefreshHandler.bind(this);
         this.jiraRefreshStatus = this.jiraRefreshStatus.bind(this);
         this.toggleModal = this.toggleModal.bind(this);
+        this.secondaryToggleModal = this.secondaryToggleModal.bind(this)
         this.toggleModalEditor = this.toggleModalEditor.bind(this);
         this.processFilterChange = this.processFilterChange.bind(this);
         this.isKey = this.isKey.bind(this);
@@ -525,9 +536,15 @@ class DsView extends Component {
         return false;
     }
 
-    toggleModal (confirmed) {
+    toggleModal(confirmed, toggleModal) {
         this.state.modalCallback(confirmed);
-        this.setState({ showModal: !this.state.showModal });
+        if (toggleModal != false) {
+            this.setState({ showModal: !this.state.showModal });
+        }
+    }
+    secondaryToggleModal(confirmed) {
+        this.state.secondaryModalCallback(confirmed);
+        this.setState({ showSecondaryModal: !this.state.showSecondaryModal });
     }
     toggleModalEditor (confirmed, value) {
         this.state.modalEditorCallback(confirmed, value);
@@ -1407,11 +1424,12 @@ class DsView extends Component {
         }
     }
 
-    submitJiraFormChange(confirmed, _id, selectorObj) {
+    async submitJiraFormChange(confirmed, _id, selectorObj) {
         if (confirmed) {
             const { dispatch, match, user, dsHome } = this.props;
             let dsName = match.params.dsName;
             let dsView = match.params.dsView;
+            let username = user.user;
             let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
             let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
             let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
@@ -1419,20 +1437,64 @@ class DsView extends Component {
                 //Just before sending change the value of key customfield_25578 to array
                 jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
             }
-            dispatch(dsActions.convertToJira(dsName, dsView, user.user, _id, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig));
+            // dispatch(dsActions.convertToJira(dsName, dsView, user.user, _id, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig));
             //reset the jiraFormData value
-            let obj = {
-                Project: "",
-                JIRA_AGILE_LABEL: "None",
-                Type: "Epic",
+            let response = await dsService.convertToJira({ dsName, dsView, username, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig })
+            let secondaryModalStatus = this.state.modalStatus;
+            let modalStatus = this.state.modalStatus;
+            let showSecondaryModal = false
+            if (response) {
+                if (response.status == 'success') {
+                    let fullUpdatedRec = response.record
+                    let update = {
+                        _id: _id,
+                        ...fullUpdatedRec
+                    }
+                    this.ref.table.updateData([update]);
+                    modalStatus += `Update <b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
+                    let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                    this.setState({
+                        modalTitle: "Convert Status",
+                        modalQuestion: modalQuestion,
+                        modalStatus: modalStatus,
+                        modalOk: "Dismiss",
+                        modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                        showModal: true,
+                        toggleModalOnClose: true
+                    });
+                    let obj = {
+                        Project: "",
+                        JIRA_AGILE_LABEL: "None",
+                        Type: "Epic",
+                    }
+                    this.jiraFormData = obj
+                    this.jiraFormData = {
+                        ...this.jiraFormData,
+                        ...dsHome.defaultTypeFieldsAndValues.value
+                    }
+                } else {
+                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    showSecondaryModal = true;
+                }
+            } else {
+                secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`
+                showSecondaryModal = true;
             }
-            this.jiraFormData = obj
-            this.jiraFormData = {
-                ...this.jiraFormData,
-                ...dsHome.defaultTypeFieldsAndValues.value
+            if (showSecondaryModal /* && !this.state.showModal*/) {
+                let self = this;
+                let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                this.setState({
+                    secondaryModalTitle: "Convert Status",
+                    secondaryModalQuestion: secondaryModalQuestion,
+                    secondaryModalStatus: secondaryModalStatus,
+                    secondaryModalOk: "Dismiss",
+                    secondaryModalCallback: (confirmed) => { self.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '' }) },
+                    showSecondaryModal: true
+                });
             }
+        } else {
+            this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
         }
-        this.setState({ showModal: !this.state.showModal });
     }
 
     convertToJiraRow(e, cell) {
@@ -1521,7 +1583,8 @@ class DsView extends Component {
                 modalCallback: (confirmed) => {
                     self.submitJiraFormChange(confirmed, _id, selectorObj)
                 },
-                showModal: !this.state.showModal
+                showModal: !this.state.showModal,
+                toggleModalOnClose: false
             })
         } else {
             this.setState({
@@ -2423,8 +2486,12 @@ class DsView extends Component {
                 </Row>
                 {this.step2()}
                 <Modal show={this.state.showModal}
-                    onClose={this.toggleModal} title={this.state.modalTitle} cancel={this.state.modalCancel} ok={this.state.modalOk}>
+                    onClose={this.toggleModal} title={this.state.modalTitle} cancel={this.state.modalCancel} ok={this.state.modalOk} toggleModalOnClose={this.state.toggleModalOnClose}>
                     {this.state.modalQuestion}
+                </Modal>
+                <Modal show={this.state.showSecondaryModal}
+                    onClose={this.secondaryToggleModal} title={this.state.secondaryModalTitle} cancel={this.state.secondaryModalCancel} ok={this.state.secondaryModalOk}>
+                    {this.state.secondaryModalQuestion}
                 </Modal>
                 <ModalEditor show={this.state.showModalEditor} 
                             title={this.state.modalEditorTitle} text={this.state.modalEditorText} onClose={this.toggleModalEditor}
