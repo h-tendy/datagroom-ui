@@ -1442,6 +1442,27 @@ class DsView extends Component {
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
         let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        let data = cell.getRow().getData()
+        if (this.isJiraRow(data, jiraConfig, jiraAgileConfig)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Already a JIRA row. Cannot convert it further.!!`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1642,6 +1663,24 @@ class DsView extends Component {
                 }
             }
         } catch (e) { }
+    }
+
+    isJiraRow(data, jiraConfig, jiraAgileConfig) {
+        let fieldMapping = null
+        if (jiraConfig && jiraConfig.jira) {
+            fieldMapping = jiraConfig.jiraFieldMapping
+        }
+        if (jiraAgileConfig && jiraAgileConfig.jira) {
+            fieldMapping = {
+                ...fieldMapping,
+                ...jiraAgileConfig.jiraFieldMapping
+            }
+        }
+        if (!fieldMapping) return false
+        let key = data[fieldMapping['key']]
+        if (!key) return false
+        if (key.match(/https:(.*)\/browse\//)) return true
+        return false
     }
     /**End convert to JIRA row */
 
