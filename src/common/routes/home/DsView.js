@@ -1586,6 +1586,7 @@ class DsView extends Component {
             if (!fieldMapping) return
             let summary = ""
             let description = ""
+            let descriptionDone = false
             let type = ""
             let estimate = 0
             if (fieldMapping["summary"]) {
@@ -1601,6 +1602,7 @@ class DsView extends Component {
                     }
                     arr.shift()
                     description = arr.join("\n").trim()
+                    descriptionDone = true
                 } else if (arr.length == 1) {
                     let summaryLine = arr[0]
                     let matchArr = summaryLine.match((/#+(.*)/))
@@ -1621,7 +1623,7 @@ class DsView extends Component {
                 else if (rowData[fieldMapping["type"]].match(/(s|S)tory/))
                     type = "User Story"
             }
-            if (description == "" && fieldMapping["description"]) {
+            if (!descriptionDone && fieldMapping["description"]) {
                 description = rowData[fieldMapping["description"]].trim()
             }
             if (fieldMapping["estimate"]) {
@@ -1637,8 +1639,8 @@ class DsView extends Component {
 
             for (let key of Object.keys(this.jiraFormData)) {
                 if (typeof this.jiraFormData[key] != 'object') continue
-                if (this.jiraFormData[key]['summary'] == "") this.jiraFormData[key]['summary'] = summary
-                if (this.jiraFormData[key]['description'] == "") this.jiraFormData[key]['description'] = description
+                this.jiraFormData[key]['summary'] = summary
+                this.jiraFormData[key]['description'] = description
                 if (estimate != 0 && jiraCustomFieldMapping['estimate']) {
                     if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
                 }
