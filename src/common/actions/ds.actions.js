@@ -23,8 +23,7 @@ export const dsActions = {
     uploadBulkEditXlsFile,
     setSelectedSheet,
     loadHdrsFromRange,
-    doBulkEditRequest,
-    convertToJira
+    doBulkEditRequest
 }
 
 
@@ -389,22 +388,4 @@ function doBulkEditRequest (dsName, fileName, sheetName, selectedRange, setRowsF
     function request(selectedRange) { return { type: dsConstants.BULK_EDIT_REQUEST, selectedRange } }
     function success(fileName, sheetName, loadStatus) { return { type: dsConstants.BULK_EDIT_SUCCESS, fileName, sheetName, loadStatus } }
     function failure(message) { return { type: dsConstants.BULK_EDIT_FAILURE, message } }
-}
-
-function convertToJira(dsName, dsView, dsUser, _id, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig) {
-    return async dispatch => {
-        try {
-            dispatch(request(_id));
-            let responseJson = await dsService.convertToJira({ dsName, dsView, dsUser, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig });
-            if (responseJson)
-                dispatch(success(_id, responseJson));
-            else
-                dispatch(failure(_id, "convertToJira failure"));
-        } catch (error) {
-            dispatch(failure(_id, "convertToJira failure"));
-        }
-    }
-    function request(_id) { return { type: dsConstants.CONVERT_TO_JIRA_REQUEST, dsName, dsView, dsUser, _id } }
-    function success(_id, response) { return { type: dsConstants.CONVERT_TO_JIRA_SUCCESS, dsName, dsView, dsUser, _id, response } }
-    function failure(_id, message) { return { type: dsConstants.CONVERT_TO_JIRA_FAILURE, dsName, dsView, dsUser, _id, message } }
 }
