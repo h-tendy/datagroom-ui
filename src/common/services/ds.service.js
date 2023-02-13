@@ -14,7 +14,10 @@ export const dsService = {
     addFilter,
     editFilter,
     deleteFilter,
-    doBulkEditRequest
+    doBulkEditRequest,
+    getProjectsMetaData,
+    getDefaultTypeFieldsAndValues,
+    convertToJira
 };
 
 const config = {};
@@ -350,6 +353,84 @@ async function doBulkEditRequest (body) {
         }
         return responseJson;
     } catch(e) {
+        console.log(e);
+    }
+}
+
+async function getProjectsMetaData(body) {
+    try {
+        console.log("Starting getProjectsMetaData API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/getProjectsMetadata`, {
+            method: "post",
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('projectsMetaData: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+async function getDefaultTypeFieldsAndValues(body) {
+    try {
+        console.log("Starting getDefaultTypeFieldsAndValues API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/getDefaultTypeFieldsAndValues`, {
+            method: "post",
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('getDefaultTypeFieldsAndValues: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+async function convertToJira(body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/convertToJira`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('convertToJira: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
         console.log(e);
     }
 }

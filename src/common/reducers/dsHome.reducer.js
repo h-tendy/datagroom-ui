@@ -28,6 +28,57 @@ export function dsHome (state = initialState, action) {
                 newState.dsViews[action.dsView] = { status: 'fail', error: action.message };
                 return newState
             }
+
+        case dsConstants.GET_PROJECTS_METADATA_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'loading' };
+                return newState
+            }
+        case dsConstants.GET_PROJECTS_METADATA_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'success', projectsMetaData: action.projectsMetaData };
+                return newState
+            }
+        case dsConstants.GET_PROJECTS_METADATA_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.projectsMetaData)
+                    newState.projectsMetaData = {};
+                newState.projectsMetaData = { status: 'fail', error: action.message };
+                return newState
+            }
+
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'loading' };
+                return newState
+            }
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'success', value: action.defaultTypeFieldsAndValues };
+                return newState
+            }
+        case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.defaultTypeFieldsAndValues)
+                    newState.defaultTypeFieldsAndValues = {};
+                newState.defaultTypeFieldsAndValues = { status: 'fail', error: action.message };
+                return newState
+            }
+
         case dsConstants.EDIT_SINGLE_REQUEST:
             {
                 let newState = {...state};
@@ -398,6 +449,41 @@ export function dsHome (state = initialState, action) {
                 return newState
             }
             
+
+        case dsConstants.CONVERT_TO_JIRA_REQUEST:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'editing' };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_SUCCESS:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'done', response: action.response };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_FAILURE:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                newState.converToJira[action._id] = { editStatus: 'fail', error: action.message };
+                return newState
+            }
+        case dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE:
+            {
+                let newState = { ...state };
+                if (!newState.converToJira)
+                    newState.converToJira = {};
+                delete newState.converToJira[action._id];
+                return newState
+            }
+
+
         default:
             return state
     }
