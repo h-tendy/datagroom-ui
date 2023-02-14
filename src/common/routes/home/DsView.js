@@ -73,7 +73,7 @@ if (process.env.NODE_ENV === 'development') {
 
 //TODO: should come from backend
 const jiraCustomFieldMapping = {
-    estimate: "customfield_11890"
+    'Story Points': "customfield_11890"
 }
 
 var socket = require('socket.io-client').connect(config.apiUrl);
@@ -217,6 +217,8 @@ class DsView extends Component {
         this.convertToJiraRow = this.convertToJiraRow.bind(this)
         this.handleJiraFormChange = this.handleJiraFormChange.bind(this)
         this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
+
+        this.addJiraRow = this.addJiraRow.bind(this)
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -1597,60 +1599,6 @@ class DsView extends Component {
         }
     }
 
-    convertToJiraRowStatus() {
-        const { dispatch, match, user, dsHome } = this.props;
-        let dsName = match.params.dsName;
-        let dsView = match.params.dsView;
-        let modalStatus = this.state.modalStatus;
-        let showModal = false;
-        let jiraIssueKey = ''
-        try {
-            Object.entries(dsHome.converToJira).map((kv) => {
-                let k = kv[0];
-                if (dsHome.converToJira[k].editStatus === 'done' &&
-                    dsHome.converToJira[k].response.status === 'fail' &&
-                    dsHome.converToJira[k].response.hasOwnProperty('error')) {
-                    // when you are editing a key. You simply get an error. Restore old value. 
-                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.converToJira[k].response.error})<br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-                } else if (dsHome.converToJira[k].editStatus === 'done' &&
-                    dsHome.converToJira[k].response.status === 'success') {
-                    let fullUpdatedRec = dsHome.converToJira[k].response.record
-                    let update = {
-                        _id: k,
-                        ...fullUpdatedRec
-                    }
-                    this.ref.table.updateData([update]);
-                    jiraIssueKey = dsHome.converToJira[k].response.key
-                    modalStatus += `Update <b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${dsHome.converToJira[k].response.key}<br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-
-                } else if (dsHome.converToJira[k].editStatus === 'fail') {
-                    modalStatus += `Update <b style="color:red">failed</b><br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-                }
-                // Revert the value for other failures also. 
-            })
-        } catch (e) { }
-        //console.log("Status: ", status);
-        if (showModal /* && !this.state.showModal*/) {
-            let self = this;
-            let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Edit Success</b>' }} />;
-            this.setState({
-                modalTitle: "Edit Status",
-                modalQuestion: modalQuestion,
-                modalStatus: modalStatus,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            });
-        }
-        return <b style={{ color: "red" }}> {''} </b>;
-    }
-
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
         try {
             let fieldMapping = null
@@ -1668,7 +1616,7 @@ class DsView extends Component {
             let description = ""
             let descriptionDone = false
             let type = ""
-            let estimate = 0
+            let storyPoints = 0
             if (fieldMapping["summary"]) {
                 let value = rowData[fieldMapping["summary"]]
                 let arr = value.split("\n")
@@ -1706,11 +1654,11 @@ class DsView extends Component {
             if (!descriptionDone && fieldMapping["description"]) {
                 description = rowData[fieldMapping["description"]].trim()
             }
-            if (fieldMapping["estimate"]) {
-                if (typeof rowData[fieldMapping["estimate"]] == 'number')
-                    estimate = rowData[fieldMapping["estimate"]]
-                else if (typeof rowData[fieldMapping["estimate"]] == 'string')
-                    estimate = parseInt(rowData[fieldMapping["estimate"]])
+            if (fieldMapping["Story Points"]) {
+                if (typeof rowData[fieldMapping["Story Points"]] == 'number')
+                    storyPoints = rowData[fieldMapping["Story Points"]]
+                else if (typeof rowData[fieldMapping["Story Points"]] == 'string')
+                    storyPoints = parseInt(rowData[fieldMapping["Story Points"]])
             }
 
             if (type == "Epic" || type == "User Story" || type == "Bug" || type == "Sub-task") {
@@ -1721,8 +1669,8 @@ class DsView extends Component {
                 if (typeof this.jiraFormData[key] != 'object') continue
                 this.jiraFormData[key]['summary'] = summary
                 this.jiraFormData[key]['description'] = description
-                if (estimate != 0 && jiraCustomFieldMapping['estimate']) {
-                    if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
+                if (storyPoints != 0 && jiraCustomFieldMapping['Story Points']) {
+                    if (this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints
                 }
             }
         } catch (e) { }
@@ -1746,6 +1694,256 @@ class DsView extends Component {
         return false
     }
     /**End convert to JIRA row */
+
+    /**Start add a jira issue */
+    addJiraRow(e, cell, type) {
+        let self = this
+        const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Add JIRA status",
+                modalQuestion: `Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to add a JIRA row`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if (cell && type) {
+            let rowData = cell.getRow().getData()
+            if (!this.isJiraRow(rowData, jiraConfig, jiraAgileConfig)) {
+                this.setState({
+                    modalTitle: "Add JIRA status",
+                    modalQuestion: `Cannot add JIRA as child of non-Jira row`,
+                    modalOk: "Dismiss",
+                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                    showModal: true
+                })
+                return
+            }
+            let isValid = this.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig)
+            if (!isValid) {
+                this.setState({
+                    modalTitle: "Add JIRA status",
+                    modalQuestion: `Can't add ${type} to current row.`,
+                    modalOk: "Dismiss",
+                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                    showModal: true
+                })
+                return
+            }
+
+        }
+        if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
+            this.setState({
+                modalTitle: "Add JIRA status",
+                modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        this.jiraFormData = {
+            ...this.jiraFormData,
+            ...dsHome.defaultTypeFieldsAndValues.value
+        }
+        if (type)
+            this.jiraFormData.Type = type
+        if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to add Bug type without enabling the Jira. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "User Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to add ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
+            let jiraAgileBoard = null
+            try {
+                let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
+                if (matchArr && matchArr.length >= 4) {
+                    jiraAgileBoard = matchArr[3].trim()
+                    this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
+                }
+            } catch (e) { }
+            let jiraId = null
+            let selectorObj = null
+            if (type) {
+                jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
+                if (this.jiraFormData.Type == 'User Story') {
+                    this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
+                } else if (this.jiraFormData.Type == "Sub-task") {
+                    this.jiraFormData[this.jiraFormData.Type].parent = jiraId
+                }
+                let _id = cell.getRow().getData()['_id'];
+                selectorObj = {};
+                selectorObj["_id"] = _id;
+            }
+            this.setState({
+                modalTitle: "Jira specifications:- ",
+                modalOk: "Add",
+                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
+                modalCallback: (confirmed) => {
+                    self.submitAddJira(confirmed, jiraId, selectorObj)
+                },
+                showModal: !this.state.showModal,
+                toggleModalOnClose: false
+            })
+        } else {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `<b>Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row</b>`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+        }
+    }
+
+    checkIfValid(rowData, type, jiraConfig, jiraAgileConfig) {
+        let fieldMapping = null
+        if (jiraConfig && jiraConfig.jira) {
+            fieldMapping = jiraConfig.jiraFieldMapping
+        }
+        if (jiraAgileConfig && jiraAgileConfig.jira) {
+            fieldMapping = {
+                ...fieldMapping,
+                ...jiraAgileConfig.jiraFieldMapping
+            }
+        }
+        if (!fieldMapping) return false
+        try {
+            if (type == 'User Story' && rowData[fieldMapping['type']] == 'Epic') {
+                return true
+            } else if (type == 'Sub-task' && rowData[fieldMapping['type']] == 'User Story') {
+                return true
+            } else {
+                return false
+            }
+        } catch (e) { return false }
+    }
+
+    getJiraId(rowData, jiraConfig, jiraAgileConfig) {
+        let fieldMapping = null
+        if (jiraConfig && jiraConfig.jira) {
+            fieldMapping = jiraConfig.jiraFieldMapping
+        }
+        if (jiraAgileConfig && jiraAgileConfig.jira) {
+            fieldMapping = {
+                ...fieldMapping,
+                ...jiraAgileConfig.jiraFieldMapping
+            }
+        }
+        try {
+            let key = rowData[fieldMapping['key']]
+            let regex = new RegExp(`/browse/(.*)\\)`)
+            let jiraIssueIdMatchArr = key.match(regex)
+            if (jiraIssueIdMatchArr && jiraIssueIdMatchArr.length >= 2) {
+                key = jiraIssueIdMatchArr[1]
+            }
+            return key
+        } catch (e) { }
+        return ""
+    }
+
+    async submitAddJira(confirmed, parentKey, parentSelectorObj) {
+        if (confirmed) {
+            const { dispatch, match, user, dsHome } = this.props;
+            let dsName = match.params.dsName;
+            let dsView = match.params.dsView;
+            let username = user.user;
+            let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+            let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+            let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            if (jiraFormData.Type == "Bug") {
+                //Just before sending change the value of key customfield_25578 to array
+                jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
+            }
+            //reset the jiraFormData value
+            let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig, parentKey, parentSelectorObj })
+            let secondaryModalStatus = this.state.modalStatus;
+            let modalStatus = this.state.modalStatus;
+            let showSecondaryModal = false
+            if (response) {
+                if (response.status == 'success') {
+                    let fullUpdatedRec = response.record
+                    let update = {
+                        _id: response._id,
+                        ...fullUpdatedRec
+                    }
+                    this.ref.table.addRow(update, true, null)
+                    if (response.parentRecord) {
+                        let fullParentUpdatedRec = response.parentRecord
+                        let update = {
+                            _id: parentSelectorObj._id,
+                            ...fullParentUpdatedRec
+                        }
+                        this.ref.table.updateData([update]);
+                    }
+                    modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
+                    let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                    this.setState({
+                        modalTitle: "Convert Status",
+                        modalQuestion: modalQuestion,
+                        modalStatus: modalStatus,
+                        modalOk: "Dismiss",
+                        modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                        showModal: true,
+                        toggleModalOnClose: true
+                    });
+                    let obj = {
+                        Project: "",
+                        JIRA_AGILE_LABEL: "None",
+                        Type: "Epic",
+                    }
+                    this.jiraFormData = obj
+                    this.jiraFormData = {
+                        ...this.jiraFormData,
+                        ...dsHome.defaultTypeFieldsAndValues.value
+                    }
+                } else {
+                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    showSecondaryModal = true;
+                }
+            } else {
+                secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`
+                showSecondaryModal = true;
+            }
+            if (showSecondaryModal /* && !this.state.showModal*/) {
+                let self = this;
+                let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                this.setState({
+                    secondaryModalTitle: "Convert Status",
+                    secondaryModalQuestion: secondaryModalQuestion,
+                    secondaryModalStatus: secondaryModalStatus,
+                    secondaryModalOk: "Dismiss",
+                    secondaryModalCallback: (confirmed) => { self.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '' }) },
+                    showSecondaryModal: true
+                });
+            }
+        } else {
+            this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
+        }
+    }
+
+    /**End add a jira issue */
 
     handleColorPickerClose () {
         this.setState({ showColorPicker: false });
@@ -1867,6 +2065,24 @@ class DsView extends Component {
             {
                 label: "Convert to JIRA row...",
                 action: this.convertToJiraRow
+            },
+            {
+                label: "Add new JIRA...",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, null)
+                }
+            },
+            {
+                label: "Add User Story to Epic",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, 'User Story')
+                }
+            },
+            {
+                label: "Add a Sub-task to User Story",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, 'Sub-task')
+                }
             }
         ];        
         let columns = [];
@@ -2391,7 +2607,6 @@ class DsView extends Component {
                     {this.rowDeleteStatus()}
                     {this.deleteAllRowsStatus()}
                     {this.jiraRefreshStatus()}
-                    {this.convertToJiraRowStatus()}
                 </Row>
                 {/* 
                 <Row>
