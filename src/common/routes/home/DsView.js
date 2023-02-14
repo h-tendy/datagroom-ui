@@ -73,7 +73,7 @@ if (process.env.NODE_ENV === 'development') {
 
 //TODO: should come from backend
 const jiraCustomFieldMapping = {
-    estimate: "customfield_11890"
+    'Story Points': "customfield_11890"
 }
 
 var socket = require('socket.io-client').connect(config.apiUrl);
@@ -1616,7 +1616,7 @@ class DsView extends Component {
             let description = ""
             let descriptionDone = false
             let type = ""
-            let estimate = 0
+            let storyPoints = 0
             if (fieldMapping["summary"]) {
                 let value = rowData[fieldMapping["summary"]]
                 let arr = value.split("\n")
@@ -1654,11 +1654,11 @@ class DsView extends Component {
             if (!descriptionDone && fieldMapping["description"]) {
                 description = rowData[fieldMapping["description"]].trim()
             }
-            if (fieldMapping["estimate"]) {
-                if (typeof rowData[fieldMapping["estimate"]] == 'number')
-                    estimate = rowData[fieldMapping["estimate"]]
-                else if (typeof rowData[fieldMapping["estimate"]] == 'string')
-                    estimate = parseInt(rowData[fieldMapping["estimate"]])
+            if (fieldMapping["Story Points"]) {
+                if (typeof rowData[fieldMapping["Story Points"]] == 'number')
+                    storyPoints = rowData[fieldMapping["Story Points"]]
+                else if (typeof rowData[fieldMapping["Story Points"]] == 'string')
+                    storyPoints = parseInt(rowData[fieldMapping["Story Points"]])
             }
 
             if (type == "Epic" || type == "User Story" || type == "Bug" || type == "Sub-task") {
@@ -1669,8 +1669,8 @@ class DsView extends Component {
                 if (typeof this.jiraFormData[key] != 'object') continue
                 this.jiraFormData[key]['summary'] = summary
                 this.jiraFormData[key]['description'] = description
-                if (estimate != 0 && jiraCustomFieldMapping['estimate']) {
-                    if (this.jiraFormData[key][jiraCustomFieldMapping['estimate']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['estimate']]) this.jiraFormData[key][jiraCustomFieldMapping['estimate']] = estimate
+                if (storyPoints != 0 && jiraCustomFieldMapping['Story Points']) {
+                    if (this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints
                 }
             }
         } catch (e) { }
