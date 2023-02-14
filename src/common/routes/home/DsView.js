@@ -1599,60 +1599,6 @@ class DsView extends Component {
         }
     }
 
-    convertToJiraRowStatus() {
-        const { dispatch, match, user, dsHome } = this.props;
-        let dsName = match.params.dsName;
-        let dsView = match.params.dsView;
-        let modalStatus = this.state.modalStatus;
-        let showModal = false;
-        let jiraIssueKey = ''
-        try {
-            Object.entries(dsHome.converToJira).map((kv) => {
-                let k = kv[0];
-                if (dsHome.converToJira[k].editStatus === 'done' &&
-                    dsHome.converToJira[k].response.status === 'fail' &&
-                    dsHome.converToJira[k].response.hasOwnProperty('error')) {
-                    // when you are editing a key. You simply get an error. Restore old value. 
-                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.converToJira[k].response.error})<br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-                } else if (dsHome.converToJira[k].editStatus === 'done' &&
-                    dsHome.converToJira[k].response.status === 'success') {
-                    let fullUpdatedRec = dsHome.converToJira[k].response.record
-                    let update = {
-                        _id: k,
-                        ...fullUpdatedRec
-                    }
-                    this.ref.table.updateData([update]);
-                    jiraIssueKey = dsHome.converToJira[k].response.key
-                    modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${dsHome.converToJira[k].response.key}<br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-
-                } else if (dsHome.converToJira[k].editStatus === 'fail') {
-                    modalStatus += `Update <b style="color:red">failed</b><br/><br/>`
-                    showModal = true;
-                    dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
-                }
-                // Revert the value for other failures also. 
-            })
-        } catch (e) { }
-        //console.log("Status: ", status);
-        if (showModal /* && !this.state.showModal*/) {
-            let self = this;
-            let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Edit Success</b>' }} />;
-            this.setState({
-                modalTitle: "Edit Status",
-                modalQuestion: modalQuestion,
-                modalStatus: modalStatus,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            });
-        }
-        return <b style={{ color: "red" }}> {''} </b>;
-    }
-
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
         try {
             let fieldMapping = null
@@ -2646,7 +2592,6 @@ class DsView extends Component {
                     {this.rowDeleteStatus()}
                     {this.deleteAllRowsStatus()}
                     {this.jiraRefreshStatus()}
-                    {this.convertToJiraRowStatus()}
                 </Row>
                 {/* 
                 <Row>
