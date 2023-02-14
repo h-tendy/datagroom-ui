@@ -217,6 +217,8 @@ class DsView extends Component {
         this.convertToJiraRow = this.convertToJiraRow.bind(this)
         this.handleJiraFormChange = this.handleJiraFormChange.bind(this)
         this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
+
+        this.addJiraRow = this.addJiraRow.bind(this)
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -1623,7 +1625,7 @@ class DsView extends Component {
                     }
                     this.ref.table.updateData([update]);
                     jiraIssueKey = dsHome.converToJira[k].response.key
-                    modalStatus += `Update <b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${dsHome.converToJira[k].response.key}<br/><br/>`
+                    modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${dsHome.converToJira[k].response.key}<br/><br/>`
                     showModal = true;
                     dispatch({ type: dsConstants.CONVERT_TO_JIRA_TRACKER_DELETE, _id: k })
 
@@ -1747,6 +1749,141 @@ class DsView extends Component {
     }
     /**End convert to JIRA row */
 
+    /**Start add a jira issue */
+    addJiraRow(e, cell) {
+        let self = this
+        const { match, dsHome } = this.props;
+        let dsView = match.params.dsView;
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Add JIRA status",
+                modalQuestion: `Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to add a JIRA row`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
+            this.setState({
+                modalTitle: "Add JIRA status",
+                modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        this.jiraFormData = {
+            ...this.jiraFormData,
+            ...dsHome.defaultTypeFieldsAndValues.value
+        }
+        if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
+            let jiraAgileBoard = null
+            try {
+                let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
+                if (matchArr && matchArr.length >= 4) {
+                    jiraAgileBoard = matchArr[3].trim()
+                }
+            } catch (e) { }
+            this.setState({
+                modalTitle: "Jira specifications:- ",
+                modalOk: "Add",
+                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
+                modalCallback: (confirmed) => {
+                    self.submitAddJira(confirmed)
+                },
+                showModal: !this.state.showModal,
+                toggleModalOnClose: false
+            })
+        } else {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `<b>Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row</b>`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+        }
+    }
+
+    async submitAddJira(confirmed) {
+        if (confirmed) {
+            const { dispatch, match, user, dsHome } = this.props;
+            let dsName = match.params.dsName;
+            let dsView = match.params.dsView;
+            let username = user.user;
+            let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+            let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+            let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            if (jiraFormData.Type == "Bug") {
+                //Just before sending change the value of key customfield_25578 to array
+                jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
+            }
+            //reset the jiraFormData value
+            let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig })
+            let secondaryModalStatus = this.state.modalStatus;
+            let modalStatus = this.state.modalStatus;
+            let showSecondaryModal = false
+            if (response) {
+                if (response.status == 'success') {
+                    let fullUpdatedRec = response.record
+                    let update = {
+                        _id: response._id,
+                        ...fullUpdatedRec
+                    }
+                    this.ref.table.addRow(update, true, null)
+                    modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
+                    let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                    this.setState({
+                        modalTitle: "Convert Status",
+                        modalQuestion: modalQuestion,
+                        modalStatus: modalStatus,
+                        modalOk: "Dismiss",
+                        modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                        showModal: true,
+                        toggleModalOnClose: true
+                    });
+                    let obj = {
+                        Project: "",
+                        JIRA_AGILE_LABEL: "None",
+                        Type: "Epic",
+                    }
+                    this.jiraFormData = obj
+                    this.jiraFormData = {
+                        ...this.jiraFormData,
+                        ...dsHome.defaultTypeFieldsAndValues.value
+                    }
+                } else {
+                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    showSecondaryModal = true;
+                }
+            } else {
+                secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`
+                showSecondaryModal = true;
+            }
+            if (showSecondaryModal /* && !this.state.showModal*/) {
+                let self = this;
+                let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+                this.setState({
+                    secondaryModalTitle: "Convert Status",
+                    secondaryModalQuestion: secondaryModalQuestion,
+                    secondaryModalStatus: secondaryModalStatus,
+                    secondaryModalOk: "Dismiss",
+                    secondaryModalCallback: (confirmed) => { self.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '' }) },
+                    showSecondaryModal: true
+                });
+            }
+        } else {
+            this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
+        }
+    }
+
+    /**End add a jira issue */
+
     handleColorPickerClose () {
         this.setState({ showColorPicker: false });
     }
@@ -1867,6 +2004,10 @@ class DsView extends Component {
             {
                 label: "Convert to JIRA row...",
                 action: this.convertToJiraRow
+            },
+            {
+                label: "Add a JIRA row...",
+                action: this.addJiraRow
             }
         ];        
         let columns = [];

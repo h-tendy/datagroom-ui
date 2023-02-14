@@ -17,7 +17,8 @@ export const dsService = {
     doBulkEditRequest,
     getProjectsMetaData,
     getDefaultTypeFieldsAndValues,
-    convertToJira
+    convertToJira,
+    addJiraRow
 };
 
 const config = {};
@@ -428,6 +429,30 @@ async function convertToJira(body) {
         if (response.ok) {
             responseJson = await response.json();
             console.log('convertToJira: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+async function addJiraRow(body) {
+    try {
+        console.log("Starting API call: ", body);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/view/addJiraRow`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+            }
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('addJiraRow: ', responseJson);
         }
         return responseJson;
     } catch (e) {
