@@ -1789,12 +1789,15 @@ class DsView extends Component {
             } else if (this.jiraFormData.Type == "Sub-task") {
                 this.jiraFormData[this.jiraFormData.Type].parent = jiraId
             }
+            let _id = cell.getRow().getData()['_id'];
+            let selectorObj = {};
+            selectorObj["_id"] = _id;
             this.setState({
                 modalTitle: "Jira specifications:- ",
                 modalOk: "Add",
                 modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
                 modalCallback: (confirmed) => {
-                    self.submitAddJira(confirmed)
+                    self.submitAddJira(confirmed, jiraId, selectorObj)
                 },
                 showModal: !this.state.showModal,
                 toggleModalOnClose: false
@@ -1856,7 +1859,7 @@ class DsView extends Component {
         return ""
     }
 
-    async submitAddJira(confirmed) {
+    async submitAddJira(confirmed, parentKey, parentSelectorObj) {
         if (confirmed) {
             const { dispatch, match, user, dsHome } = this.props;
             let dsName = match.params.dsName;
@@ -1870,7 +1873,7 @@ class DsView extends Component {
                 jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
             }
             //reset the jiraFormData value
-            let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig })
+            let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig, parentKey, parentSelectorObj })
             let secondaryModalStatus = this.state.modalStatus;
             let modalStatus = this.state.modalStatus;
             let showSecondaryModal = false
@@ -1882,6 +1885,14 @@ class DsView extends Component {
                         ...fullUpdatedRec
                     }
                     this.ref.table.addRow(update, true, null)
+                    if (response.parentRecord) {
+                        let fullParentUpdatedRec = response.parentRecord
+                        let update = {
+                            _id: parentSelectorObj._id,
+                            ...fullParentUpdatedRec
+                        }
+                        this.ref.table.updateData([update]);
+                    }
                     modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
                     let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
                     this.setState({
