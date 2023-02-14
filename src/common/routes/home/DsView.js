@@ -1750,7 +1750,7 @@ class DsView extends Component {
     /**End convert to JIRA row */
 
     /**Start add a jira issue */
-    addJiraRow(e, cell) {
+    addJiraRow(e, cell, type) {
         let self = this
         const { match, dsHome } = this.props;
         let dsView = match.params.dsView;
@@ -1767,6 +1767,31 @@ class DsView extends Component {
             })
             return
         }
+        if (cell && type) {
+            let rowData = cell.getRow().getData()
+            if (!this.isJiraRow(rowData, jiraConfig, jiraAgileConfig)) {
+                this.setState({
+                    modalTitle: "Add JIRA status",
+                    modalQuestion: `Cannot add JIRA as child of non-Jira row`,
+                    modalOk: "Dismiss",
+                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                    showModal: true
+                })
+                return
+            }
+            let isValid = this.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig)
+            if (!isValid) {
+                this.setState({
+                    modalTitle: "Add JIRA status",
+                    modalQuestion: `Can't add ${type} to current row.`,
+                    modalOk: "Dismiss",
+                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                    showModal: true
+                })
+                return
+            }
+
+        }
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1781,14 +1806,43 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...dsHome.defaultTypeFieldsAndValues.value
         }
+        if (type)
+            this.jiraFormData.Type = type
+        if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to add Bug type without enabling the Jira. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "User Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Trying to add ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
             let jiraAgileBoard = null
             try {
                 let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
                 if (matchArr && matchArr.length >= 4) {
                     jiraAgileBoard = matchArr[3].trim()
+                    this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
                 }
             } catch (e) { }
+            let jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
+            if (this.jiraFormData.Type == 'User Story') {
+                this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
+            } else if (this.jiraFormData.Type == "Sub-task") {
+                this.jiraFormData[this.jiraFormData.Type].parent = jiraId
+            }
             this.setState({
                 modalTitle: "Jira specifications:- ",
                 modalOk: "Add",
@@ -1808,6 +1862,52 @@ class DsView extends Component {
                 showModal: true
             })
         }
+    }
+
+    checkIfValid(rowData, type, jiraConfig, jiraAgileConfig) {
+        let fieldMapping = null
+        if (jiraConfig && jiraConfig.jira) {
+            fieldMapping = jiraConfig.jiraFieldMapping
+        }
+        if (jiraAgileConfig && jiraAgileConfig.jira) {
+            fieldMapping = {
+                ...fieldMapping,
+                ...jiraAgileConfig.jiraFieldMapping
+            }
+        }
+        if (!fieldMapping) return false
+        try {
+            if (type == 'User Story' && rowData[fieldMapping['type']] == 'Epic') {
+                return true
+            } else if (type == 'Sub-task' && rowData[fieldMapping['type']] == 'User Story') {
+                return true
+            } else {
+                return false
+            }
+        } catch (e) { return false }
+    }
+
+    getJiraId(rowData, jiraConfig, jiraAgileConfig) {
+        let fieldMapping = null
+        if (jiraConfig && jiraConfig.jira) {
+            fieldMapping = jiraConfig.jiraFieldMapping
+        }
+        if (jiraAgileConfig && jiraAgileConfig.jira) {
+            fieldMapping = {
+                ...fieldMapping,
+                ...jiraAgileConfig.jiraFieldMapping
+            }
+        }
+        try {
+            let key = rowData[fieldMapping['key']]
+            let regex = new RegExp(`/browse/(.*)\\)`)
+            let jiraIssueIdMatchArr = key.match(regex)
+            if (jiraIssueIdMatchArr && jiraIssueIdMatchArr.length >= 2) {
+                key = jiraIssueIdMatchArr[1]
+            }
+            return key
+        } catch (e) { }
+        return ""
     }
 
     async submitAddJira(confirmed) {
@@ -2006,8 +2106,22 @@ class DsView extends Component {
                 action: this.convertToJiraRow
             },
             {
-                label: "Add a JIRA row...",
-                action: this.addJiraRow
+                label: "Add new JIRA...",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, null)
+                }
+            },
+            {
+                label: "Add User Story to Epic",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, 'User Story')
+                }
+            },
+            {
+                label: "Add a Sub-task to User Story",
+                action: function (e, cell) {
+                    me.addJiraRow(e, cell, 'Sub-task')
+                }
             }
         ];        
         let columns = [];
