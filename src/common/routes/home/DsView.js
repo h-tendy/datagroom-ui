@@ -1206,10 +1206,13 @@ class DsView extends Component {
 
     deleteRowQuestion (e, cell) {
         let me = this;
-        this.setState({ modalTitle: "Delete current row?", 
-                        modalQuestion: `This will delete the current row. Please confirm. Undoing support is not yet available!`,
-                        modalCallback: (confirmed) => me.deleteRowHandler(e, cell, confirmed),
-                        showModal: !this.state.showModal });
+        this.setState({
+            modalTitle: "Delete current row?",
+            modalQuestion: `This will delete the current row. Please confirm. Undoing support is not yet available!`,
+            modalOk: "Delete",
+            modalCallback: (confirmed) => me.deleteRowHandler(e, cell, confirmed),
+            showModal: !this.state.showModal
+        });
     }
 
     /* End: Handling of single row delete */
@@ -1264,10 +1267,13 @@ class DsView extends Component {
 
     deleteAllRowsInViewQuestion () {
         let rows = this.ref.table.getRows();
-        this.setState({ modalTitle: "Delete all rows in view?", 
-                        modalQuestion: `This will delete ${rows.length} rows. Please confirm. Undoing support is not yet available!`,
-                        modalCallback: this.deleteAllRowsInView,
-                        showModal: !this.state.showModal });
+        this.setState({
+            modalTitle: "Delete all rows in view?",
+            modalQuestion: `This will delete ${rows.length} rows. Please confirm. Undoing support is not yet available!`,
+            modalOk: "Delete",
+            modalCallback: this.deleteAllRowsInView,
+            showModal: !this.state.showModal
+        });
     }
 
     /* End: Handling of all rows in view */
@@ -1295,29 +1301,32 @@ class DsView extends Component {
         if (response.ok) {
             responseJson = await response.json();
             console.log('deleteFromQuery responseJson total: ', responseJson.total);
-            this.setState({ modalTitle: "Delete all Rows in query?", 
-                            modalQuestion: `This will delete ${responseJson.total} rows. Please confirm. Undoing support is not yet available!`,
-                            modalCallback: async (confirmed) => { 
-                                if (confirmed) {
-                                    url = this.ajaxURLGenerator(baseUrl, {}, { filters, pretend: false });
-                                    let dataLen = JSON.stringify(body).length.toString();
-                                    let response = await fetch(url, {
-                                        method: "post",
-                                        body: JSON.stringify(body),
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "Content-Length": dataLen,
-                                        }     
-                                    });
-                                    if (response.ok) {
-                                        let delJson = await response.json();
-                                        if (delJson.count == responseJson.total) {
-                                            this.ref.table.clearData();
-                                        }
-                                    }
-                                }
-                            },
-                            showModal: !this.state.showModal });            
+            this.setState({
+                modalTitle: "Delete all Rows in query?",
+                modalQuestion: `This will delete ${responseJson.total} rows. Please confirm. Undoing support is not yet available!`,
+                modalOk: "Delete",
+                modalCallback: async (confirmed) => {
+                    if (confirmed) {
+                        url = this.ajaxURLGenerator(baseUrl, {}, { filters, pretend: false });
+                        let dataLen = JSON.stringify(body).length.toString();
+                        let response = await fetch(url, {
+                            method: "post",
+                            body: JSON.stringify(body),
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Content-Length": dataLen,
+                            }
+                        });
+                        if (response.ok) {
+                            let delJson = await response.json();
+                            if (delJson.count == responseJson.total) {
+                                this.ref.table.clearData();
+                            }
+                        }
+                    }
+                },
+                showModal: !this.state.showModal
+            });            
         }
         return responseJson;
     }
