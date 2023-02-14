@@ -1783,15 +1783,19 @@ class DsView extends Component {
                     this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
                 }
             } catch (e) { }
-            let jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
-            if (this.jiraFormData.Type == 'User Story') {
-                this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
-            } else if (this.jiraFormData.Type == "Sub-task") {
-                this.jiraFormData[this.jiraFormData.Type].parent = jiraId
+            let jiraId = null
+            let selectorObj = null
+            if (type) {
+                jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
+                if (this.jiraFormData.Type == 'User Story') {
+                    this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
+                } else if (this.jiraFormData.Type == "Sub-task") {
+                    this.jiraFormData[this.jiraFormData.Type].parent = jiraId
+                }
+                let _id = cell.getRow().getData()['_id'];
+                selectorObj = {};
+                selectorObj["_id"] = _id;
             }
-            let _id = cell.getRow().getData()['_id'];
-            let selectorObj = {};
-            selectorObj["_id"] = _id;
             this.setState({
                 modalTitle: "Jira specifications:- ",
                 modalOk: "Add",
