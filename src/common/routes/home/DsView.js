@@ -1487,7 +1487,7 @@ class DsView extends Component {
                     this.jiraFormData = obj
                     this.jiraFormData = {
                         ...this.jiraFormData,
-                        ...dsHome.defaultTypeFieldsAndValues.value
+                        ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
                     secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
@@ -1552,7 +1552,7 @@ class DsView extends Component {
             })
             return
         }
-        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value))
+        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes))
         this.jiraFormData = {
             ...this.jiraFormData,
             ...copyOfDefaults
@@ -1764,7 +1764,7 @@ class DsView extends Component {
             })
             return
         }
-        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value))
+        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes))
         this.jiraFormData = {
             ...this.jiraFormData,
             ...copyOfDefaults
@@ -1934,7 +1934,7 @@ class DsView extends Component {
                     this.jiraFormData = obj
                     this.jiraFormData = {
                         ...this.jiraFormData,
-                        ...dsHome.defaultTypeFieldsAndValues.value
+                        ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
                     secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
