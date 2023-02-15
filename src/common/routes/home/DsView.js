@@ -1162,7 +1162,7 @@ class DsView extends Component {
         let rowData = cell.getRow().getData()
         if (this.isJiraRow(rowData, jiraConfig, jiraAgileConfig)) {
             this.setState({
-                modalTitle: "Convert JIRA status",
+                modalTitle: "Duplicate Row status",
                 modalQuestion: `Can't duplicate a JIRA/JIRA_AGILE row`,
                 modalOk: "Dismiss",
                 modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
