@@ -1552,9 +1552,10 @@ class DsView extends Component {
             })
             return
         }
+        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value))
         this.jiraFormData = {
             ...this.jiraFormData,
-            ...dsHome.defaultTypeFieldsAndValues.value
+            ...copyOfDefaults
         }
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
@@ -1763,9 +1764,10 @@ class DsView extends Component {
             })
             return
         }
+        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value))
         this.jiraFormData = {
             ...this.jiraFormData,
-            ...dsHome.defaultTypeFieldsAndValues.value
+            ...copyOfDefaults
         }
         if (type)
             this.jiraFormData.Type = type
