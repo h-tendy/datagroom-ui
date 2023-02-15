@@ -1569,7 +1569,7 @@ class DsView extends Component {
             })
             return
         }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "User Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
                 modalQuestion: `Trying to convert ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -1665,7 +1665,7 @@ class DsView extends Component {
                 else if (rowData[fieldMapping["type"]].match(/(e|E)pic/))
                     type = "Epic"
                 else if (rowData[fieldMapping["type"]].match(/(s|S)tory/))
-                    type = "User Story"
+                    type = "Story"
             }
             if (!descriptionDone && fieldMapping["description"]) {
                 description = rowData[fieldMapping["description"]].trim()
@@ -1677,7 +1677,7 @@ class DsView extends Component {
                     storyPoints = parseInt(rowData[fieldMapping["Story Points"]])
             }
 
-            if (type == "Epic" || type == "User Story" || type == "Bug" || type == "Sub-task") {
+            if (type == "Epic" || type == "Story" || type == "Bug" || type == "Sub-task") {
                 this.jiraFormData["Type"] = type
             }
 
@@ -1781,7 +1781,7 @@ class DsView extends Component {
             })
             return
         }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "User Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
                 modalQuestion: `Trying to add ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -1804,7 +1804,7 @@ class DsView extends Component {
             let selectorObj = null
             if (type) {
                 jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
-                if (this.jiraFormData.Type == 'User Story') {
+                if (this.jiraFormData.Type == 'Story') {
                     this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
                 } else if (this.jiraFormData.Type == "Sub-task") {
                     this.jiraFormData[this.jiraFormData.Type].parent = jiraId
@@ -1847,9 +1847,9 @@ class DsView extends Component {
         }
         if (!fieldMapping) return false
         try {
-            if (type == 'User Story' && rowData[fieldMapping['type']] == 'Epic') {
+            if (type == 'Story' && rowData[fieldMapping['type']] == 'Epic') {
                 return true
-            } else if (type == 'Sub-task' && rowData[fieldMapping['type']] == 'User Story') {
+            } else if (type == 'Sub-task' && rowData[fieldMapping['type']] == 'Story') {
                 return true
             } else {
                 return false
@@ -2091,13 +2091,13 @@ class DsView extends Component {
                 }
             },
             {
-                label: "Add User Story to Epic",
+                label: "Add Story to Epic",
                 action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'User Story')
+                    me.addJiraRow(e, cell, 'Story')
                 }
             },
             {
-                label: "Add a Sub-task to User Story",
+                label: "Add a Sub-task to Story",
                 action: function (e, cell) {
                     me.addJiraRow(e, cell, 'Sub-task')
                 }
