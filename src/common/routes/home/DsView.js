@@ -1154,6 +1154,22 @@ class DsView extends Component {
     }
 
     duplicateAndAddRowHandler (e, cell, pos) {
+        const { match, dsHome } = this.props;
+        let self = this
+        let dsView = match.params.dsView;
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let rowData = cell.getRow().getData()
+        if (this.isJiraRow(rowData, jiraConfig, jiraAgileConfig)) {
+            this.setState({
+                modalTitle: "Duplicate Row status",
+                modalQuestion: `Can't duplicate a JIRA/JIRA_AGILE row`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         console.log("Duplicate and add row called..");
         let newData = JSON.parse(JSON.stringify(cell.getData()));
         delete newData._id;
