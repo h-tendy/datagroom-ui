@@ -38,7 +38,8 @@ class DsViewEdit extends Component {
             jiraAgile: null,
             jql: "",
             jiraFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions", "parentKey", "parentSummary", "parent", "subtasks", "subtasksDetails", "dependsLinks", "implementLinks", "packageLinks", "relatesLinks", "testLinks", "coversLinks", "defectLinks", "automatesLinks", "updated", "votes", "systemFeature", "labels", "phaseBugFound", "phaseBugIntroduced", "epic", "description", "Story Points", "sprintNumber"\n\n',
-            jiraAgileJql: "",
+            jiraAgileLabel: "",
+            jiraAgileBoardId: 0,
             jiraAgileFieldMapping: '# Jira keys: "key", "summary", "type", "assignee", "severity", "priority", "reporter", "foundInRls", "created", "rrtTargetRls", "targetRls", "status", "feature", "rzFeature", "versions", "parentKey", "parentSummary", "parent", "subtasks", "subtasksDetails", "dependsLinks", "implementLinks", "packageLinks", "relatesLinks", "testLinks", "coversLinks", "defectLinks", "automatesLinks", "updated", "votes", "systemFeature", "labels", "phaseBugFound", "phaseBugIntroduced", "epic", "description", "Story Points", "sprintNumber"\n\n',
             dsDescription: null,
             widths: {},
@@ -293,10 +294,11 @@ class DsViewEdit extends Component {
             }
         }
         let jiraAgileConfig = null;
-        if (jiraColumnsPresent && this.state.jiraAgile && this.state.jiraAgileJql) {
+        if (jiraColumnsPresent && this.state.jiraAgile && this.state.jiraAgileLabel && this.state.jiraAgileBoardId) {
             jiraAgileConfig = {
                 jira: true,
-                jql: this.state.jiraAgileJql,
+                label: this.state.jiraAgileLabel,
+                boardId: parseInt(this.state.jiraAgileBoardId),
                 jiraFieldMapping: jiraAgileFieldMapping
             }
         }
@@ -995,7 +997,8 @@ class DsViewEdit extends Component {
                 }
                 this.setState({
                     jiraAgile: dsHome.dsViews[dsView].jiraAgileConfig.jira,
-                    jiraAgileJql: dsHome.dsViews[dsView].jiraAgileConfig.jql,
+                    jiraAgileLabel: dsHome.dsViews[dsView].jiraAgileConfig.label,
+                    jiraAgileBoardId: dsHome.dsViews[dsView].jiraAgileConfig.boardId,
                     jiraAgileFieldMapping: jiraAgileFieldMapping
                 });
             }
@@ -1099,14 +1102,14 @@ class DsViewEdit extends Component {
                 <br />
                 <Row>
                     <Col md={2} sm={2} xs={2}>
-                        <Form.Check inline type="checkbox" label="&nbsp;Add Jira Agile Query" checked={this.state.jiraAgile} onChange={(event) => {
+                        <Form.Check inline type="checkbox" label="&nbsp;Add Jira Agile Label" checked={this.state.jiraAgile} onChange={(event) => {
                             let checked = event.target.checked;
                             me.setState({ jiraAgile: checked });
                         }} />
                     </Col>
                     {this.state.jiraAgile &&
                         <Col md={6} sm={6} xs={6}>
-                            <Form.Control type="text" defaultValue={this.state.jiraAgileJql} onChange={(event) => {
+                            <Form.Control type="text" required defaultValue={this.state.jiraAgileLabel} onChange={(event) => {
                                 let value = event.target.value;
                                 if (me.state.debounceTimers["__dsViewEdit__main"]) {
                                     clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
@@ -1114,7 +1117,31 @@ class DsViewEdit extends Component {
                                 me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
                                     delete me.state.debounceTimers["__dsViewEdit__main"];
                                     if (!value) return;
-                                    me.setState({ jiraAgileJql: value });
+                                    me.setState({ jiraAgileLabel: value });
+                                }, 1000)
+                            }} />
+                        </Col>
+                    }
+                </Row>
+                <Row>
+                    {this.state.jiraAgile &&
+                        <Col md={2} sm={2} xs={2}>
+                            <b>Jira Agile BoardId: </b>
+                        </Col>
+                    }
+                    {this.state.jiraAgile &&
+                        <Col md={6} sm={6} xs={6}>
+                            <Form.Control type="number" required defaultValue={this.state.jiraAgileBoardId} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    // trigger render again no matter what changed.
+                                    //me.setState({somethingChanged: me.state.somethingChanged++});        
+                                    if (!value) return;
+                                    me.setState({ jiraAgileBoardId: value });
                                 }, 1000)
                             }} />
                         </Col>
