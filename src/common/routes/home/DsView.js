@@ -1603,13 +1603,7 @@ class DsView extends Component {
                 let key = dsHome.dsViews[dsView].keys[i];
                 selectorObj[key] = cell.getRow().getData()[key];
             }
-            let jiraAgileBoard = null
-            try {
-                let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
-                if (matchArr && matchArr.length >= 4) {
-                    jiraAgileBoard = matchArr[3].trim()
-                }
-            } catch (e) { }
+            let jiraAgileBoard = jiraAgileConfig.label
             this.setState({
                 modalTitle: "Jira row specifications:- ",
                 modalOk: "Convert",
@@ -1810,11 +1804,8 @@ class DsView extends Component {
         if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
             let jiraAgileBoard = null
             try {
-                let matchArr = jiraAgileConfig.jql.match(/labels(\s)*=(\s)*(.*)/)
-                if (matchArr && matchArr.length >= 4) {
-                    jiraAgileBoard = matchArr[3].trim()
-                    this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
-                }
+                jiraAgileBoard = jiraAgileConfig.label
+                this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
             } catch (e) { }
             let jiraId = null
             let selectorObj = null
