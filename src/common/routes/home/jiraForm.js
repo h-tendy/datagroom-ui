@@ -185,6 +185,13 @@ class JiraForm extends Component {
                                 <Form.Row style={{ paddingBottom: "45px" }}>
                                     <Form.Label column sm="4">{this.fields[key].name}:</Form.Label>
                                     <Col sm="8">
+                                        {key === "issuelinks" && <Form.Control
+                                            as="textarea"
+                                            rows="1"
+                                            name={`${key}`}
+                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />}
                                         {key === "customfield_25578" && <Form.Control
                                             as="textarea"
                                             rows="1"
