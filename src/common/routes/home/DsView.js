@@ -1465,6 +1465,7 @@ class DsView extends Component {
             let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
             let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
             let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            this.updateLocalStorage(jiraFormData)
             if (jiraFormData.Type == "Bug") {
                 //Just before sending change the value of key customfield_25578 to array
                 jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
@@ -1896,6 +1897,7 @@ class DsView extends Component {
             let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
             let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
             let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            this.updateLocalStorage(jiraFormData)
             if (jiraFormData.Type == "Bug") {
                 //Just before sending change the value of key customfield_25578 to array
                 jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
@@ -1965,6 +1967,15 @@ class DsView extends Component {
             }
         } else {
             this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
+        }
+    }
+
+    updateLocalStorage(jiraFormData) {
+        if (jiraFormData["Story"].customfield_28101) {
+            localStorage.setItem("Scrum_Master", jiraFormData["Story"].customfield_28101)
+        }
+        if (jiraFormData["Story"].customfield_28102) {
+            localStorage.setItem("Product_Owner", jiraFormData["Story"].customfield_28102)
         }
     }
 

@@ -224,14 +224,14 @@ class JiraForm extends Component {
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            value={localStorage.getItem("Scrum_Master") || this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
                                         {key === "customfield_28102" && <Form.Control
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            value={localStorage.getItem("Product_Owner") || this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
                                         {key === "description" && <Form.Control
