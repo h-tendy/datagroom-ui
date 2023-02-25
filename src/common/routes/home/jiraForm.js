@@ -127,9 +127,9 @@ class JiraForm extends Component {
         <Container>
             <Row className="justify-content-md-center">
                 <Col sm={12}>
-                    <Form>
-                        <Form.Group controlId="formProject">
-                            <Form.Row style={{ paddingBottom: "45px" }}>
+                    <Form style={{ display: "flex", flexDirection: "column" }}>
+                        <Form.Group controlId="formProject" style={{ marginBottom: "10px" }}>
+                            <Form.Row>
                                 <Form.Label column sm="4">Project:</Form.Label>
                                 <Col sm="8">
                                     <Form.Control
@@ -144,8 +144,8 @@ class JiraForm extends Component {
                             </Form.Row>
                         </Form.Group>
                         {this.props.jiraAgileEnabled && (
-                            <Form.Group controlId="formJIRA_AGILE_LABEL">
-                                <Form.Row style={{ paddingBottom: "45px" }}>
+                            <Form.Group controlId="formJIRA_AGILE_LABEL" style={{ marginBottom: "10px" }}>
+                                <Form.Row>
                                     <Form.Label column sm="4">JIRA AGILE LABEL:</Form.Label>
                                     <Col sm="8">
                                         <Form.Control
@@ -161,8 +161,8 @@ class JiraForm extends Component {
                                 </Form.Row>
                             </Form.Group>
                         )}
-                        <Form.Group controlId="formType">
-                            <Form.Row style={{ paddingBottom: "45px" }}>
+                        <Form.Group controlId="formType" style={{ marginBottom: "10px" }}>
+                            <Form.Row>
                                 <Form.Label column sm="4">Type:</Form.Label>
                                 <Col sm="8">
                                     <Form.Control
@@ -181,8 +181,8 @@ class JiraForm extends Component {
                         </Form.Group>
                         {this.state.formData.Type != "" && this.fieldsKey && this.fieldsKey.map((key) =>
                         (
-                            <Form.Group key={`form${key}`} controlId={`form${key}`}>
-                                <Form.Row style={{ paddingBottom: "45px" }}>
+                            <Form.Group key={`form${key}`} controlId={`form${key}`} style={{ marginBottom: "10px" }}>
+                                <Form.Row>
                                     <Form.Label column sm="4">{this.fields[key].name}:</Form.Label>
                                     <Col sm="8">
                                         {key === "issuelinks" && <Form.Control
@@ -224,17 +224,24 @@ class JiraForm extends Component {
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            value={localStorage.getItem("Scrum_Master") || this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
                                         {key === "customfield_28102" && <Form.Control
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
+                                            value={localStorage.getItem("Product_Owner") || this.state.formData[this.state.formData.Type][key]}
+                                            onChange={this.handleChange}
+                                        />}
+                                        {key === "description" && <Form.Control
+                                            as="textarea"
+                                            rows="6"
+                                            name={`${key}`}
                                             value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
-                                        {this.fields[key].type === "string" && <Form.Control
+                                        {this.fields[key].type === "string" && key !== "description" && <Form.Control
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
