@@ -985,7 +985,7 @@ class DsView extends Component {
                     let update = { _id: k };
                     update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
                     this.ref.table.updateData([ update ]);
-                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.dsEdits[k].serverStatus.error}), reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
+                    modalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${dsHome.dsEdits[k].serverStatus.error})</b> <br/> Reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
 
                     showModal = true;
                     // Release the lock
@@ -1507,7 +1507,7 @@ class DsView extends Component {
                         ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error}</b><br/><br/>`
                     showSecondaryModal = true;
                 }
             } else {
@@ -1946,7 +1946,7 @@ class DsView extends Component {
                         ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error})</b><br/><br/>`
                     showSecondaryModal = true;
                 }
             } else {
