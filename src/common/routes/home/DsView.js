@@ -985,7 +985,7 @@ class DsView extends Component {
                     let update = { _id: k };
                     update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
                     this.ref.table.updateData([ update ]);
-                    modalStatus += `Update <b style="color:red">failed</b>, (error: ${dsHome.dsEdits[k].serverStatus.error}), reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
+                    modalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${dsHome.dsEdits[k].serverStatus.error})</b> <br/> Reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`
 
                     showModal = true;
                     // Release the lock
@@ -994,6 +994,25 @@ class DsView extends Component {
                     let unlockReq = { _id: k, field: column, dsName, dsView }
                     socket.emit('unlockReq', unlockReq);
                     dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
+                } else if (dsHome.dsEdits[k].editStatus === 'done' &&
+                    dsHome.dsEdits[k].serverStatus.status === 'success' &&
+                    dsHome.dsEdits[k].serverStatus.hasOwnProperty('record')) {
+
+                    let updatedRec = dsHome.dsEdits[k].serverStatus.record
+                    let update = {
+                        _id: k,
+                        ...updatedRec
+                    }
+                    this.ref.table.updateData([update]);
+                    showModal = false;
+                    // Release the lock and publish new value to everyone
+                    this.cellImEditing = null;
+                    let column = dsHome.dsEdits[k].editTracker.field;
+                    let newVal = dsHome.dsEdits[k].editTracker.newVal;
+                    let unlockReq = { _id: k, field: column, dsName, dsView, newVal }
+                    socket.emit('unlockReq', unlockReq);
+                    dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
+
                 } else if (dsHome.dsEdits[k].editStatus === 'done' && 
                     dsHome.dsEdits[k].serverStatus.status === 'success') {
 
@@ -1012,6 +1031,17 @@ class DsView extends Component {
                     this.ref.table.updateData([ update ]);
                     modalStatus += `Update <b style="color:red">failed</b>, reverted [key, RejectedValue]: [${dsHome.dsEdits[k].editTracker.field}, ${dsHome.dsEdits[k].editTracker.newVal}]<br/><br/>`;
                     showModal = true;
+                    // Release the lock
+                    this.cellImEditing = null;
+                    let column = dsHome.dsEdits[k].editTracker.field;
+                    let unlockReq = { _id: k, field: column, dsName, dsView }
+                    socket.emit('unlockReq', unlockReq);
+                    dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
+                } else if (dsHome.dsEdits[k].editStatus === 'done' &&
+                    dsHome.dsEdits[k].serverStatus.status === 'silentFail') {
+                    let update = { _id: k };
+                    update[dsHome.dsEdits[k].editTracker.field] = dsHome.dsEdits[k].editTracker.oldVal;
+                    this.ref.table.updateData([update]);
                     // Release the lock
                     this.cellImEditing = null;
                     let column = dsHome.dsEdits[k].editTracker.field;
@@ -1507,7 +1537,7 @@ class DsView extends Component {
                         ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error}</b><br/><br/>`
                     showSecondaryModal = true;
                 }
             } else {
@@ -1946,7 +1976,7 @@ class DsView extends Component {
                         ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
                     }
                 } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b>, (error: ${response.error})<br/><br/>`
+                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error})</b><br/><br/>`
                     showSecondaryModal = true;
                 }
             } else {
