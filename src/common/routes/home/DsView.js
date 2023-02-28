@@ -218,7 +218,7 @@ class DsView extends Component {
         this.convertToJiraRow = this.convertToJiraRow.bind(this)
         this.handleJiraFormChange = this.handleJiraFormChange.bind(this)
         this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
-
+        this.fillLocalStorageItemData = this.fillLocalStorageItemData.bind(this)
         this.addJiraRow = this.addJiraRow.bind(this)
     }
     componentDidMount () {
@@ -1604,6 +1604,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
+        this.fillLocalStorageItemData()
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1654,6 +1655,11 @@ class DsView extends Component {
                 showModal: true
             })
         }
+    }
+
+    fillLocalStorageItemData() {
+        this.jiraFormData["Story"]["customfield_28101"] = localStorage.getItem("Scrum_Master")
+        this.jiraFormData["Story"]["customfield_28102"] = localStorage.getItem("Product_Owner")
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -1810,6 +1816,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
+        this.fillLocalStorageItemData()
         if (type)
             this.jiraFormData.Type = type
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
