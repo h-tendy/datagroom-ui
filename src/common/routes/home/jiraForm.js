@@ -173,7 +173,7 @@ class JiraForm extends Component {
                                     >
                                         {this.props.jiraAgileEnabled && (<option key={"Epic"} value="Epic">Epic</option>)}
                                         {this.props.jiraAgileEnabled && (<option key={"Story"} value="Story">Story</option>)}
-                                        {this.props.jiraAgileEnabled && (<option key={"Sub-task"} value="Sub-task">Sub-task</option>)}
+                                        {this.props.jiraAgileEnabled && (<option key={"Story Task"} value="Story Task">Story Task</option>)}
                                         {this.props.jiraEnabled && (<option key={"Bug"} value="Bug">Bug</option>)}
                                     </Form.Control>
                                 </Col>
