@@ -218,7 +218,7 @@ class DsView extends Component {
         this.convertToJiraRow = this.convertToJiraRow.bind(this)
         this.handleJiraFormChange = this.handleJiraFormChange.bind(this)
         this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
-
+        this.fillLocalStorageItemData = this.fillLocalStorageItemData.bind(this)
         this.addJiraRow = this.addJiraRow.bind(this)
     }
     componentDidMount () {
@@ -1604,6 +1604,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
+        this.fillLocalStorageItemData()
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1616,7 +1617,7 @@ class DsView extends Component {
             })
             return
         }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
                 modalQuestion: `Trying to convert ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -1654,6 +1655,24 @@ class DsView extends Component {
                 showModal: true
             })
         }
+    }
+
+    fillLocalStorageItemData() {
+        try {
+            for (let key of Object.keys(this.jiraFormData)) {
+                if (typeof this.jiraFormData[key] == "object") {
+                    let localStorageItem = localStorage.getItem(key)
+                    if (localStorageItem && localStorageItem != "undefined") {
+                        let parsedLocalItem = JSON.parse(localStorageItem)
+                        for (let parsedKey of Object.keys(parsedLocalItem)) {
+                            if (this.jiraFormData[key].hasOwnProperty(parsedKey)) {
+                                this.jiraFormData[key][parsedKey] = parsedLocalItem[parsedKey]
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) { }
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -1700,7 +1719,7 @@ class DsView extends Component {
             }
             if (fieldMapping["type"]) {
                 if (rowData[fieldMapping["type"]].match(/(t|T)ask/))
-                    type = "Sub-task"
+                    type = "Story Task"
                 else if (rowData[fieldMapping["type"]].match(/(b|B)ug/))
                     type = "Bug"
                 else if (rowData[fieldMapping["type"]].match(/(e|E)pic/))
@@ -1718,7 +1737,7 @@ class DsView extends Component {
                     storyPoints = parseInt(rowData[fieldMapping["Story Points"]])
             }
 
-            if (type == "Epic" || type == "Story" || type == "Bug" || type == "Sub-task") {
+            if (type == "Epic" || type == "Story" || type == "Bug" || type == "Story Task") {
                 this.jiraFormData["Type"] = type
             }
 
@@ -1810,6 +1829,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
+        this.fillLocalStorageItemData()
         if (type)
             this.jiraFormData.Type = type
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1822,7 +1842,7 @@ class DsView extends Component {
             })
             return
         }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Sub-task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
                 modalQuestion: `Trying to add ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -1844,7 +1864,7 @@ class DsView extends Component {
                 jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
                 if (this.jiraFormData.Type == 'Story') {
                     this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
-                } else if (this.jiraFormData.Type == "Sub-task") {
+                } else if (this.jiraFormData.Type == "Story Task") {
                     this.jiraFormData[this.jiraFormData.Type].parent = jiraId
                 }
                 let _id = cell.getRow().getData()['_id'];
@@ -1887,7 +1907,7 @@ class DsView extends Component {
         try {
             if (type == 'Story' && rowData[fieldMapping['type']] == 'Epic') {
                 return true
-            } else if (type == 'Sub-task' && rowData[fieldMapping['type']] == 'Story') {
+            } else if (type == 'Story Task' && rowData[fieldMapping['type']] == 'Story') {
                 return true
             } else {
                 return false
@@ -2001,12 +2021,21 @@ class DsView extends Component {
     }
 
     updateLocalStorage(jiraFormData) {
-        if (jiraFormData["Story"].customfield_28101) {
-            localStorage.setItem("Scrum_Master", jiraFormData["Story"].customfield_28101)
-        }
-        if (jiraFormData["Story"].customfield_28102) {
-            localStorage.setItem("Product_Owner", jiraFormData["Story"].customfield_28102)
-        }
+        try {
+            for (let key of Object.keys(jiraFormData)) {
+                if (typeof jiraFormData[key] == "object") {
+                    let objStringified;
+                    let obj = {
+                        ...jiraFormData[key]
+                    }
+                    if (obj["summary"]) obj["summary"] = ""
+                    if (obj["description"]) obj["description"] = ""
+                    if (obj["customfield_12791"]) obj["customfield_12791"] = ""
+                    objStringified = JSON.stringify(obj)
+                    localStorage.setItem(key, objStringified)
+                }
+            }
+        } catch (e) { }
     }
 
     /**End add a jira issue */
@@ -2145,9 +2174,9 @@ class DsView extends Component {
                 }
             },
             {
-                label: "Add a Sub-task to Story",
+                label: "Add a Story Task to Story",
                 action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'Sub-task')
+                    me.addJiraRow(e, cell, 'Story Task')
                 }
             }
         ];        
