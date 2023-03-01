@@ -1658,8 +1658,20 @@ class DsView extends Component {
     }
 
     fillLocalStorageItemData() {
-        this.jiraFormData["Story"]["customfield_28101"] = localStorage.getItem("Scrum_Master")
-        this.jiraFormData["Story"]["customfield_28102"] = localStorage.getItem("Product_Owner")
+        try {
+            let obj = {}
+            for (let key of Object.keys(this.jiraFormData)) {
+                if (typeof this.jiraFormData[key] == "object") {
+                    let localStorageItem = localStorage.getItem(key)
+                    if (localStorageItem != "undefined")
+                        obj[key] = JSON.parse(localStorageItem)
+                }
+            }
+            this.jiraFormData = {
+                ...this.jiraFormData,
+                ...obj
+            }
+        } catch (e) { }
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -2008,12 +2020,21 @@ class DsView extends Component {
     }
 
     updateLocalStorage(jiraFormData) {
-        if (jiraFormData["Story"].customfield_28101) {
-            localStorage.setItem("Scrum_Master", jiraFormData["Story"].customfield_28101)
-        }
-        if (jiraFormData["Story"].customfield_28102) {
-            localStorage.setItem("Product_Owner", jiraFormData["Story"].customfield_28102)
-        }
+        try {
+            for (let key of Object.keys(jiraFormData)) {
+                if (typeof jiraFormData[key] == "object") {
+                    let objStringified;
+                    let obj = {
+                        ...jiraFormData[key]
+                    }
+                    if (obj["summary"]) obj["summary"] = ""
+                    if (obj["description"]) obj["description"] = ""
+                    if (obj["customfield_12791"]) obj["customfield_12791"] = ""
+                    objStringified = JSON.stringify(obj)
+                    localStorage.setItem(key, objStringified)
+                }
+            }
+        } catch (e) { }
     }
 
     /**End add a jira issue */
