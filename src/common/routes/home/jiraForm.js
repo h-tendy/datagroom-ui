@@ -103,8 +103,10 @@ class JiraForm extends Component {
 
     handleMultiChange = (e, b, c, d) => {
         let values = []
-        for (let i = 0; i < e.length; i++) {
-            values.push(e[i].value)
+        if (e) {
+            for (let i = 0; i < e.length; i++) {
+                values.push(e[i].value)
+            }
         }
         let obj = {};
         obj[b.name] = values;
