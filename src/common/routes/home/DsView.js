@@ -2158,6 +2158,9 @@ class DsView extends Component {
                 action: this.deleteRowQuestion
             },
             {
+                separator: true
+            },
+            {
                 label: "Convert to JIRA row...",
                 action: this.convertToJiraRow
             },
