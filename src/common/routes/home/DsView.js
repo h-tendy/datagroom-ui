@@ -227,7 +227,6 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         if ( !Object.keys(dsHome).length || !dsHome.dsViews || !dsHome.dsViews[dsView] ) {
             dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));
-            dispatch(dsActions.getProjectsMetaData(dsName, dsView, user.user));
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
@@ -1561,13 +1560,14 @@ class DsView extends Component {
         }
     }
 
-    convertToJiraRow(e, cell) {
+    async convertToJiraRow(e, cell) {
         let self = this
-        const { match, dsHome } = this.props;
+        const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
+        let dsName = match.params.dsName;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        let dsUser = user.user;
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1589,6 +1589,7 @@ class DsView extends Component {
             })
             return
         }
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1772,13 +1773,14 @@ class DsView extends Component {
     /**End convert to JIRA row */
 
     /**Start add a jira issue */
-    addJiraRow(e, cell, type) {
+    async addJiraRow(e, cell, type) {
         let self = this
-        const { match, dsHome } = this.props;
+        const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
+        let dsName = match.params.dsName;
+        let dsUser = user.user;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1814,6 +1816,7 @@ class DsView extends Component {
             }
 
         }
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Add JIRA status",

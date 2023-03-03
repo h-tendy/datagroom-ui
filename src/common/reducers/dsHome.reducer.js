@@ -29,31 +29,6 @@ export function dsHome (state = initialState, action) {
                 return newState
             }
 
-        case dsConstants.GET_PROJECTS_METADATA_REQUEST:
-            {
-                let newState = { ...state };
-                if (!newState.projectsMetaData)
-                    newState.projectsMetaData = {};
-                newState.projectsMetaData = { status: 'loading' };
-                return newState
-            }
-        case dsConstants.GET_PROJECTS_METADATA_SUCCESS:
-            {
-                let newState = { ...state };
-                if (!newState.projectsMetaData)
-                    newState.projectsMetaData = {};
-                newState.projectsMetaData = { status: 'success', projectsMetaData: action.projectsMetaData };
-                return newState
-            }
-        case dsConstants.GET_PROJECTS_METADATA_FAILURE:
-            {
-                let newState = { ...state };
-                if (!newState.projectsMetaData)
-                    newState.projectsMetaData = {};
-                newState.projectsMetaData = { status: 'fail', error: action.message };
-                return newState
-            }
-
         case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_REQUEST:
             {
                 let newState = { ...state };
