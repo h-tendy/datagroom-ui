@@ -1589,7 +1589,7 @@ class DsView extends Component {
             })
             return
         }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser })
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1605,7 +1605,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
-        this.fillLocalStorageItemData()
+        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1658,7 +1658,7 @@ class DsView extends Component {
         }
     }
 
-    fillLocalStorageItemData() {
+    fillLocalStorageItemData(issueTypes) {
         try {
             for (let key of Object.keys(this.jiraFormData)) {
                 if (typeof this.jiraFormData[key] == "object") {
@@ -1667,13 +1667,69 @@ class DsView extends Component {
                         let parsedLocalItem = JSON.parse(localStorageItem)
                         for (let parsedKey of Object.keys(parsedLocalItem)) {
                             if (this.jiraFormData[key].hasOwnProperty(parsedKey)) {
-                                this.jiraFormData[key][parsedKey] = parsedLocalItem[parsedKey]
+                                let { isValidated, defaultValue } = this.validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey])
+                                if (isValidated && defaultValue != null) {
+                                    this.jiraFormData[key][parsedKey] = defaultValue
+                                }
                             }
                         }
                     }
                 }
             }
         } catch (e) { }
+    }
+
+    validateAndGetDefaultValue(issueTypes, issueType, field, value) {
+        let isValidated = false;
+        let defaultValue = null;
+        if (field === "customfield_25578") {
+            isValidated = true;
+            defaultValue = value;
+            return { isValidated, defaultValue }
+        }
+        for (let i = 0; i < issueTypes.length; i++) {
+            if (issueTypes[i].name != issueType) { continue }
+            let currIssueObj = issueTypes[i];
+            let fieldObj = currIssueObj.fields[field];
+            if (fieldObj) {
+                if (fieldObj.type == "array" && fieldObj.allowedValues) {
+                    for (let k = 0; k < value.length; k++) {
+                        if (!fieldObj.allowedValues.includes(value[k])) {
+                            isValidated = false;
+                            return { isValidated, defaultValue }
+                        }
+                    }
+                    isValidated = true
+                    defaultValue = value
+                    return { isValidated, defaultValue }
+                } else if (fieldObj.type == "option" && fieldObj.allowedValues) {
+                    if (fieldObj.allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
+                } else if (fieldObj.type == "creatableArray" && fieldObj.allowedValues) {
+                    if (fieldObj.allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
+                } else {
+                    isValidated = true
+                    defaultValue = value
+                    return { isValidated, defaultValue }
+                }
+            } else {
+                return { isValidated, defaultValue }
+            }
+        }
+        return { isValidated, defaultValue }
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -1816,7 +1872,7 @@ class DsView extends Component {
             }
 
         }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser })
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1832,7 +1888,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
-        this.fillLocalStorageItemData()
+        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         if (type)
             this.jiraFormData.Type = type
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
