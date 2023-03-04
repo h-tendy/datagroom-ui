@@ -244,27 +244,6 @@ class JiraForm extends Component {
                                             value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
-                                        {/* {key === "customfield_12790" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />} */}
-                                        {/* {key === "parent" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />} */}
-                                        {/* {key === "assignee" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />} */}
                                         {key === "customfield_28101" && <Form.Control
                                             as="textarea"
                                             rows="1"
@@ -350,21 +329,6 @@ class JiraForm extends Component {
                             </Form.Group>
                         )
                         )}
-                        {/* <Form.Group key={`formXXX`} controlId={`formXXX`} style={{ marginBottom: "10px" }}>
-                            <Form.Row>
-                                <Form.Label column sm="4">XXXXX:</Form.Label>
-                                <Col sm="8">
-                                    <CreatableSelect
-                                        value={this.state.selectedOption}
-                                        isClearable
-                                        options={this.state.options}
-                                        onChange={this.handleCreatableSelectChange}
-                                        onCreateOption={this.handleCreate}
-                                        placeholder="Type to search or add a new option..."
-                                    />
-                                </Col>
-                            </Form.Row>
-                        </Form.Group> */}
                     </Form>
                 </Col>
             </Row>
