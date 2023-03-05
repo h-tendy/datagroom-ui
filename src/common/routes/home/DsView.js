@@ -227,7 +227,6 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         if ( !Object.keys(dsHome).length || !dsHome.dsViews || !dsHome.dsViews[dsView] ) {
             dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));
-            dispatch(dsActions.getProjectsMetaData(dsName, dsView, user.user));
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
@@ -1561,13 +1560,14 @@ class DsView extends Component {
         }
     }
 
-    convertToJiraRow(e, cell) {
+    async convertToJiraRow(e, cell) {
         let self = this
-        const { match, dsHome } = this.props;
+        const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
+        let dsName = match.params.dsName;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
+        let dsUser = user.user;
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1589,6 +1589,7 @@ class DsView extends Component {
             })
             return
         }
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1604,7 +1605,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
-        this.fillLocalStorageItemData()
+        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1657,7 +1658,7 @@ class DsView extends Component {
         }
     }
 
-    fillLocalStorageItemData() {
+    fillLocalStorageItemData(issueTypes) {
         try {
             for (let key of Object.keys(this.jiraFormData)) {
                 if (typeof this.jiraFormData[key] == "object") {
@@ -1666,13 +1667,79 @@ class DsView extends Component {
                         let parsedLocalItem = JSON.parse(localStorageItem)
                         for (let parsedKey of Object.keys(parsedLocalItem)) {
                             if (this.jiraFormData[key].hasOwnProperty(parsedKey)) {
-                                this.jiraFormData[key][parsedKey] = parsedLocalItem[parsedKey]
+                                let { isValidated, defaultValue } = this.validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey])
+                                if (isValidated && defaultValue != null) {
+                                    this.jiraFormData[key][parsedKey] = defaultValue
+                                }
                             }
                         }
                     }
                 }
             }
         } catch (e) { }
+    }
+
+    validateAndGetDefaultValue(issueTypes, issueType, field, value) {
+        let isValidated = false;
+        let defaultValue = null;
+        if (field === "customfield_25578") {
+            isValidated = true;
+            defaultValue = value;
+            return { isValidated, defaultValue }
+        }
+        for (let i = 0; i < issueTypes.length; i++) {
+            if (issueTypes[i].name != issueType) { continue }
+            let currIssueObj = issueTypes[i];
+            let fieldObj = currIssueObj.fields[field];
+            if (fieldObj) {
+                if (fieldObj.type == "array" && fieldObj.allowedValues) {
+                    for (let k = 0; k < value.length; k++) {
+                        if (!fieldObj.allowedValues.includes(value[k])) {
+                            isValidated = false;
+                            return { isValidated, defaultValue }
+                        }
+                    }
+                    isValidated = true
+                    defaultValue = value
+                    return { isValidated, defaultValue }
+                } else if (fieldObj.type == "option" && fieldObj.allowedValues) {
+                    if (fieldObj.allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
+                } else if (fieldObj.type == "creatableArray" && fieldObj.allowedValues) {
+                    if (fieldObj.allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
+                } else if (fieldObj.type == "searchableOption" && fieldObj.allowedValues) {
+                    let allowedValues = fieldObj.allowedValues.map((e) => e.key)
+                    if (allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
+                } else {
+                    isValidated = true
+                    defaultValue = value
+                    return { isValidated, defaultValue }
+                }
+            } else {
+                return { isValidated, defaultValue }
+            }
+        }
+        return { isValidated, defaultValue }
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
@@ -1772,13 +1839,14 @@ class DsView extends Component {
     /**End convert to JIRA row */
 
     /**Start add a jira issue */
-    addJiraRow(e, cell, type) {
+    async addJiraRow(e, cell, type) {
         let self = this
-        const { match, dsHome } = this.props;
+        const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
+        let dsName = match.params.dsName;
+        let dsUser = user.user;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let projectsMetaData = dsHome.projectsMetaData.projectsMetaData;
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1814,6 +1882,7 @@ class DsView extends Component {
             }
 
         }
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1829,7 +1898,7 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
-        this.fillLocalStorageItemData()
+        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         if (type)
             this.jiraFormData.Type = type
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {

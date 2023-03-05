@@ -1,5 +1,6 @@
 import React, { Component, useState } from "react";
 import Select from 'react-select'
+import CreatableSelect from 'react-select/creatable';
 import { Button, Col, Row, Container, FormControl, DropdownButton, Dropdown } from "react-bootstrap";
 import Form from 'react-bootstrap/Form'
 
@@ -9,7 +10,7 @@ class JiraForm extends Component {
         this.state = {
             formData: {
                 ...this.props.formData
-            }
+            },
         }
         this.projectsMetaData = null
         this.projects = []
@@ -26,13 +27,22 @@ class JiraForm extends Component {
                 this.fields = this.projectsMetaData.projects[0].issuetypes[i].fields
                 this.fieldsKey = Object.keys(this.fields)
                 for (let j = 0; j < this.fieldsKey.length; j++) {
-                    if (this.fields[this.fieldsKey[j]].type === "array" && this.fields[this.fieldsKey[j]].allowedValues) {
+                    if ((this.fields[this.fieldsKey[j]].type === "array" || this.fields[this.fieldsKey[j]].type === "creatableArray") && this.fields[this.fieldsKey[j]].allowedValues) {
                         this.allowedValues[this.fieldsKey[j]] = []
                         for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
                             let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
                             let obj = {};
                             obj.label = currVal
                             obj.value = currVal
+                            this.allowedValues[this.fieldsKey[j]].push(obj)
+                        }
+                    } else if (this.fields[this.fieldsKey[j]].type === "searchableOption" && this.fields[this.fieldsKey[j]].allowedValues) {
+                        this.allowedValues[this.fieldsKey[j]] = []
+                        for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
+                            let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
+                            let obj = {};
+                            obj.value = currVal.key
+                            obj.label = `${currVal.key} - ${currVal.summary}`
                             this.allowedValues[this.fieldsKey[j]].push(obj)
                         }
                     }
@@ -61,13 +71,22 @@ class JiraForm extends Component {
                     this.fields = this.projectsMetaData.projects[0].issuetypes[i].fields
                     this.fieldsKey = Object.keys(this.fields)
                     for (let j = 0; j < this.fieldsKey.length; j++) {
-                        if (this.fields[this.fieldsKey[j]].type === "array" && this.fields[this.fieldsKey[j]].allowedValues) {
+                        if ((this.fields[this.fieldsKey[j]].type === "array" || this.fields[this.fieldsKey[j]].type === "creatableArray") && this.fields[this.fieldsKey[j]].allowedValues) {
                             this.allowedValues[this.fieldsKey[j]] = []
                             for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
                                 let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
                                 let obj = {};
                                 obj.label = currVal
                                 obj.value = currVal
+                                this.allowedValues[this.fieldsKey[j]].push(obj)
+                            }
+                        } else if (this.fields[this.fieldsKey[j]].type === "searchableOption" && this.fields[this.fieldsKey[j]].allowedValues) {
+                            this.allowedValues[this.fieldsKey[j]] = []
+                            for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
+                                let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
+                                let obj = {};
+                                obj.value = currVal.key
+                                obj.label = `${currVal.key} - ${currVal.summary}`
                                 this.allowedValues[this.fieldsKey[j]].push(obj)
                             }
                         }
@@ -120,9 +139,50 @@ class JiraForm extends Component {
         })
     }
 
+    handleCreate = (option, event) => {
+        try {
+            const newOption = { label: option.label, value: option.value };
+            this.allowedValues[event.name].push(newOption);
+            let obj = {}
+            obj[event.name] = option.value;
+            this.props.handleChange(obj)
+            this.setState({
+                ...this.state,
+                formData: {
+                    ...this.state.formData,
+                    [this.state.formData.Type]: {
+                        ...this.state.formData[this.state.formData.Type],
+                        [event.name]: option.value
+                    }
+                }
+            })
+        } catch (e) { }
+    };
 
-
-
+    handleSelectChange = (selectedOption, event) => {
+        let obj = {}
+        let selectedValue = ""
+        if (event.action == "clear") {
+            selectedValue = ""
+        } else if (event.action == "create-option") {
+            this.handleCreate(selectedOption, event)
+            return
+        } else if (event.action == "select-option") {
+            selectedValue = selectedOption.value;
+        }
+        obj[event.name] = selectedValue
+        this.props.handleChange(obj)
+        this.setState({
+            ...this.state,
+            formData: {
+                ...this.state.formData,
+                [this.state.formData.Type]: {
+                    ...this.state.formData[this.state.formData.Type],
+                    [event.name]: selectedValue
+                }
+            }
+        })
+    };
 
     render() {
     return (
@@ -201,27 +261,6 @@ class JiraForm extends Component {
                                             value={this.state.formData[this.state.formData.Type][key]}
                                             onChange={this.handleChange}
                                         />}
-                                        {key === "customfield_12790" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />}
-                                        {key === "parent" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />}
-                                        {key === "assignee" && <Form.Control
-                                            as="textarea"
-                                            rows="1"
-                                            name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
-                                            onChange={this.handleChange}
-                                        />}
                                         {key === "customfield_28101" && <Form.Control
                                             as="textarea"
                                             rows="1"
@@ -288,6 +327,33 @@ class JiraForm extends Component {
                                                 className="basic-multi-select"
                                                 classNamePrefix="select"
                                             />
+                                        }
+                                        {
+                                            this.fields[key].type === "creatableArray" && this.allowedValues[key] &&
+                                            <div key={`${this.state.formData[this.state.formData.Type][key]}`}>
+                                                <CreatableSelect
+                                                    defaultValue={(this.state.formData[this.state.formData.Type][key] != "") ? ({ label: this.state.formData[this.state.formData.Type][key], value: this.state.formData[this.state.formData.Type][key] }) : null}
+                                                    isClearable
+                                                    name={`${key}`}
+                                                    options={this.allowedValues[key]}
+                                                    onChange={this.handleSelectChange}
+                                                    placeholder="Type to search or add a new option..."
+                                                />
+                                            </div>
+                                        }
+                                        {
+                                            this.fields[key].type === "searchableOption" && this.allowedValues[key] &&
+                                            <div key={`${this.state.formData[this.state.formData.Type][key]}`}>
+                                                <Select
+                                                    defaultValue={(this.state.formData[this.state.formData.Type][key] != "") ? ({ label: this.state.formData[this.state.formData.Type][key], value: this.state.formData[this.state.formData.Type][key] }) : null}
+                                                    isClearable
+                                                    isSearchable
+                                                    name={`${key}`}
+                                                    options={this.allowedValues[key]}
+                                                    onChange={this.handleSelectChange}
+                                                    placeholder="Type to search or add a new option..."
+                                                />
+                                            </div>
                                         }
                                     </Col>
                                 </Form.Row>
