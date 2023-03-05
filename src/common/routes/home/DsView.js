@@ -1720,6 +1720,16 @@ class DsView extends Component {
                         isValidated = false;
                         return { isValidated, defaultValue }
                     }
+                } else if (fieldObj.type == "searchableOption" && fieldObj.allowedValues) {
+                    let allowedValues = fieldObj.allowedValues.map((e) => e.key)
+                    if (allowedValues.includes(value)) {
+                        isValidated = true;
+                        defaultValue = value;
+                        return { isValidated, defaultValue }
+                    } else {
+                        isValidated = false;
+                        return { isValidated, defaultValue }
+                    }
                 } else {
                     isValidated = true
                     defaultValue = value

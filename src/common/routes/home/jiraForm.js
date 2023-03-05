@@ -36,6 +36,15 @@ class JiraForm extends Component {
                             obj.value = currVal
                             this.allowedValues[this.fieldsKey[j]].push(obj)
                         }
+                    } else if (this.fields[this.fieldsKey[j]].type === "searchableOption" && this.fields[this.fieldsKey[j]].allowedValues) {
+                        this.allowedValues[this.fieldsKey[j]] = []
+                        for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
+                            let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
+                            let obj = {};
+                            obj.value = currVal.key
+                            obj.label = `${currVal.key} - ${currVal.summary}`
+                            this.allowedValues[this.fieldsKey[j]].push(obj)
+                        }
                     }
                 }
                 break
@@ -69,6 +78,15 @@ class JiraForm extends Component {
                                 let obj = {};
                                 obj.label = currVal
                                 obj.value = currVal
+                                this.allowedValues[this.fieldsKey[j]].push(obj)
+                            }
+                        } else if (this.fields[this.fieldsKey[j]].type === "searchableOption" && this.fields[this.fieldsKey[j]].allowedValues) {
+                            this.allowedValues[this.fieldsKey[j]] = []
+                            for (let k = 0; k < this.fields[this.fieldsKey[j]].allowedValues.length; k++) {
+                                let currVal = this.fields[this.fieldsKey[j]].allowedValues[k]
+                                let obj = {};
+                                obj.value = currVal.key
+                                obj.label = `${currVal.key} - ${currVal.summary}`
                                 this.allowedValues[this.fieldsKey[j]].push(obj)
                             }
                         }
@@ -141,7 +159,7 @@ class JiraForm extends Component {
         } catch (e) { }
     };
 
-    handleCreatableSelectChange = (selectedOption, event) => {
+    handleSelectChange = (selectedOption, event) => {
         let obj = {}
         let selectedValue = ""
         if (event.action == "clear") {
@@ -165,7 +183,6 @@ class JiraForm extends Component {
             }
         })
     };
-
 
     render() {
     return (
@@ -319,7 +336,21 @@ class JiraForm extends Component {
                                                     isClearable
                                                     name={`${key}`}
                                                     options={this.allowedValues[key]}
-                                                    onChange={this.handleCreatableSelectChange}
+                                                    onChange={this.handleSelectChange}
+                                                    placeholder="Type to search or add a new option..."
+                                                />
+                                            </div>
+                                        }
+                                        {
+                                            this.fields[key].type === "searchableOption" && this.allowedValues[key] &&
+                                            <div key={`${this.state.formData[this.state.formData.Type][key]}`}>
+                                                <Select
+                                                    defaultValue={(this.state.formData[this.state.formData.Type][key] != "") ? ({ label: this.state.formData[this.state.formData.Type][key], value: this.state.formData[this.state.formData.Type][key] }) : null}
+                                                    isClearable
+                                                    isSearchable
+                                                    name={`${key}`}
+                                                    options={this.allowedValues[key]}
+                                                    onChange={this.handleSelectChange}
                                                     placeholder="Type to search or add a new option..."
                                                 />
                                             </div>
