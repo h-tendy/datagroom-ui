@@ -145,6 +145,8 @@ class DsView extends Component {
             Project: "",
             JIRA_AGILE_LABEL: "None",
             Type: "Epic",
+            summary: "",
+            description: ""
         }
 
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
@@ -220,6 +222,7 @@ class DsView extends Component {
         this.submitJiraFormChange = this.submitJiraFormChange.bind(this)
         this.fillLocalStorageItemData = this.fillLocalStorageItemData.bind(this)
         this.addJiraRow = this.addJiraRow.bind(this)
+        this.formFinalJiraFormData = this.formFinalJiraFormData.bind(this)
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -1469,7 +1472,7 @@ class DsView extends Component {
     /**Start convert to JIRA row */
     handleJiraFormChange(obj) {
         let key = Object.keys(obj)[0]
-        if (key && key === "Project" || key == "JIRA_AGILE_LABEL" || key == "Type") {
+        if (key && key === "Project" || key == "JIRA_AGILE_LABEL" || key == "Type" || key === "summary" || key === "description") {
             this.jiraFormData = {
                 ...this.jiraFormData,
                 [key]: obj[key]
@@ -1485,6 +1488,19 @@ class DsView extends Component {
         }
     }
 
+    formFinalJiraFormData() {
+        let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+        for (let field of Object.keys(jiraFormData)) {
+            if (!jiraFormData[field]) continue;
+            if (typeof jiraFormData[field] !== 'object') continue;
+            jiraFormData[field].summary = jiraFormData.summary;
+            jiraFormData[field].description = jiraFormData.description;
+        }
+        delete jiraFormData.summary;
+        delete jiraFormData.description;
+        return jiraFormData;
+    }
+
     async submitJiraFormChange(confirmed, _id, selectorObj) {
         if (confirmed) {
             const { dispatch, match, user, dsHome } = this.props;
@@ -1493,7 +1509,7 @@ class DsView extends Component {
             let username = user.user;
             let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
             let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-            let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            let jiraFormData = this.formFinalJiraFormData()
             this.updateLocalStorage(jiraFormData)
             if (jiraFormData.Type == "Bug") {
                 //Just before sending change the value of key customfield_25578 to array
@@ -1529,6 +1545,8 @@ class DsView extends Component {
                         Project: "",
                         JIRA_AGILE_LABEL: "None",
                         Type: "Epic",
+                        summary: "",
+                        description: ""
                     }
                     this.jiraFormData = obj
                     this.jiraFormData = {
@@ -1771,7 +1789,6 @@ class DsView extends Component {
                     } else {
                         summary = summaryLine
                     }
-                    arr.shift()
                     description = arr.join("\n").trim()
                     descriptionDone = true
                 } else if (arr.length == 1) {
@@ -1807,11 +1824,10 @@ class DsView extends Component {
             if (type == "Epic" || type == "Story" || type == "Bug" || type == "Story Task") {
                 this.jiraFormData["Type"] = type
             }
-
+            this.jiraFormData['summary'] = summary
+            this.jiraFormData['description'] = description
             for (let key of Object.keys(this.jiraFormData)) {
                 if (typeof this.jiraFormData[key] != 'object') continue
-                this.jiraFormData[key]['summary'] = summary
-                this.jiraFormData[key]['description'] = description
                 if (storyPoints != 0 && jiraCustomFieldMapping['Story Points']) {
                     if (this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints
                 }
@@ -2015,7 +2031,7 @@ class DsView extends Component {
             let username = user.user;
             let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
             let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-            let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
+            let jiraFormData = this.formFinalJiraFormData();
             this.updateLocalStorage(jiraFormData)
             if (jiraFormData.Type == "Bug") {
                 //Just before sending change the value of key customfield_25578 to array
