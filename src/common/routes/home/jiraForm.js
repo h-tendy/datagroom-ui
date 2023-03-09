@@ -94,11 +94,11 @@ class JiraForm extends Component {
                     break
                 }
             }
-        }
+        }     
         let obj = {}
         obj[event.target.name] = event.target.value;
         this.props.handleChange(obj)
-        if (event.target.name == "Project" || event.target.name == "JIRA_AGILE_LABEL" || event.target.name == "Type") {
+        if (event.target.name == "Project" || event.target.name == "JIRA_AGILE_LABEL" || event.target.name == "Type" || event.target.name == "summary" || event.target.name == "description") {
             this.setState({
                 ...this.state,
                 formData: {
@@ -279,10 +279,17 @@ class JiraForm extends Component {
                                             as="textarea"
                                             rows="6"
                                             name={`${key}`}
-                                            value={this.state.formData[this.state.formData.Type][key]}
+                                            value={this.state.formData[key]}
                                             onChange={this.handleChange}
                                         />}
-                                        {this.fields[key].type === "string" && key !== "description" && <Form.Control
+                                        {key === "summary" && <Form.Control
+                                            as="textarea"
+                                            rows="1"
+                                            name={`${key}`}
+                                            value={this.state.formData[key]}
+                                            onChange={this.handleChange}
+                                        />}
+                                        {this.fields[key].type === "string" && key !== "description" && key !== "summary" && <Form.Control
                                             as="textarea"
                                             rows="1"
                                             name={`${key}`}
