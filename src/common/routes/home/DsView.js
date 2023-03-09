@@ -1694,6 +1694,9 @@ class DsView extends Component {
                     }
                 }
             }
+            if (localStorage.getItem('JIRA_AGILE_LABEL') && localStorage.getItem('JIRA_AGILE_LABEL') != "undefined") {
+                this.jiraFormData.JIRA_AGILE_LABEL = localStorage.getItem('JIRA_AGILE_LABEL')
+            }
         } catch (e) { }
     }
 
@@ -2107,6 +2110,7 @@ class DsView extends Component {
 
     updateLocalStorage(jiraFormData) {
         try {
+            localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL)
             for (let key of Object.keys(jiraFormData)) {
                 if (typeof jiraFormData[key] == "object") {
                     let objStringified;
