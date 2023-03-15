@@ -1623,6 +1623,9 @@ class DsView extends Component {
             ...this.jiraFormData,
             ...copyOfDefaults
         }
+        if (jiraAgileConfig && jiraAgileConfig.label) {
+            this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
+        }
         this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
@@ -1916,6 +1919,9 @@ class DsView extends Component {
         this.jiraFormData = {
             ...this.jiraFormData,
             ...copyOfDefaults
+        }
+        if (jiraAgileConfig && jiraAgileConfig.label) {
+            this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
         }
         this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
         if (type)
