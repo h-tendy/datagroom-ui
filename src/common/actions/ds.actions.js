@@ -372,11 +372,11 @@ function loadHdrsFromRange (fileName, sheetName, selectedRange) {
 }
 
 
-function doBulkEditRequest (dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet, doIt) {
+function doBulkEditRequest(dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet, doIt, dsUser) {
     return async dispatch => {
         try {
             dispatch(request(selectedRange));
-            let responseJson = await dsService.doBulkEditRequest({dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet, doIt});
+            let responseJson = await dsService.doBulkEditRequest({ dsName, fileName, sheetName, selectedRange, setRowsFrmSheet, setColsFrmSheet, doIt, dsUser });
             if (responseJson)
                 dispatch(success(fileName, sheetName, responseJson));
             else 
