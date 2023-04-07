@@ -118,15 +118,16 @@ class DsBulkEdit extends Component {
         this.setState({ range: event.target.value });
     }
     rangeSelectionDone (e, doIt = false) {
-        const { dsHome, dispatch, match } = this.props;
+        const { dsHome, dispatch, match, user } = this.props;
         let dsName = match.params.dsName;
+        let dsUser = user.user;
         if (doIt) {
             this.setState({ doIt: true });
         } else {
             this.setState({ validate: true, doIt: false });
             dispatch({ type: dsConstants.CLEAR_LOADSTATUS });
         }
-        dispatch(dsActions.doBulkEditRequest(dsName, dsHome.dsBulkEdits.fileName, dsHome.dsBulkEdits.selectedSheet, this.state.range, this.state.setRowsFrmSheet, this.state.setColsFrmSheet, doIt));
+        dispatch(dsActions.doBulkEditRequest(dsName, dsHome.dsBulkEdits.fileName, dsHome.dsBulkEdits.selectedSheet, this.state.range, this.state.setRowsFrmSheet, this.state.setColsFrmSheet, doIt, dsUser));
     }
 
     step3 () {
