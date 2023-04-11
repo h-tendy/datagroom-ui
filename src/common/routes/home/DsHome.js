@@ -5,6 +5,7 @@ import Select from 'react-select';
 import 'react-tabulator/lib/styles.css'; // required styles
 import 'react-tabulator/lib/css/tabulator.min.css'; // theme
 import { ReactTabulator } from 'react-tabulator';
+import { authHeader } from '../../helpers';
 
 const config = {};
 if (process.env.NODE_ENV === 'development') {
@@ -74,6 +75,12 @@ class DsHome extends Component {
                                 data={[]}
                                 options={{
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}`,
+                                    ajaxConfig: {
+                                        headers: {
+                                            ...authHeader(),
+                                            "Content-Type": "application/json",
+                                        },
+                                    },
                                     //ajaxProgressiveLoad:"load",
                                     //ajaxProgressiveLoadDelay: 200,
                                     pagination:"remote",

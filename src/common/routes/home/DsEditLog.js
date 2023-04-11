@@ -10,6 +10,7 @@ import MyAutoCompleter from './MyAutoCompleter';
 import MySingleAutoCompleter from './MySingleAutoCompleter';
 
 import './simpleStyles.css';
+import { authHeader } from '../../helpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -248,6 +249,12 @@ class DsEditLog extends Component {
                             data={[]}
                             options={{
                                 ajaxURL: `${config.apiUrl}/ds/view/editLog/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                ajaxConfig: {
+                                    headers: {
+                                        ...authHeader(),
+                                        "Content-Type": "application/json",
+                                    },
+                                },
                                 pagination:"remote",
                                 paginationDataSent: {
                                     page: 'page',

@@ -37,6 +37,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
 import './simpleStyles.css';
 import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 import { dsService } from '../../services';
+import { authHeader } from '../../helpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -1343,6 +1344,7 @@ class DsView extends Component {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -1363,6 +1365,7 @@ class DsView extends Component {
                             headers: {
                                 "Content-Type": "application/json",
                                 "Content-Length": dataLen,
+                                ...authHeader()
                             }
                         });
                         if (response.ok) {
@@ -2522,6 +2525,12 @@ class DsView extends Component {
                                 data={[]}
                                 options={{
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                    ajaxConfig: {
+                                        headers: {
+                                            ...authHeader(),
+                                            "Content-Type": "application/json",
+                                        },
+                                    },
                                     ajaxURLGenerator:this.ajaxURLGenerator,
                                     chronology: this.state.chronologyDescending,
                                     forceRefresh: this.state.refresh,

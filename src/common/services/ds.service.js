@@ -1,3 +1,4 @@
+import { authHeader } from '../helpers'
 const FileSaver = require('file-saver');
 
 export const dsService = {
@@ -30,11 +31,14 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 
-async function loadColumnsForUserView (dsName, dsView, dsUser) {
+async function loadColumnsForUserView(dsName, dsView, dsUser) {
     try {
         console.log("Starting API call: ", dsName, dsView, dsUser);
         let response = await fetch(`${config.apiUrl}/ds/view/columns/${dsName}/${dsView}/${dsUser}`, {
             method: "get",
+            headers: new Headers({
+                ...authHeader()
+            })
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -58,6 +62,7 @@ async function editSingleAttribute (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -82,6 +87,7 @@ async function insertOneDoc (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -101,6 +107,9 @@ async function downloadXlsx (dsName, dsView, dsUser) {
         console.log("Starting API call: ", dsName, dsView, dsUser);
         let response = await fetch(`${config.apiUrl}/ds/downloadXlsx/${dsName}/${dsView}/${dsUser}`, {
             method: "get",
+            headers: new Headers({
+                ...authHeader()
+            })
         });
         console.log("Finished fetch")
         if (response.ok) {
@@ -125,6 +134,9 @@ async function getDsList (dsUser) {
         console.log("Starting getDsList API call: ", dsUser);
         let response = await fetch(`${config.apiUrl}/ds/dsList/${dsUser}`, {
             method: "get",
+            headers: new Headers({
+                ...authHeader()
+            })
         });
         let responseJson = null;
         console.log("Finished API")
@@ -149,6 +161,7 @@ async function deleteDs (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -173,6 +186,7 @@ async function deleteOneDoc (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -197,6 +211,7 @@ async function deleteManyDocs (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -221,6 +236,7 @@ async function setViewDefinitions (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -245,6 +261,7 @@ async function refreshJira (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -270,6 +287,7 @@ async function addFilter (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -295,6 +313,7 @@ async function editFilter (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -319,6 +338,7 @@ async function deleteFilter (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -344,6 +364,7 @@ async function doBulkEditRequest (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }     
         });
         let responseJson = null;
@@ -371,6 +392,7 @@ async function getProjectsMetaData(body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }
         });
         let responseJson = null;
@@ -395,10 +417,13 @@ async function getDefaultTypeFieldsAndValues(body) {
             cache: 'no-cache',
             credentials: 'same-origin',
             body: JSON.stringify(body),
-            headers: {
-                "Content-Type": "application/json",
-                "Content-Length": dataLen,
-            }
+            headers: new Headers(
+                {
+                    "Content-Type": "application/json",
+                    "Content-Length": dataLen,
+                    ...authHeader()
+                }
+            )
         });
         let responseJson = null;
         console.log("Finished API")
@@ -422,6 +447,7 @@ async function convertToJira(body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }
         });
         let responseJson = null;
@@ -446,6 +472,7 @@ async function addJiraRow(body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
+                ...authHeader()
             }
         });
         let responseJson = null;
