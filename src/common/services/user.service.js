@@ -7,7 +7,8 @@ export const userService = {
     getAll,
     getById,
     update,
-    delete: _delete
+    delete: _delete,
+    sessionCheck
 };
 
 const config = {};
@@ -108,4 +109,28 @@ function handleResponse(response) {
         }
         return JSON.parse(data.user);
     });
+}
+
+async function sessionCheck(user) {
+    let response;
+    try {
+        let url = `${config.apiUrl}/sessionCheck`;
+        response = await fetch(url, {
+            method: "get",
+            headers: {
+                ...authHeader(),
+                "Content-Type": "application/json",
+                "user": user.user
+            }
+        });
+        if (response.ok) {
+            return true;
+        } else {
+            console.log("Response not ok in sessionCheck!", response);
+            throw new Error("Response not ok in sessiosCheck!");
+        }
+    } catch (e) {
+        console.log("sessiosCheck! has errors!", e);
+    }
+    return false;
 }
