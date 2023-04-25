@@ -130,7 +130,7 @@ async function sessionCheck(user) {
             throw new Error("Response not ok in sessiosCheck!");
         }
     } catch (e) {
-        console.log("sessiosCheck! has errors!", e);
+        console.log("sessionCheck! has errors!", e);
     }
     return false;
 }
