@@ -41,9 +41,20 @@ function login(username, password) {
         });
 }
 
-function logout() {
+async function logout() {
     // remove user from local storage to log user out
-    localStorage.removeItem('user');
+    try {
+        console.log("logging out...");
+        let response = await fetch(`${config.apiUrl}/logout`, {
+            method: "GET",
+            credentials: "include"
+        });
+        if (response.ok) {
+            localStorage.removeItem('user');
+        }
+    } catch (e) {
+        console.log("Error in logging out:", e)
+    }
 }
 
 function getAll() {

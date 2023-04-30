@@ -35,8 +35,17 @@ function login(username, password) {
 }
 
 function logout() {
-    userService.logout();
-    return { type: userConstants.LOGOUT };
+    return async dispatch => {
+        try {
+            let response = await userService.logout();
+            if (response) {
+                dispatch(userLogout());
+            }
+        } catch (e) {
+            console.log("logging out error:", e);
+        }
+    }
+    function userLogout() { return { type: userConstants.LOGOUT } }
 }
 
 function register(user) {
