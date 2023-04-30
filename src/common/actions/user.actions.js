@@ -17,9 +17,13 @@ function login(username, password) {
         dispatch(request({ username }));
         dispatch(alertActions.clear());
         try {
-            let user = await userService.login(username, password);
-            console.log("user", user);
-            dispatch(success(user));
+            let obj = await userService.login(username, password);
+            console.log("user", obj.user);
+            dispatch(success(obj.user));
+            if (obj.redirectUrl) {
+                console.log("redirectUrl", obj.redirectUrl);
+                window.location.href = obj.redirectUrl;
+            }
             //history.push('/ui');
         } catch (error) {
             //dispatch(failure(error.toString()));

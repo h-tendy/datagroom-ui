@@ -30,14 +30,14 @@ function login(username, password) {
 
     return fetch(`${config.apiUrl}/login`, requestOptions)
         .then(handleResponse)
-        .then(user => {
+        .then(obj => {
             // login successful if there's a jwt token in the response
-            if (user.token) {
+            if (obj.user.token) {
                 // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(obj.user));
             }
 
-            return user;
+            return obj;
         });
 }
 
@@ -124,7 +124,7 @@ function handleResponse(response) {
             const error = (data && data.message) || response.statusText;
             return Promise.reject(error);
         }
-        return JSON.parse(data.user);
+        return { user: JSON.parse(data.user), redirectUrl: data.redirectUrl };
     });
 }
 
