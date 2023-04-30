@@ -1345,7 +1345,8 @@ class DsView extends Component {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"  
         });
         let responseJson = null;
         if (response.ok) {
@@ -1366,7 +1367,8 @@ class DsView extends Component {
                                 "Content-Type": "application/json",
                                 "Content-Length": dataLen,
                                 ...authHeader()
-                            }
+                            },
+                            credentials: "include"
                         });
                         if (response.ok) {
                             let delJson = await response.json();
@@ -2530,6 +2532,7 @@ class DsView extends Component {
                                             ...authHeader(),
                                             "Content-Type": "application/json",
                                         },
+                                        credentials: 'include'
                                     },
                                     ajaxURLGenerator:this.ajaxURLGenerator,
                                     chronology: this.state.chronologyDescending,

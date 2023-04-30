@@ -80,6 +80,7 @@ class DsHome extends Component {
                                             ...authHeader(),
                                             "Content-Type": "application/json",
                                         },
+                                        credentials: 'include'
                                     },
                                     //ajaxProgressiveLoad:"load",
                                     //ajaxProgressiveLoadDelay: 200,

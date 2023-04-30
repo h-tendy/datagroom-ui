@@ -38,7 +38,8 @@ async function loadColumnsForUserView(dsName, dsView, dsUser) {
             method: "get",
             headers: new Headers({
                 ...authHeader()
-            })
+            }),
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -63,7 +64,8 @@ async function editSingleAttribute (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"  
         });
         let responseJson = null;
         console.log("Finished API")
@@ -88,7 +90,8 @@ async function insertOneDoc (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"  
         });
         let responseJson = null;
         console.log("Finished API")
@@ -109,7 +112,8 @@ async function downloadXlsx (dsName, dsView, dsUser) {
             method: "get",
             headers: new Headers({
                 ...authHeader()
-            })
+            }),
+            credentials: "include"
         });
         console.log("Finished fetch")
         if (response.ok) {
@@ -134,6 +138,7 @@ async function getDsList (dsUser) {
         console.log("Starting getDsList API call: ", dsUser);
         let response = await fetch(`${config.apiUrl}/ds/dsList/${dsUser}`, {
             method: "get",
+            credentials: "include",
             headers: new Headers({
                 ...authHeader()
             })
@@ -162,7 +167,8 @@ async function deleteDs (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"   
         });
         let responseJson = null;
         console.log("Finished API")
@@ -187,7 +193,8 @@ async function deleteOneDoc (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"   
         });
         let responseJson = null;
         console.log("Finished API")
@@ -212,7 +219,8 @@ async function deleteManyDocs (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"    
         });
         let responseJson = null;
         console.log("Finished API")
@@ -237,7 +245,8 @@ async function setViewDefinitions (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished API")
@@ -262,7 +271,8 @@ async function refreshJira (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished API")
@@ -288,7 +298,8 @@ async function addFilter (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"    
         });
         let responseJson = null;
         console.log("Finished API")
@@ -314,7 +325,8 @@ async function editFilter (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"    
         });
         let responseJson = null;
         console.log("Finished API")
@@ -339,7 +351,8 @@ async function deleteFilter (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished API")
@@ -365,7 +378,8 @@ async function doBulkEditRequest (body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }     
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -387,7 +401,7 @@ async function getProjectsMetaData(body) {
             method: "post",
             mode: 'cors',
             cache: 'no-cache',
-            credentials: 'same-origin',
+            credentials: "include",
             body: JSON.stringify(body),
             headers: {
                 "Content-Type": "application/json",
@@ -415,7 +429,7 @@ async function getDefaultTypeFieldsAndValues(body) {
             method: "post",
             mode: 'cors',
             cache: 'no-cache',
-            credentials: 'same-origin',
+            credentials: "include",
             body: JSON.stringify(body),
             headers: new Headers(
                 {
@@ -448,7 +462,8 @@ async function convertToJira(body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }
+            },
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -473,7 +488,8 @@ async function addJiraRow(body) {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
                 ...authHeader()
-            }
+            },
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")

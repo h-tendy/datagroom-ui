@@ -254,6 +254,7 @@ class DsEditLog extends Component {
                                         ...authHeader(),
                                         "Content-Type": "application/json",
                                     },
+                                    credentials: 'include'
                                 },
                                 pagination:"remote",
                                 paginationDataSent: {

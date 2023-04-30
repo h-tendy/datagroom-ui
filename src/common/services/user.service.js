@@ -24,7 +24,8 @@ function login(username, password) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/login`, requestOptions)
@@ -48,7 +49,8 @@ function logout() {
 function getAll() {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users`, requestOptions).then(handleResponse);
@@ -57,7 +59,8 @@ function getAll() {
 function getById(id) {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
@@ -67,7 +70,8 @@ function register(user) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
+        body: JSON.stringify(user),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/register`, requestOptions).then(handleResponse);
@@ -77,7 +81,8 @@ function update(user) {
     const requestOptions = {
         method: 'PUT',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
+        body: JSON.stringify(user),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${user.id}`, requestOptions).then(handleResponse);;
@@ -87,7 +92,8 @@ function update(user) {
 function _delete(id) {
     const requestOptions = {
         method: 'DELETE',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
@@ -121,7 +127,8 @@ async function sessionCheck(user) {
                 ...authHeader(),
                 "Content-Type": "application/json",
                 "user": user.user
-            }
+            },
+            credentials: 'include'
         });
         if (response.ok) {
             return true;
