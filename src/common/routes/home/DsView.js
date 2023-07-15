@@ -31,7 +31,7 @@ import JiraForm from './jiraForm.js'
 import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
-
+import io from 'socket.io-client'
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
 import './simpleStyles.css';
@@ -77,8 +77,7 @@ const jiraCustomFieldMapping = {
     'Story Points': "customfield_11890"
 }
 
-var socket = require('socket.io-client').connect(config.apiUrl);
-
+var socket = null;
 class DsView extends Component {
     constructor(props) {
         super(props)
@@ -234,6 +233,13 @@ class DsView extends Component {
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
+        // Send jwt token while making the initial connection to the server
+        socket = io(config.apiUrl, {
+            extraHeaders: {
+                Cookie: document.cookie
+            }
+        });
+
         socket.on('connect', (data) => {
             socket.emit('Hello', { user: user.user});
             socket.emit('getActiveLocks', dsName);
@@ -247,6 +253,7 @@ class DsView extends Component {
         })
         socket.on('activeLocks', (activeLocks) => {
             me.setState({connectedState: true});
+            if (!me.ref || !me.ref.table) return;
             activeLocks = JSON.parse(activeLocks);
             console.log("Active locks: ", activeLocks);
             let keys = Object.keys(activeLocks);
@@ -342,9 +349,13 @@ class DsView extends Component {
             }
             console.log('Received unlocked: ', unlockedObj);
         })
+        socket.on('exception', (msg) => {
+            console.log("GOT exception:", msg);
+        })
     }
     componentWillUnmount () {
         const { dispatch } = this.props;
+        socket.disconnect();
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
     }
 
