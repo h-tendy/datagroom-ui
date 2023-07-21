@@ -1,8 +1,16 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Route, Redirect } from "react-router-dom";
+import { userActions } from '../actions';
 
 class PrivateRoute extends React.Component {
+
+    componentDidMount() {
+        const { dispatch, user, loggedIn } = this.props;
+        if (!loggedIn && user && user.token) {
+            dispatch(userActions.sessionCheck(user))
+        }
+    }
 
     render() {
         const { loggedIn } = this.props;
@@ -19,9 +27,10 @@ class PrivateRoute extends React.Component {
 }
 
 function mapStateToProps(state) {
-    const { loggedIn } = state.authentication;
+    const { loggedIn, user } = state.authentication;
     return {
         loggedIn,
+        user
     }
 }
 

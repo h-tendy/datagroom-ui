@@ -7,7 +7,8 @@ export const userService = {
     getAll,
     getById,
     update,
-    delete: _delete
+    delete: _delete,
+    sessionCheck
 };
 
 const config = {};
@@ -23,31 +24,44 @@ function login(username, password) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/login`, requestOptions)
         .then(handleResponse)
-        .then(user => {
+        .then(obj => {
             // login successful if there's a jwt token in the response
-            if (user.token) {
+            if (obj.user.token) {
                 // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(obj.user));
             }
 
-            return user;
+            return obj;
         });
 }
 
-function logout() {
+async function logout() {
     // remove user from local storage to log user out
-    localStorage.removeItem('user');
+    try {
+        console.log("logging out...");
+        let response = await fetch(`${config.apiUrl}/logout`, {
+            method: "GET",
+            credentials: "include"
+        });
+        if (response.ok) {
+            localStorage.removeItem('user');
+        }
+    } catch (e) {
+        console.log("Error in logging out:", e)
+    }
 }
 
 function getAll() {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users`, requestOptions).then(handleResponse);
@@ -56,7 +70,8 @@ function getAll() {
 function getById(id) {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
@@ -66,7 +81,8 @@ function register(user) {
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
+        body: JSON.stringify(user),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/register`, requestOptions).then(handleResponse);
@@ -76,7 +92,8 @@ function update(user) {
     const requestOptions = {
         method: 'PUT',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
+        body: JSON.stringify(user),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${user.id}`, requestOptions).then(handleResponse);;
@@ -86,7 +103,8 @@ function update(user) {
 function _delete(id) {
     const requestOptions = {
         method: 'DELETE',
-        headers: authHeader()
+        headers: authHeader(),
+        credentials: "include"
     };
 
     return fetch(`${config.apiUrl}/users/${id}`, requestOptions).then(handleResponse);
@@ -106,6 +124,31 @@ function handleResponse(response) {
             const error = (data && data.message) || response.statusText;
             return Promise.reject(error);
         }
-        return JSON.parse(data.user);
+        return { user: JSON.parse(data.user), redirectUrl: data.redirectUrl };
     });
+}
+
+async function sessionCheck(user) {
+    let response;
+    try {
+        let url = `${config.apiUrl}/sessionCheck`;
+        response = await fetch(url, {
+            method: "get",
+            headers: {
+                ...authHeader(),
+                "Content-Type": "application/json",
+                "user": user.user
+            },
+            credentials: 'include'
+        });
+        if (response.ok) {
+            return true;
+        } else {
+            console.log("Response not ok in sessionCheck!", response);
+            throw new Error("Response not ok in sessiosCheck!");
+        }
+    } catch (e) {
+        console.log("sessionCheck! has errors!", e);
+    }
+    return false;
 }

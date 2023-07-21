@@ -29,7 +29,7 @@ class App extends Component {
           <Left user={user} visible={leftVisible}>
             {Menu}
           </Left>
-          <Top user={user} toggleCb={this.toggleLeft} needMargin={leftVisible} />
+          <Top user={user} toggleCb={this.toggleLeft} needMargin={leftVisible} {...this.props} />
           <PageContent needMargin={leftVisible} />
           <Footer needMargin={leftVisible} />
         </div>

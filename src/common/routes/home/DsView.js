@@ -31,12 +31,13 @@ import JiraForm from './jiraForm.js'
 import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
-
+import io from 'socket.io-client'
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
 import './simpleStyles.css';
 import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 import { dsService } from '../../services';
+import { authHeader } from '../../helpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -76,8 +77,7 @@ const jiraCustomFieldMapping = {
     'Story Points': "customfield_11890"
 }
 
-var socket = require('socket.io-client').connect(config.apiUrl);
-
+var socket = null;
 class DsView extends Component {
     constructor(props) {
         super(props)
@@ -233,6 +233,13 @@ class DsView extends Component {
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
+        // Send jwt token while making the initial connection to the server
+        socket = io(config.apiUrl, {
+            extraHeaders: {
+                Cookie: document.cookie
+            }
+        });
+
         socket.on('connect', (data) => {
             socket.emit('Hello', { user: user.user});
             socket.emit('getActiveLocks', dsName);
@@ -246,6 +253,7 @@ class DsView extends Component {
         })
         socket.on('activeLocks', (activeLocks) => {
             me.setState({connectedState: true});
+            if (!me.ref || !me.ref.table) return;
             activeLocks = JSON.parse(activeLocks);
             console.log("Active locks: ", activeLocks);
             let keys = Object.keys(activeLocks);
@@ -341,9 +349,13 @@ class DsView extends Component {
             }
             console.log('Received unlocked: ', unlockedObj);
         })
+        socket.on('exception', (msg) => {
+            console.log("GOT exception:", msg);
+        })
     }
     componentWillUnmount () {
         const { dispatch } = this.props;
+        socket.disconnect();
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
     }
 
@@ -1343,7 +1355,9 @@ class DsView extends Component {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"  
         });
         let responseJson = null;
         if (response.ok) {
@@ -1363,7 +1377,9 @@ class DsView extends Component {
                             headers: {
                                 "Content-Type": "application/json",
                                 "Content-Length": dataLen,
-                            }
+                                ...authHeader()
+                            },
+                            credentials: "include"
                         });
                         if (response.ok) {
                             let delJson = await response.json();
@@ -2522,6 +2538,13 @@ class DsView extends Component {
                                 data={[]}
                                 options={{
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                    ajaxConfig: {
+                                        headers: {
+                                            ...authHeader(),
+                                            "Content-Type": "application/json",
+                                        },
+                                        credentials: 'include'
+                                    },
                                     ajaxURLGenerator:this.ajaxURLGenerator,
                                     chronology: this.state.chronologyDescending,
                                     forceRefresh: this.state.refresh,

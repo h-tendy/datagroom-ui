@@ -1,3 +1,5 @@
+import { authHeader } from "../helpers";
+
 export const uploadService = {
     fileUpload,
     findHeadersInSheet,
@@ -25,7 +27,11 @@ async function fileUpload(body) {
     try {
         const requestOptions = {
             method: 'POST',
-            body
+            body,
+            headers: new Headers({
+                ...authHeader()
+            }),
+            credentials: "include"
         };
         let responseJson = null;
         let response = await fetch(`${config.apiUrl}/upload`, requestOptions);
@@ -50,7 +56,9 @@ async function findHeadersInSheet(body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -75,7 +83,9 @@ async function loadHdrsFromRange (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -99,7 +109,9 @@ async function createDs (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -118,7 +130,11 @@ async function csvFileUpload(body) {
     try {
         const requestOptions = {
             method: 'POST',
-            body
+            body,
+            headers: new Headers({
+                ...authHeader()
+            }),
+            credentials: "include"
         };
         let responseJson = null;
         let response = await fetch(`${config.apiUrl}/uploadCsv`, requestOptions);
@@ -143,7 +159,9 @@ async function createDsViaCsv (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -167,7 +185,9 @@ async function createDsFromDs (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -186,7 +206,11 @@ async function uploadAttachment(body) {
     try {
         const requestOptions = {
             method: 'POST',
-            body
+            body,
+            headers: new Headers({
+                ...authHeader()
+            }),
+            credentials: "include"
         };
         let responseJson = null;
         let response = await fetch(`${config.apiUrl}/uploadAttachments`, requestOptions);
@@ -212,7 +236,9 @@ async function deleteOneAttachment (body) {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Length": dataLen,
-            }     
+                ...authHeader()
+            },
+            credentials: "include"     
         });
         let responseJson = null;
         console.log("Finished API")

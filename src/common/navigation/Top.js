@@ -14,7 +14,7 @@ class Top extends Component {
               <a href="##" id="menu_toggle" onClick={ toggleCb }><i className="fas fa-bars"></i></a>
             </div>
             <TopNavBar>
-              <UserMenuItem user={ user }/>
+              <UserMenuItem user={user} {...this.props} />
             </TopNavBar>
           </nav>
         </div>

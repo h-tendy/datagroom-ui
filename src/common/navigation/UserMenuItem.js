@@ -9,7 +9,8 @@ class UserMenuItem extends Component {
   }
 
   logout(){
-    userActions.logout();
+    const { dispatch } = this.props;
+    dispatch(userActions.logout());
   }
 
   render() {

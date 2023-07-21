@@ -8,6 +8,7 @@ import './simpleStyles.css';
 import { dsHome } from '../../reducers/dsHome.reducer';
 import Select from 'react-select';
 import AccessCtrl from './DsViewEditAccessCtrl';
+import { authHeader } from '../../helpers';
 
 
 let MarkdownIt = new require('markdown-it')({
@@ -930,6 +931,13 @@ class DsViewEdit extends Component {
                                 data={[]}
                                 options={{
                                     ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                    ajaxConfig: {
+                                        headers: {
+                                            ...authHeader(),
+                                            "Content-Type": "application/json",
+                                        },
+                                        credentials: 'include'
+                                    },
                                     pagination:"remote",
                                     paginationDataSent: {
                                         page: 'page',

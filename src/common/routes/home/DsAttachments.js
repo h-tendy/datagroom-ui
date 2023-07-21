@@ -11,6 +11,7 @@ import Modal from './Modal';
 import ReactDOM from 'react-dom';
 
 import './simpleStyles.css';
+import { authHeader } from '../../helpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -307,6 +308,13 @@ class DsAttachments extends Component {
                             data={[]}
                             options={{
                                 ajaxURL: `${config.apiUrl}/ds/view/attachments/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                ajaxConfig: {
+                                    headers: {
+                                        ...authHeader(),
+                                        "Content-Type": "application/json",
+                                    },
+                                    credentials: 'include'
+                                },
                                 pagination:"remote",
                                 paginationDataSent: {
                                     page: 'page',
