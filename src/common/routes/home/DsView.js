@@ -2277,26 +2277,31 @@ class DsView extends Component {
                 separator: true
             },
             {
-                label: "Convert to JIRA row...",
-                action: this.convertToJiraRow
-            },
-            {
-                label: "Add new JIRA...",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, null)
-                }
-            },
-            {
-                label: "Add Story to Epic",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'Story')
-                }
-            },
-            {
-                label: "Add a Story Task to Story",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'Story Task')
-                }
+                label: "JIRA Menu....",
+                menu: [
+                    {
+                        label: "Convert to JIRA row...",
+                        action: this.convertToJiraRow
+                    },
+                    {
+                        label: "Add new JIRA...",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, null)
+                        }
+                    },
+                    {
+                        label: "Add Story to Epic",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, 'Story')
+                        }
+                    },
+                    {
+                        label: "Add a Story Task to Story",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, 'Story Task')
+                        }
+                    }
+                ]
             }
         ];        
         let columns = [];
