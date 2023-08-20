@@ -2257,16 +2257,21 @@ class DsView extends Component {
                 separator: true
             },*/
             {
-                label:"Delete all rows in view...",
-                action: this.deleteAllRowsInViewQuestion
-            },
-            {
-                label:"Delete all rows in query...",
-                action: this.deleteAllRowsInQuery
-            },
-            {
-                label:"Delete row...",
-                action: this.deleteRowQuestion
+                label: "Delete....",
+                menu: [
+                    {
+                        label: "Delete all rows in view...",
+                        action: this.deleteAllRowsInViewQuestion
+                    },
+                    {
+                        label: "Delete all rows in query...",
+                        action: this.deleteAllRowsInQuery
+                    },
+                    {
+                        label: "Delete row...",
+                        action: this.deleteRowQuestion
+                    }
+                ]
             },
             {
                 separator: true
