@@ -18366,10 +18366,11 @@ Keybindings.prototype.actions = {
 Tabulator.prototype.registerModule("keybindings", Keybindings);
 var Menu = function Menu(table) {
 	this.table = table; //hold Tabulator object
-	this.menuEl = false;
+	this.menuElements = [];
 	this.blurEvent = this.hideMenu.bind(this);
 	this.escEvent = this.escMenu.bind(this);
 	this.nestedMenuBlock = false;
+	this.positionReversedX = false;
 };
 
 Menu.prototype.initializeColumnHeader = function (column) {
@@ -18393,11 +18394,10 @@ Menu.prototype.initializeColumnHeader = function (column) {
 		headerMenuEl.innerHTML = "&vellip;";
 
 		headerMenuEl.addEventListener("click", function (e) {
-			var menu = typeof column.definition.headerMenu == "function" ? column.definition.headerMenu(column.getComponent(), e) : column.definition.headerMenu;
 			e.stopPropagation();
 			e.preventDefault();
 
-			_this71.loadMenu(e, column, menu);
+			_this71.LoadMenuEvent(column, column.definition.headerMenu, e);
 		});
 
 		column.titleElement.insertBefore(headerMenuEl, column.titleElement.firstChild);
@@ -18405,7 +18405,7 @@ Menu.prototype.initializeColumnHeader = function (column) {
 };
 
 Menu.prototype.LoadMenuEvent = function (component, menu, e) {
-	menu = typeof menu == "function" ? menu(component.getComponent(), e) : menu;
+	menu = typeof menu == "function" ? menu.call(this.table, component.getComponent(), e) : menu;
 
 	// if(component instanceof Cell){
 	// 	e.stopImmediatePropagation();
@@ -18446,12 +18446,12 @@ Menu.prototype.tapHold = function (component, menu) {
 
 Menu.prototype.initializeCell = function (cell) {
 	if (cell.column.definition.contextMenu) {
-		cell.getElement().addEventListener("contextmenu", this.LoadMenuEvent.bind(this, cell, cell.column.definition.contextMenu));
+		cell.getElement(true).addEventListener("contextmenu", this.LoadMenuEvent.bind(this, cell, cell.column.definition.contextMenu));
 		this.tapHold(cell, cell.column.definition.contextMenu);
 	}
 
 	if (cell.column.definition.clickMenu) {
-		cell.getElement().addEventListener("click", this.LoadMenuEvent.bind(this, cell, cell.column.definition.clickMenu));
+		cell.getElement(true).addEventListener("click", this.LoadMenuEvent.bind(this, cell, cell.column.definition.clickMenu));
 	}
 };
 
@@ -18477,11 +18477,13 @@ Menu.prototype.initializeGroup = function (group) {
 	}
 };
 
-Menu.prototype.loadMenu = function (e, component, menu) {
+Menu.prototype.loadMenu = function (e, component, menu, parentEl) {
 	var _this73 = this;
 
-	var docHeight = Math.max(document.body.offsetHeight, window.innerHeight),
-	    touch = !(e instanceof MouseEvent);
+	var touch = !(e instanceof MouseEvent);
+
+	var menuEl = document.createElement("div");
+	menuEl.classList.add("tabulator-menu");
 
 	if (!touch) {
 		e.preventDefault();
@@ -18492,26 +18494,26 @@ Menu.prototype.loadMenu = function (e, component, menu) {
 		return;
 	}
 
-	if (this.nestedMenuBlock) {
-		//abort if child menu already open
-		if (this.isOpen()) {
-			return;
+	if (!parentEl) {
+		if (this.nestedMenuBlock) {
+			//abort if child menu already open
+			if (this.isOpen()) {
+				return;
+			}
+		} else {
+			this.nestedMenuBlock = setTimeout(function () {
+				_this73.nestedMenuBlock = false;
+			}, 100);
 		}
-	} else {
-		this.nestedMenuBlock = setTimeout(function () {
-			_this73.nestedMenuBlock = false;
-		}, 100);
+
+		this.hideMenu();
+		this.menuElements = [];
 	}
 
-	this.hideMenu();
-
-	this.menuEl = document.createElement("div");
-	this.menuEl.classList.add("tabulator-menu");
-
 	menu.forEach(function (item) {
-		var itemEl = document.createElement("div");
-		var label = item.label;
-		var disabled = item.disabled;
+		var itemEl = document.createElement("div"),
+		    label = item.label,
+		    disabled = item.disabled;
 
 		if (item.separator) {
 			itemEl.classList.add("tabulator-menu-separator");
@@ -18519,7 +18521,7 @@ Menu.prototype.loadMenu = function (e, component, menu) {
 			itemEl.classList.add("tabulator-menu-item");
 
 			if (typeof label == "function") {
-				label = label(component.getComponent());
+				label = label.call(_this73.table, component.getComponent());
 			}
 
 			if (label instanceof Node) {
@@ -18529,7 +18531,7 @@ Menu.prototype.loadMenu = function (e, component, menu) {
 			}
 
 			if (typeof disabled == "function") {
-				disabled = disabled(component.getComponent());
+				disabled = disabled.call(_this73.table, component.getComponent());
 			}
 
 			if (disabled) {
@@ -18538,43 +18540,116 @@ Menu.prototype.loadMenu = function (e, component, menu) {
 					e.stopPropagation();
 				});
 			} else {
-				itemEl.addEventListener("click", function (e) {
-					_this73.hideMenu();
-					item.action(e, component.getComponent());
-				});
+				if (item.menu && item.menu.length) {
+					itemEl.addEventListener("mouseenter", function (e) {
+						e.stopPropagation();
+						_this73.hideOldSubMenus(menuEl);
+						_this73.loadMenu(e, component, item.menu, itemEl);
+					});
+				} else {
+					itemEl.addEventListener("mouseenter", function (e) {
+						e.stopPropagation();
+						_this73.hideOldSubMenus(menuEl);
+					});
+					if (item.action) {
+						itemEl.addEventListener("click", function (e) {
+							item.action(e, component.getComponent());
+						});
+					}
+				}
+			}
+
+			if (item.menu && item.menu.length) {
+				itemEl.classList.add("tabulator-menu-item-submenu");
 			}
 		}
 
-		_this73.menuEl.appendChild(itemEl);
+		menuEl.appendChild(itemEl);
 	});
 
-	this.menuEl.style.top = (touch ? e.touches[0].pageY : e.pageY) + "px";
-	this.menuEl.style.left = (touch ? e.touches[0].pageX : e.pageX) + "px";
+	menuEl.addEventListener("click", function (e) {
+		_this73.hideMenu();
+	});
 
-	setTimeout(function () {
-		_this73.table.rowManager.element.addEventListener("scroll", _this73.blurEvent);
-		document.body.addEventListener("click", _this73.blurEvent);
-		document.body.addEventListener("contextmenu", _this73.blurEvent);
-		document.body.addEventListener("keydown", _this73.escEvent);
-	}, 100);
+	this.menuElements.push(menuEl);
+	this.positionMenu(menuEl, parentEl, touch, e);
+};
 
-	document.body.appendChild(this.menuEl);
+Menu.prototype.hideOldSubMenus = function (menuEl) {
+	var index = this.menuElements.indexOf(menuEl);
 
-	//move menu to start on right edge if it is too close to the edge of the screen
-	if (e.pageX + this.menuEl.offsetWidth >= document.body.offsetWidth) {
-		this.menuEl.style.left = "";
-		this.menuEl.style.right = document.body.offsetWidth - e.pageX + "px";
+	if (index > -1) {
+		for (var _i13 = this.menuElements.length - 1; _i13 > index; _i13--) {
+			var el = this.menuElements[_i13];
+
+			if (el.parentNode) {
+				el.parentNode.removeChild(el);
+			}
+
+			this.menuElements.pop();
+		}
+	}
+};
+
+Menu.prototype.positionMenu = function (element, parentEl, touch, e) {
+	var _this74 = this;
+
+	var docHeight = Math.max(document.body.offsetHeight, window.innerHeight),
+	    x,
+	    y,
+	    parentOffset;
+
+	if (!parentEl) {
+		x = touch ? e.touches[0].pageX : e.pageX;
+		y = touch ? e.touches[0].pageY : e.pageY;
+
+		this.positionReversedX = false;
+	} else {
+		parentOffset = Tabulator.prototype.helpers.elOffset(parentEl);
+		x = parentOffset.left + parentEl.offsetWidth;
+		y = parentOffset.top - 1;
 	}
 
+	element.style.top = y + "px";
+	element.style.left = x + "px";
+
+	setTimeout(function () {
+		_this74.table.rowManager.element.addEventListener("scroll", _this74.blurEvent);
+		document.body.addEventListener("click", _this74.blurEvent);
+		document.body.addEventListener("contextmenu", _this74.blurEvent);
+		window.addEventListener("resize", _this74.blurEvent);
+		document.body.addEventListener("keydown", _this74.escEvent);
+	}, 100);
+
+	document.body.appendChild(element);
+
 	//move menu to start on bottom edge if it is too close to the edge of the screen
-	if (e.pageY + this.menuEl.offsetHeight >= docHeight) {
-		this.menuEl.style.top = "";
-		this.menuEl.style.bottom = docHeight - e.pageY + "px";
+	if (y + element.offsetHeight >= docHeight) {
+		element.style.top = "";
+
+		if (parentEl) {
+			element.style.bottom = docHeight - parentOffset.top - parentEl.offsetHeight - 1 + "px";
+		} else {
+			element.style.bottom = docHeight - y + "px";
+		}
+	}
+
+	//move menu to start on right edge if it is too close to the edge of the screen
+	if (x + element.offsetWidth >= document.body.offsetWidth || this.positionReversedX) {
+		element.style.left = "";
+
+		if (parentEl) {
+			element.style.right = document.documentElement.offsetWidth - parentOffset.left + "px";
+		} else {
+			element.style.right = document.documentElement.offsetWidth - x + "px";
+		}
+
+		this.positionReversedX = true;
 	}
 };
 
 Menu.prototype.isOpen = function () {
-	return !!this.menuEl.parentNode;
+	return !!this.menuElements.length;
 };
 
 Menu.prototype.escMenu = function (e) {
@@ -18584,25 +18659,24 @@ Menu.prototype.escMenu = function (e) {
 };
 
 Menu.prototype.hideMenu = function () {
-	if (this.menuEl.parentNode) {
-		this.menuEl.parentNode.removeChild(this.menuEl);
-	}
+	this.menuElements.forEach(function (menuEl) {
+		if (menuEl.parentNode) {
+			menuEl.parentNode.removeChild(menuEl);
+		}
+	});
 
-	if (this.escEvent) {
-		document.body.removeEventListener("keydown", this.escEvent);
-	}
-
-	if (this.blurEvent) {
-		document.body.removeEventListener("click", this.blurEvent);
-		document.body.removeEventListener("contextmenu", this.blurEvent);
-		this.table.rowManager.element.removeEventListener("scroll", this.blurEvent);
-	}
+	document.body.removeEventListener("keydown", this.escEvent);
+	document.body.removeEventListener("click", this.blurEvent);
+	document.body.removeEventListener("contextmenu", this.blurEvent);
+	window.removeEventListener("resize", this.blurEvent);
+	this.table.rowManager.element.removeEventListener("scroll", this.blurEvent);
 };
 
 //default accessors
 Menu.prototype.menus = {};
 
 Tabulator.prototype.registerModule("menu", Menu);
+
 var MoveColumns = function MoveColumns(table) {
 	this.table = table; //hold Tabulator object
 	this.placeholderElement = this.createPlaceholderElement();
@@ -19289,7 +19363,7 @@ MoveRows.prototype.elementRowDrop = function (e, element, row) {
 
 //establish connection with other tables
 MoveRows.prototype.connectToTables = function (row) {
-	var _this74 = this;
+	var _this75 = this;
 
 	var connectionTables;
 
@@ -19313,15 +19387,15 @@ MoveRows.prototype.connectToTables = function (row) {
 
 		this.connectionSelectorsElements.forEach(function (query) {
 			if (typeof query === "string") {
-				_this74.connectionElements = _this74.connectionElements.concat(Array.prototype.slice.call(document.querySelectorAll(query)));
+				_this75.connectionElements = _this75.connectionElements.concat(Array.prototype.slice.call(document.querySelectorAll(query)));
 			} else {
-				_this74.connectionElements.push(query);
+				_this75.connectionElements.push(query);
 			}
 		});
 
 		this.connectionElements.forEach(function (element) {
 			var dropEvent = function dropEvent(e) {
-				_this74.elementRowDrop(e, element, _this74.moving);
+				_this75.elementRowDrop(e, element, _this75.moving);
 			};
 
 			element.addEventListener("mouseup", dropEvent);
@@ -19695,7 +19769,7 @@ Page.prototype.createElements = function () {
 };
 
 Page.prototype.generatePageSizeSelectList = function () {
-	var _this75 = this;
+	var _this76 = this;
 
 	var pageSizes = [];
 
@@ -19713,8 +19787,8 @@ Page.prototype.generatePageSizeSelectList = function () {
 			if (this.pageSizes.indexOf(this.size) == -1) {
 				pageSizes = [];
 
-				for (var _i13 = 1; _i13 < 5; _i13++) {
-					pageSizes.push(this.size * _i13);
+				for (var _i14 = 1; _i14 < 5; _i14++) {
+					pageSizes.push(this.size * _i14);
 				}
 
 				this.pageSizes = pageSizes;
@@ -19730,14 +19804,14 @@ Page.prototype.generatePageSizeSelectList = function () {
 			itemEl.value = item;
 
 			if (item === true) {
-				_this75.table.modules.localize.bind("pagination|all", function (value) {
+				_this76.table.modules.localize.bind("pagination|all", function (value) {
 					itemEl.innerHTML = value;
 				});
 			} else {
 				itemEl.innerHTML = item;
 			}
 
-			_this75.pageSizeSelect.appendChild(itemEl);
+			_this76.pageSizeSelect.appendChild(itemEl);
 		});
 
 		this.pageSizeSelect.value = this.size;
@@ -19931,7 +20005,7 @@ Page.prototype.setMaxPage = function (max) {
 
 //set current page number
 Page.prototype.setPage = function (page) {
-	var _this76 = this;
+	var _this77 = this;
 
 	var self = this;
 
@@ -19957,9 +20031,9 @@ Page.prototype.setPage = function (page) {
 
 		page = parseInt(page);
 
-		if (page > 0 && page <= _this76.max) {
-			_this76.page = page;
-			_this76.trigger().then(function () {
+		if (page > 0 && page <= _this77.max) {
+			_this77.page = page;
+			_this77.trigger().then(function () {
 				resolve();
 			}).catch(function () {
 				reject();
@@ -19969,24 +20043,24 @@ Page.prototype.setPage = function (page) {
 				self.table.modules.persistence.save("page");
 			}
 		} else {
-			console.warn("Pagination Error - Requested page is out of range of 1 - " + _this76.max + ":", page);
+			console.warn("Pagination Error - Requested page is out of range of 1 - " + _this77.max + ":", page);
 			reject();
 		}
 	});
 };
 
 Page.prototype.setPageToRow = function (row) {
-	var _this77 = this;
+	var _this78 = this;
 
 	return new Promise(function (resolve, reject) {
 
-		var rows = _this77.table.rowManager.getDisplayRows(_this77.displayIndex - 1);
+		var rows = _this78.table.rowManager.getDisplayRows(_this78.displayIndex - 1);
 		var index = rows.indexOf(row);
 
 		if (index > -1) {
-			var page = _this77.size === true ? 1 : Math.ceil((index + 1) / _this77.size);
+			var page = _this78.size === true ? 1 : Math.ceil((index + 1) / _this78.size);
 
-			_this77.setPage(page).then(function () {
+			_this78.setPage(page).then(function () {
 				resolve();
 			}).catch(function () {
 				reject();
@@ -20044,9 +20118,9 @@ Page.prototype._setPageButtons = function () {
 		self.nextBut.disabled = false;
 	}
 
-	for (var _i14 = min; _i14 <= max; _i14++) {
-		if (_i14 > 0 && _i14 <= self.max) {
-			self.pagesElement.appendChild(self._generatePageButton(_i14));
+	for (var _i15 = min; _i15 <= max; _i15++) {
+		if (_i15 > 0 && _i15 <= self.max) {
+			self.pagesElement.appendChild(self._generatePageButton(_i15));
 		}
 	}
 
@@ -20082,34 +20156,11 @@ Page.prototype._generatePageButton = function (page) {
 
 //previous page
 Page.prototype.previousPage = function () {
-	var _this78 = this;
-
-	return new Promise(function (resolve, reject) {
-		if (_this78.page > 1) {
-			_this78.page--;
-			_this78.trigger().then(function () {
-				resolve();
-			}).catch(function () {
-				reject();
-			});
-
-			if (_this78.table.options.persistence && _this78.table.modExists("persistence", true) && _this78.table.modules.persistence.config.page) {
-				_this78.table.modules.persistence.save("page");
-			}
-		} else {
-			console.warn("Pagination Error - Previous page would be less than page 1:", 0);
-			reject();
-		}
-	});
-};
-
-//next page
-Page.prototype.nextPage = function () {
 	var _this79 = this;
 
 	return new Promise(function (resolve, reject) {
-		if (_this79.page < _this79.max) {
-			_this79.page++;
+		if (_this79.page > 1) {
+			_this79.page--;
 			_this79.trigger().then(function () {
 				resolve();
 			}).catch(function () {
@@ -20120,8 +20171,31 @@ Page.prototype.nextPage = function () {
 				_this79.table.modules.persistence.save("page");
 			}
 		} else {
-			if (!_this79.progressiveLoad) {
-				console.warn("Pagination Error - Next page would be greater than maximum page of " + _this79.max + ":", _this79.max + 1);
+			console.warn("Pagination Error - Previous page would be less than page 1:", 0);
+			reject();
+		}
+	});
+};
+
+//next page
+Page.prototype.nextPage = function () {
+	var _this80 = this;
+
+	return new Promise(function (resolve, reject) {
+		if (_this80.page < _this80.max) {
+			_this80.page++;
+			_this80.trigger().then(function () {
+				resolve();
+			}).catch(function () {
+				reject();
+			});
+
+			if (_this80.table.options.persistence && _this80.table.modExists("persistence", true) && _this80.table.modules.persistence.config.page) {
+				_this80.table.modules.persistence.save("page");
+			}
+		} else {
+			if (!_this80.progressiveLoad) {
+				console.warn("Pagination Error - Next page would be greater than maximum page of " + _this80.max + ":", _this80.max + 1);
 			}
 			reject();
 		}
@@ -20163,9 +20237,9 @@ Page.prototype.getRows = function (data) {
 
 		this._setPageButtons();
 
-		for (var _i15 = start; _i15 < end; _i15++) {
-			if (data[_i15]) {
-				output.push(data[_i15]);
+		for (var _i16 = start; _i16 < end; _i16++) {
+			if (data[_i16]) {
+				output.push(data[_i16]);
 			}
 		}
 
@@ -20179,28 +20253,28 @@ Page.prototype.getRows = function (data) {
 };
 
 Page.prototype.trigger = function () {
-	var _this80 = this;
+	var _this81 = this;
 
 	var left;
 
 	return new Promise(function (resolve, reject) {
 
-		switch (_this80.mode) {
+		switch (_this81.mode) {
 			case "local":
-				left = _this80.table.rowManager.scrollLeft;
+				left = _this81.table.rowManager.scrollLeft;
 
-				_this80.table.rowManager.refreshActiveData("page");
-				_this80.table.rowManager.scrollHorizontal(left);
+				_this81.table.rowManager.refreshActiveData("page");
+				_this81.table.rowManager.scrollHorizontal(left);
 
-				_this80.table.options.pageLoaded.call(_this80.table, _this80.getPage());
+				_this81.table.options.pageLoaded.call(_this81.table, _this81.getPage());
 				resolve();
 				break;
 
 			case "remote":
 			case "progressive_load":
 			case "progressive_scroll":
-				_this80.table.modules.ajax.blockActiveRequest();
-				_this80._getRemotePage().then(function () {
+				_this81.table.modules.ajax.blockActiveRequest();
+				_this81._getRemotePage().then(function () {
 					resolve();
 				}).catch(function () {
 					reject();
@@ -20208,14 +20282,14 @@ Page.prototype.trigger = function () {
 				break;
 
 			default:
-				console.warn("Pagination Error - no such pagination mode:", _this80.mode);
+				console.warn("Pagination Error - no such pagination mode:", _this81.mode);
 				reject();
 		}
 	});
 };
 
 Page.prototype._getRemotePage = function () {
-	var _this81 = this;
+	var _this82 = this;
 
 	var self = this,
 	    oldParams,
@@ -20232,33 +20306,33 @@ Page.prototype._getRemotePage = function () {
 		pageParams = self.table.modules.ajax.getParams();
 
 		//configure request params
-		pageParams[_this81.dataSentNames.page] = self.page;
+		pageParams[_this82.dataSentNames.page] = self.page;
 
 		//set page size if defined
-		if (_this81.size) {
-			pageParams[_this81.dataSentNames.size] = _this81.size;
+		if (_this82.size) {
+			pageParams[_this82.dataSentNames.size] = _this82.size;
 		}
 
 		//set sort data if defined
-		if (_this81.table.options.ajaxSorting && _this81.table.modExists("sort")) {
+		if (_this82.table.options.ajaxSorting && _this82.table.modExists("sort")) {
 			var sorters = self.table.modules.sort.getSort();
 
 			sorters.forEach(function (item) {
 				delete item.column;
 			});
 
-			pageParams[_this81.dataSentNames.sorters] = sorters;
+			pageParams[_this82.dataSentNames.sorters] = sorters;
 		}
 
 		//set filter data if defined
-		if (_this81.table.options.ajaxFiltering && _this81.table.modExists("filter")) {
+		if (_this82.table.options.ajaxFiltering && _this82.table.modExists("filter")) {
 			var filters = self.table.modules.filter.getFilters(true, true);
-			pageParams[_this81.dataSentNames.filters] = filters;
+			pageParams[_this82.dataSentNames.filters] = filters;
 		}
 
 		self.table.modules.ajax.setParams(pageParams);
 
-		self.table.modules.ajax.sendRequest(_this81.progressiveLoad).then(function (data) {
+		self.table.modules.ajax.sendRequest(_this82.progressiveLoad).then(function (data) {
 			self._parseRemoteData(data);
 			resolve();
 		}).catch(function (e) {
@@ -21475,7 +21549,7 @@ var ResizeTable = function ResizeTable(table) {
 };
 
 ResizeTable.prototype.initialize = function (row) {
-	var _this82 = this;
+	var _this83 = this;
 
 	var table = this.table,
 	    tableStyle;
@@ -21498,13 +21572,13 @@ ResizeTable.prototype.initialize = function (row) {
 				var nodeHeight = Math.floor(entry[0].contentRect.height);
 				var nodeWidth = Math.floor(entry[0].contentRect.width);
 
-				if (_this82.tableHeight != nodeHeight || _this82.tableWidth != nodeWidth) {
-					_this82.tableHeight = nodeHeight;
-					_this82.tableWidth = nodeWidth;
+				if (_this83.tableHeight != nodeHeight || _this83.tableWidth != nodeWidth) {
+					_this83.tableHeight = nodeHeight;
+					_this83.tableWidth = nodeWidth;
 
 					if (table.element.parentNode) {
-						_this82.containerHeight = table.element.parentNode.clientHeight;
-						_this82.containerWidth = table.element.parentNode.clientWidth;
+						_this83.containerHeight = table.element.parentNode.clientHeight;
+						_this83.containerWidth = table.element.parentNode.clientWidth;
 					}
 
 					if (table.options.virtualDomHoz) {
@@ -21528,11 +21602,11 @@ ResizeTable.prototype.initialize = function (row) {
 					var nodeHeight = Math.floor(entry[0].contentRect.height);
 					var nodeWidth = Math.floor(entry[0].contentRect.width);
 
-					if (_this82.containerHeight != nodeHeight || _this82.containerWidth != nodeWidth) {
-						_this82.containerHeight = nodeHeight;
-						_this82.containerWidth = nodeWidth;
-						_this82.tableHeight = table.element.clientHeight;
-						_this82.tableWidth = table.element.clientWidth;
+					if (_this83.containerHeight != nodeHeight || _this83.containerWidth != nodeWidth) {
+						_this83.containerHeight = nodeHeight;
+						_this83.containerWidth = nodeWidth;
+						_this83.tableHeight = table.element.clientHeight;
+						_this83.tableWidth = table.element.clientWidth;
 					}
 
 					if (table.options.virtualDomHoz) {
@@ -21624,16 +21698,16 @@ ResponsiveLayout.prototype.initialize = function () {
 	}
 
 	//assign collapse column
-	for (var _iterator = this.table.columnManager.columnsByIndex, _isArray = Array.isArray(_iterator), _i16 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+	for (var _iterator = this.table.columnManager.columnsByIndex, _isArray = Array.isArray(_iterator), _i17 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
 		var _ref;
 
 		if (_isArray) {
-			if (_i16 >= _iterator.length) break;
-			_ref = _iterator[_i16++];
+			if (_i17 >= _iterator.length) break;
+			_ref = _iterator[_i17++];
 		} else {
-			_i16 = _iterator.next();
-			if (_i16.done) break;
-			_ref = _i16.value;
+			_i17 = _iterator.next();
+			if (_i17.done) break;
+			_ref = _i17.value;
 		}
 
 		var col = _ref;
@@ -22033,14 +22107,14 @@ SelectRow.prototype.toggleRow = function (row) {
 
 //select a number of rows
 SelectRow.prototype.selectRows = function (rows) {
-	var _this83 = this;
+	var _this84 = this;
 
 	var rowMatch;
 
 	switch (typeof rows === 'undefined' ? 'undefined' : _typeof(rows)) {
 		case "undefined":
 			this.table.rowManager.rows.forEach(function (row) {
-				_this83._selectRow(row, true, true);
+				_this84._selectRow(row, true, true);
 			});
 
 			this._rowSelectionChanged();
@@ -22054,7 +22128,7 @@ SelectRow.prototype.selectRows = function (rows) {
 				this._selectRow(rowMatch, true, true);
 			} else {
 				this.table.rowManager.getRows(rows).forEach(function (row) {
-					_this83._selectRow(row, true, true);
+					_this84._selectRow(row, true, true);
 				});
 			}
 
@@ -22064,7 +22138,7 @@ SelectRow.prototype.selectRows = function (rows) {
 		default:
 			if (Array.isArray(rows)) {
 				rows.forEach(function (row) {
-					_this83._selectRow(row, true, true);
+					_this84._selectRow(row, true, true);
 				});
 
 				this._rowSelectionChanged();
@@ -22136,7 +22210,7 @@ SelectRow.prototype.deselectRows = function (rows, silent) {
 
 		rowCount = self.selectedRows.length;
 
-		for (var _i17 = 0; _i17 < rowCount; _i17++) {
+		for (var _i18 = 0; _i18 < rowCount; _i18++) {
 			self._deselectRow(self.selectedRows[0], true);
 		}
 
@@ -22251,16 +22325,16 @@ SelectRow.prototype.childRowSelection = function (row, select) {
 	var children = this.table.modules.dataTree.getChildren(row);
 
 	if (select) {
-		for (var _iterator2 = children, _isArray2 = Array.isArray(_iterator2), _i18 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+		for (var _iterator2 = children, _isArray2 = Array.isArray(_iterator2), _i19 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
 			var _ref2;
 
 			if (_isArray2) {
-				if (_i18 >= _iterator2.length) break;
-				_ref2 = _iterator2[_i18++];
+				if (_i19 >= _iterator2.length) break;
+				_ref2 = _iterator2[_i19++];
 			} else {
-				_i18 = _iterator2.next();
-				if (_i18.done) break;
-				_ref2 = _i18.value;
+				_i19 = _iterator2.next();
+				if (_i19.done) break;
+				_ref2 = _i19.value;
 			}
 
 			var child = _ref2;
@@ -22268,16 +22342,16 @@ SelectRow.prototype.childRowSelection = function (row, select) {
 			this._selectRow(child, true);
 		}
 	} else {
-		for (var _iterator3 = children, _isArray3 = Array.isArray(_iterator3), _i19 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+		for (var _iterator3 = children, _isArray3 = Array.isArray(_iterator3), _i20 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
 			var _ref3;
 
 			if (_isArray3) {
-				if (_i19 >= _iterator3.length) break;
-				_ref3 = _iterator3[_i19++];
+				if (_i20 >= _iterator3.length) break;
+				_ref3 = _iterator3[_i20++];
 			} else {
-				_i19 = _iterator3.next();
-				if (_i19.done) break;
-				_ref3 = _i19.value;
+				_i20 = _iterator3.next();
+				if (_i20.done) break;
+				_ref3 = _i20.value;
 			}
 
 			var _child = _ref3;
@@ -22582,7 +22656,7 @@ Sort.prototype.setColumnHeader = function (column, dir) {
 
 //sort each item in sort list
 Sort.prototype._sortItems = function (data, sortList) {
-	var _this84 = this;
+	var _this85 = this;
 
 	var sorterCount = sortList.length - 1;
 
@@ -22592,7 +22666,7 @@ Sort.prototype._sortItems = function (data, sortList) {
 		for (var i = sorterCount; i >= 0; i--) {
 			var sortItem = sortList[i];
 
-			result = _this84._sortRow(a, b, sortItem.column, sortItem.dir, sortItem.params);
+			result = _this85._sortRow(a, b, sortItem.column, sortItem.dir, sortItem.params);
 
 			if (result !== 0) {
 				break;

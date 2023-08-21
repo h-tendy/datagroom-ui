@@ -2210,25 +2210,7 @@ class DsView extends Component {
                 action: this.showAllCols
             },            
         ];
-        let cellContextMenu = [
-            {
-                label:"Duplicate row & add (above)",
-                action: function (e, cell) {
-                    me.duplicateAndAddRowHandler(e, cell, true)
-                }
-            },
-            {
-                label:"Duplicate row & add (below)",
-                action: function (e, cell) {
-                    me.duplicateAndAddRowHandler(e, cell, false)
-                }
-            },
-            {
-                label:"Add empty row...",
-                action: function (e, cell) {
-                    me.addRow(e, cell, null, true)
-                }
-            },
+        let cellContextMenu = [ 
             {
                 label:"Copy cell to clipboard...",
                 action: this.copyCellToClipboard
@@ -2238,15 +2220,20 @@ class DsView extends Component {
                 action: this.startPreso
             },
             {
-                label:"<i class='fas fa-eye-slash'></i> Hide Column",
-                action: this.hideColumnFromCell
-            },            
-            {
-                label:"<i class='fas fa-eye'></i> Unhide all Columns",
-                action: this.showAllCols
-            },            
-            {
                 separator: true
+            },
+            {
+                label: "Hide/Unhide column...",
+                menu: [
+                    {
+                        label: "<i class='fas fa-eye-slash'></i> Hide Column",
+                        action: this.hideColumnFromCell
+                    },
+                    {
+                        label: "<i class='fas fa-eye'></i> Unhide all Columns",
+                        action: this.showAllCols
+                    },            
+                ]
             },
             /*
             {
@@ -2257,41 +2244,71 @@ class DsView extends Component {
                 separator: true
             },*/
             {
-                label:"Delete all rows in view...",
-                action: this.deleteAllRowsInViewQuestion
+                label: "Add row.....",
+                menu: [
+                    {
+                        label: "Duplicate row & add (above)",
+                        action: function (e, cell) {
+                            me.duplicateAndAddRowHandler(e, cell, true)
+                        }
+                    },
+                    {
+                        label: "Duplicate row & add (below)",
+                        action: function (e, cell) {
+                            me.duplicateAndAddRowHandler(e, cell, false)
+                        }
+                    },
+                    {
+                        label: "Add empty row...",
+                        action: function (e, cell) {
+                            me.addRow(e, cell, null, true)
+                        }
+                    },
+                ]
             },
             {
-                label:"Delete all rows in query...",
-                action: this.deleteAllRowsInQuery
+                label: "Delete row....",
+                menu: [
+                    {
+                        label: "Delete all rows in view...",
+                        action: this.deleteAllRowsInViewQuestion
+                    },
+                    {
+                        label: "Delete all rows in query...",
+                        action: this.deleteAllRowsInQuery
+                    },
+                    {
+                        label: "Delete row...",
+                        action: this.deleteRowQuestion
+                    }
+                ]
             },
             {
-                label:"Delete row...",
-                action: this.deleteRowQuestion
-            },
-            {
-                separator: true
-            },
-            {
-                label: "Convert to JIRA row...",
-                action: this.convertToJiraRow
-            },
-            {
-                label: "Add new JIRA...",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, null)
-                }
-            },
-            {
-                label: "Add Story to Epic",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'Story')
-                }
-            },
-            {
-                label: "Add a Story Task to Story",
-                action: function (e, cell) {
-                    me.addJiraRow(e, cell, 'Story Task')
-                }
+                label: "JIRA Menu....",
+                menu: [
+                    {
+                        label: "Convert to JIRA row...",
+                        action: this.convertToJiraRow
+                    },
+                    {
+                        label: "Add new JIRA...",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, null)
+                        }
+                    },
+                    {
+                        label: "Add Story to Epic",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, 'Story')
+                        }
+                    },
+                    {
+                        label: "Add a Story Task to Story",
+                        action: function (e, cell) {
+                            me.addJiraRow(e, cell, 'Story Task')
+                        }
+                    }
+                ]
             }
         ];        
         let columns = [];
