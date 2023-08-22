@@ -1073,7 +1073,7 @@ class DsView extends Component {
                     socket.emit('unlockReq', unlockReq);
                     dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
                 } 
-                                // Revert the value for other failures also. 
+                // Revert the value for other failures also. 
             })
         } catch (e) {}
         //console.log("Status: ", status);
