@@ -2795,17 +2795,6 @@ class DsView extends Component {
         }
     }
 
-    //     if ( this.state.connectedState && this.state.dbconnectivitystate ) {
-    //         return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b></span> 
-    //     } else if ( this.state.connectedState && !this.state.dbconnectivitystate ){
-    //         return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b> <i>(Database connectivity is down)</i></span>
-    //     } else if ( !this.state.connectedState && this.state.dbconnectivitystate ) {
-    //         return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i></span> 
-    //     } else {
-    //         return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i></span>
-    //     }
-    // }
-
     render () {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
