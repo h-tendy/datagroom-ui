@@ -130,6 +130,7 @@ class DsView extends Component {
             color: 0,
 
             connectedState: false,
+            dbconnectivitystate: false,
         };
         this.ref = null;
         
@@ -248,6 +249,9 @@ class DsView extends Component {
         socket.on('disconnect', (data) => {
             me.setState({connectedState: false});
         })
+        socket.on('dbConnectivityState', (isDbConnected) => {
+            me.setState({dbconnectivitystate: isDbConnected.dbState});
+        });
         socket.on('Hello', (helloObj) => {
             ;
         })
@@ -573,6 +577,9 @@ class DsView extends Component {
     }
 
     cellClickEvents (e, cell) {
+        if (!this.state.connectedState || !this.state.dbconnectivitystate) {
+            return
+        }
         if (e.type === "dblclick" && !this.state.singleClickEdit && !this.state.disableEditing && this.cellEditCheckForConflicts(cell)) {
             // Force edit
             cell.edit(true);
@@ -594,6 +601,7 @@ class DsView extends Component {
         if (!this.state.singleClickEdit)  return false;
         if (this.state.disableEditing) return false;
         if (!this.state.connectedState) return false;
+        if (!this.state.dbconnectivitystate) return false;
         return this.cellEditCheckForConflicts(cell);
     }
     cellForceEditTrigger (cell) {
@@ -601,6 +609,7 @@ class DsView extends Component {
         if (!this.state.singleClickEdit)  return false;
         if (this.state.disableEditing) return false;
         if (!this.state.connectedState) return false;
+        if (!this.state.dbconnectivitystate) return false;
         let noConcurrentEdits = this.cellEditCheckForConflicts(cell);
         if (noConcurrentEdits) {
             setImmediate(() => {
@@ -1062,7 +1071,7 @@ class DsView extends Component {
                     let unlockReq = { _id: k, field: column, dsName, dsView }
                     socket.emit('unlockReq', unlockReq);
                     dispatch({ type: dsConstants.EDIT_SINGLE_DELETE_TRACKER, _id: k })
-                }
+                } 
                 // Revert the value for other failures also. 
             })
         } catch (e) {}
@@ -2773,11 +2782,16 @@ class DsView extends Component {
         }
     }
 
-    displayConnectedStatus () {
-        if (this.state.connectedState) {
-            return <span><i class='fas fa-server'></i> <b>Server connection:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b></span>
-        } else {
-            return <span><i class='fas fa-server'></i> <b>Server connection:</b> <b style={{ 'color': 'red' }}>Disconnected</b></span>
+    displayConnectedStatus(){
+        if ( this.state.connectedState ) {
+            if ( this.state.dbconnectivitystate ){
+                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b></span>
+            } else {
+                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b> <i>(Database connectivity is down)</i></span>
+            }
+        } else{
+            return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i></span>
+
         }
     }
 
