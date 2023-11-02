@@ -2478,12 +2478,14 @@ class DsView extends Component {
     }
 
     ajaxResponse (url, params, response) {
-        //console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
-        if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
-            this.setState({ totalRecs: response.total});
-        } else {
-            console.log(`In ajaxResponse, avoided stale setting of response.total!`);
-        }
+        // console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
+        setTimeout(() => {
+            if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
+                this.setState({ totalRecs: response.total});
+            } else {
+                console.log(`In ajaxResponse, avoided stale setting of response.total!`);
+            }
+        }, 2000);
         return response; 
     }
 
