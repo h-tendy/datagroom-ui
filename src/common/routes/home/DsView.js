@@ -2479,13 +2479,11 @@ class DsView extends Component {
 
     ajaxResponse (url, params, response) {
         // console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
-        setTimeout(() => {
-            if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
-                this.setState({ totalRecs: response.total});
-            } else {
-                console.log(`In ajaxResponse, avoided stale setting of response.total!`);
-            }
-        }, 2000);
+        if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
+            this.setState({ totalRecs: response.total});
+        } else {
+            console.log(`In ajaxResponse, avoided stale setting of response.total!`);
+        }
         return response; 
     }
 
@@ -2603,6 +2601,7 @@ class DsView extends Component {
                                     index: "_id",
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
+                                    headerFilterLiveFilterDelay: 2000,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
                                     //columnResized: this.columnResized,
