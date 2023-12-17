@@ -17,7 +17,7 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsViews)
                     newState.dsViews = {};
-                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription, filters: action.columnsAndKeys.filters, otherTableAttrs: action.columnsAndKeys.otherTableAttrs, aclConfig: action.columnsAndKeys.aclConfig, jiraAgileConfig: action.columnsAndKeys.jiraAgileConfig };
+                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription, filters: action.columnsAndKeys.filters, otherTableAttrs: action.columnsAndKeys.otherTableAttrs, aclConfig: action.columnsAndKeys.aclConfig, jiraAgileConfig: action.columnsAndKeys.jiraAgileConfig, jiraProjectName: action.columnsAndKeys.jiraProjectName };
                 return newState
             }
         case dsConstants.LOAD_COLUMNS_FAILURE:
