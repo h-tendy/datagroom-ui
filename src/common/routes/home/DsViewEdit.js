@@ -35,6 +35,8 @@ class DsViewEdit extends Component {
             filterButtonText: 'Enable Filters',
             editingButtonText: 'Disable Editing',
             refreshAfterRender: false,
+            jiraProjectNameEnabled: null,
+            jiraProjectName: "",
             jira: null,
             jiraAgile: null,
             jql: "",
@@ -313,7 +315,11 @@ class DsViewEdit extends Component {
         // XXX: Push all columns including invisible ones.
         currentDefs = filteredDefs;
         console.log("Will push these definitions: ", currentDefs);
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig));
+        let jiraProjectName = null;
+        if (this.state.jiraProjectNameEnabled && this.state.jiraProjectName) {
+            jiraProjectName = this.state.jiraProjectName;
+        }
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig, jiraProjectName));
         this.timer = setTimeout(() => {
             dispatch(dsActions.clearViewDefs())
         }, 2000)
@@ -986,6 +992,14 @@ class DsViewEdit extends Component {
         document.title = `Edit-view: ${dsName}`;
         
         try {
+            if (this.state.jiraProjectNameEnabled === null && dsHome.dsViews[dsView].jiraProjectName) {
+                this.setState({
+                    jiraProjectNameEnabled: true,
+                    jiraProjectName: dsHome.dsViews[dsView].jiraProjectName
+                });
+            }
+        } catch (e) { };
+        try {
             if (this.state.jira === null && dsHome.dsViews[dsView].jiraConfig) {
                 let jiraFieldMapping = this.state.jiraFieldMapping;
                 for (let key in dsHome.dsViews[dsView].jiraConfig.jiraFieldMapping) {
@@ -1059,6 +1073,29 @@ class DsViewEdit extends Component {
                 {this.dsDescription()}
                 <br/>
                 {this.step1()}
+                <Row>
+                    <Col md={2} sm={2} xs={2}>
+                        <Form.Check inline type="checkbox" label="&nbsp;Add Jira project name" checked={this.state.jiraProjectNameEnabled} onChange={(event) => {
+                            let checked = event.target.checked;
+                            me.setState({ jiraProjectNameEnabled: checked });
+                        }} />
+                    </Col>
+                    {this.state.jiraProjectNameEnabled &&
+                        <Col md={6} sm={6} xs={6}>
+                            <Form.Control type="text" defaultValue={this.state.jiraProjectName} onChange={(event) => {
+                                let value = event.target.value;
+                                if (me.state.debounceTimers["__dsViewEdit__main"]) {
+                                    clearTimeout(me.state.debounceTimers["__dsViewEdit__main"]);
+                                }
+                                me.state.debounceTimers["__dsViewEdit__main"] = setTimeout(() => {
+                                    delete me.state.debounceTimers["__dsViewEdit__main"];
+                                    if (!value) return;
+                                    me.setState({ jiraProjectName: value });
+                                }, 1000)
+                            }} />
+                        </Col>
+                    }
+                </Row>
                 <Row>
                     <Col md={2} sm={2} xs={2}> 
                     <Form.Check inline type="checkbox" label="&nbsp;Add Jira query" checked={this.state.jira} onChange={(event) => {

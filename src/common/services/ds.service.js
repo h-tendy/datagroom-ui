@@ -397,7 +397,7 @@ async function getProjectsMetaData(body) {
     try {
         console.log("Starting getProjectsMetaData API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
-        let response = await fetch(`${config.apiUrl}/ds/getProjectsMetadata`, {
+        let response = await fetch(`${config.apiUrl}/ds/getProjectsMetadataForProject`, {
             method: "post",
             mode: 'cors',
             cache: 'no-cache',

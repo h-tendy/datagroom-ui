@@ -22,9 +22,9 @@ class JiraForm extends Component {
 
     componentDidMount() {
         this.projectsMetaData = this.props.projectsMetaData
-        for (let i = 0; i < this.projectsMetaData.projects[0].issuetypes.length; i++) {
-            if (this.projectsMetaData.projects[0].issuetypes[i].name === this.state.formData.Type) {
-                this.fields = this.projectsMetaData.projects[0].issuetypes[i].fields
+        for (let i = 0; i < this.projectsMetaData.issuetypes.length; i++) {
+            if (this.projectsMetaData.issuetypes[i].name === this.state.formData.Type) {
+                this.fields = this.projectsMetaData.issuetypes[i].fields
                 this.fieldsKey = Object.keys(this.fields)
                 for (let j = 0; j < this.fieldsKey.length; j++) {
                     if ((this.fields[this.fieldsKey[j]].type === "array" || this.fields[this.fieldsKey[j]].type === "creatableArray") && this.fields[this.fieldsKey[j]].allowedValues) {
@@ -51,13 +51,13 @@ class JiraForm extends Component {
             }
         }
         let obj = {};
-        obj["Project"] = this.projectsMetaData.projects[0].key
+        obj["Project"] = this.projectsMetaData.key
         this.props.handleChange(obj)
         this.setState({
             ...this.state,
             formData: {
                 ...this.state.formData,
-                Project: this.projectsMetaData.projects[0].key
+                Project: this.projectsMetaData.key
             }
         })
     }
@@ -66,9 +66,9 @@ class JiraForm extends Component {
         if (event.target.name == "Project") {
             this.projectName = event.target.value
         } else if (event.target.name == "Type") {
-            for (let i = 0; i < this.projectsMetaData.projects[0].issuetypes.length; i++) {
-                if (this.projectsMetaData.projects[0].issuetypes[i].name === event.target.value) {
-                    this.fields = this.projectsMetaData.projects[0].issuetypes[i].fields
+            for (let i = 0; i < this.projectsMetaData.issuetypes.length; i++) {
+                if (this.projectsMetaData.issuetypes[i].name === event.target.value) {
+                    this.fields = this.projectsMetaData.issuetypes[i].fields
                     this.fieldsKey = Object.keys(this.fields)
                     for (let j = 0; j < this.fieldsKey.length; j++) {
                         if ((this.fields[this.fieldsKey[j]].type === "array" || this.fields[this.fieldsKey[j]].type === "creatableArray") && this.fields[this.fieldsKey[j]].allowedValues) {
@@ -200,7 +200,8 @@ class JiraForm extends Component {
                                         value={this.state.formData.Project}
                                         onChange={this.handleChange}
                                     >
-                                        {this.props.projectsMetaData.projects.map((item) => <option key={item.key} value={`${item.key}`}>{item.key}</option>)}
+                                        <option key={this.props.projectsMetaData.key} value={`${this.props.projectsMetaData.key}`}>{this.props.projectsMetaData.key}</option>
+
                                     </Form.Control>
                                 </Col>
                             </Form.Row>

@@ -216,19 +216,19 @@ function deleteManyDocs (dsName, dsView, dsUser, objects, rows) {
 }
 
 
-function setViewDefinitions(dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig) {
+function setViewDefinitions(dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName) {
     return async dispatch => {
         try {
             dispatch(request());
             let responseJson;
             if (jiraConfig && jiraAgileConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig });
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName });
             else if (jiraConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig });
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraProjectName });
             else if (jiraAgileConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig });
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName });
             else 
-                responseJson = await dsService.setViewDefinitions({dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig});
+                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraProjectName });
             if (responseJson)
                 dispatch(success(responseJson));
             else 

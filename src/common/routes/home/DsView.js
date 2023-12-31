@@ -1603,6 +1603,21 @@ class DsView extends Component {
         }
     }
 
+    /**
+     * Given all the defaults defined in the backend, this function will return the default values for the given projectName
+     * @param {Array<Object>} defaultValuesOfAllProjects 
+     * @param {string} jiraProjectName 
+     * @returns {object}
+     */
+    getDefaultTypeFieldsAndValuesForProject(defaultValuesOfAllProjects, jiraProjectName) {
+        for (let projectObj of defaultValuesOfAllProjects) {
+            if (projectObj.key == jiraProjectName) {
+                return projectObj;
+            }
+        }
+        return null;
+    }
+
     async convertToJiraRow(e, cell) {
         let self = this
         const { match, dsHome, user } = this.props;
@@ -1610,7 +1625,18 @@ class DsView extends Component {
         let dsName = match.params.dsName;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let jiraProjectName = dsHome.dsViews[dsView].jiraProjectName;
         let dsUser = user.user;
+        if (!jiraProjectName) {
+            this.setState({
+                modalTitle: "Convert JIRA status",
+                modalQuestion: `Jira Project Name not configured. Please go to "Edit-view" of the dataset and add Jira Project Name same as that in JIRA. Reload this page.`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1632,7 +1658,7 @@ class DsView extends Component {
             })
             return
         }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Convert JIRA status",
@@ -1643,7 +1669,7 @@ class DsView extends Component {
             })
             return
         }
-        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes))
+        let copyOfDefaults = JSON.parse(JSON.stringify(this.getDefaultTypeFieldsAndValuesForProject(dsHome.defaultTypeFieldsAndValues.value.projects, jiraProjectName).issuetypes));
         this.jiraFormData = {
             ...this.jiraFormData,
             ...copyOfDefaults
@@ -1651,7 +1677,7 @@ class DsView extends Component {
         if (jiraAgileConfig && jiraAgileConfig.label) {
             this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
         }
-        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
+        this.fillLocalStorageItemData(projectsMetaData.issuetypes)
         let rowData = cell.getRow().getData()
         this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
@@ -1894,6 +1920,17 @@ class DsView extends Component {
         let dsUser = user.user;
         let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
         let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+        let jiraProjectName = dsHome.dsViews[dsView].jiraProjectName;
+        if (!jiraProjectName) {
+            this.setState({
+                modalTitle: "Add JIRA status",
+                modalQuestion: `Jira Project Name not configured. Please go to "Edit-view" of the dataset and add Jira Project Name same as that in JIRA. Reload this page.`,
+                modalOk: "Dismiss",
+                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+                showModal: true
+            })
+            return
+        }
         if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1929,7 +1966,7 @@ class DsView extends Component {
             }
 
         }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig })
+        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName })
         if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
             this.setState({
                 modalTitle: "Add JIRA status",
@@ -1940,7 +1977,7 @@ class DsView extends Component {
             })
             return
         }
-        let copyOfDefaults = JSON.parse(JSON.stringify(dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes))
+        let copyOfDefaults = JSON.parse(JSON.stringify(this.getDefaultTypeFieldsAndValuesForProject(dsHome.defaultTypeFieldsAndValues.value.projects, jiraProjectName).issuetypes))
         this.jiraFormData = {
             ...this.jiraFormData,
             ...copyOfDefaults
@@ -1948,7 +1985,7 @@ class DsView extends Component {
         if (jiraAgileConfig && jiraAgileConfig.label) {
             this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
         }
-        this.fillLocalStorageItemData(projectsMetaData.projects[0].issuetypes)
+        this.fillLocalStorageItemData(projectsMetaData.issuetypes)
         if (type)
             this.jiraFormData.Type = type
         if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
