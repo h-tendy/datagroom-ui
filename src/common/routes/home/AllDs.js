@@ -75,7 +75,17 @@ class AllDs extends Component {
         }
         return '';
     }
-    
+
+    onFilterClickHandler = (e) => {
+        e.preventDefault();
+        const { dispatch, user } = this.props;
+        if (e.target.innerText === "ALL DS") {
+            dispatch(dsActions.getDsList(user.user));
+        } else {
+            dispatch(dsActions.getFilteredDsList(user.user, e.target.innerText));
+        }
+    }
+
     render () {
         document.title = "Datagroom - browse data-sets";
         return (
@@ -85,6 +95,11 @@ class AllDs extends Component {
                     <h3 style={{ 'float': 'center' }}><label className="underline">Your Datasets</label></h3>
                     </Col>
                 </Row>
+                <Button size="sm" onClick={this.onFilterClickHandler}> A-I</Button>
+                <Button size="sm" onClick={this.onFilterClickHandler}> J-S</Button>
+                <Button size="sm" onClick={this.onFilterClickHandler}> T-Z</Button>
+                <Button size="sm" onClick={this.onFilterClickHandler}> 0-9</Button>
+                <Button size="sm" onClick={this.onFilterClickHandler}> ALL DS</Button> 
                 {this.dsList()}
                 <Row>
                 <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 

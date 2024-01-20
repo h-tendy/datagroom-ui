@@ -10,6 +10,7 @@ export const dsActions = {
     insertOneDoc,
     downloadXlsx, 
     getDsList,
+    getFilteredDsList,
     deleteDs,
     deleteOneDoc,
     deleteManyDocs,
@@ -150,6 +151,21 @@ function getDsList ( dsUser ) {
         try {
             dispatch(request());
             let dsList = await dsService.getDsList(dsUser);
+            dispatch(success(dsList));
+        } catch (error) {
+            dispatch(failure("getDsList failure"));
+        }
+    }
+    function request() { return { type: allDsConstants.LOAD_DSLIST_REQUEST, dsUser } }
+    function success(dsList) { return { type: allDsConstants.LOAD_DSLIST_SUCCESS, dsList } }
+    function failure(message) { return { type: allDsConstants.LOAD_DSLIST_FAILURE, message } }
+}
+
+function getFilteredDsList(dsUser, dsFilter) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let dsList = await dsService.getFilteredDsList({ dsUser, dsFilter });
             dispatch(success(dsList));
         } catch (error) {
             dispatch(failure("getDsList failure"));
