@@ -29,7 +29,11 @@ class AllDs extends Component {
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
-        dispatch(dsActions.getFilteredDsList(user.user, "A-I"));
+        if (this.state.activeTab === "ALL DS") {
+            dispatch(dsActions.getDsList(user.user));
+        } else {
+            dispatch(dsActions.getFilteredDsList(user.user, this.state.activeTab));
+        }
     }
 
     deleteRequest ( dsName ) {
