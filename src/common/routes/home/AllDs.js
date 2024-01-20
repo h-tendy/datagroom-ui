@@ -69,14 +69,18 @@ class AllDs extends Component {
     dsList () {
         const { allDs } = this.props;
         try {
-            if (allDs.dsList.dbList.length == 0) {
-                return <h3> OOPS..!! No Dataset found....!!</h3>
-            } else {
-                let listItems = allDs.dsList.dbList.map((v) => {
-                    let url = `/ds/${v.name}/default`;
-                    return <li><Link to={url}>{v.name}</Link>{this.deleteControls(v.name)}</li>
-                })
-                return (<Row><Col md={12} sm={12} xs={12}><ul>{listItems}</ul></Col></Row>)
+            if (allDs.dsListStatus === 'loading') {
+                return <h5>Loading....</h5>
+            } else if (allDs.dsListStatus === 'success') {
+                if (allDs.dsList.dbList.length == 0) {
+                    return <h3> OOPS..!! No Dataset found....!!</h3>
+                } else {
+                    let listItems = allDs.dsList.dbList.map((v) => {
+                        let url = `/ds/${v.name}/default`;
+                        return <li><Link to={url}>{v.name}</Link>{this.deleteControls(v.name)}</li>
+                    })
+                    return (<Row><Col md={12} sm={12} xs={12}><ul>{listItems}</ul></Col></Row>)
+                }
             }
         } catch (e) {
             console.log('dsList, exception: ', e);
