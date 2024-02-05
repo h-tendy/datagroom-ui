@@ -7,6 +7,7 @@ export const dsService = {
     insertOneDoc,
     downloadXlsx,
     getDsList, 
+    getFilteredDsList,
     deleteDs,
     deleteOneDoc,
     deleteManyDocs,
@@ -155,6 +156,31 @@ async function getDsList (dsUser) {
     }
 }
 
+async function getFilteredDsList(body) {
+    try {
+        console.log("Starting getDsList API call: ", body.dsUser);
+        let dataLen = JSON.stringify(body).length.toString();
+        let response = await fetch(`${config.apiUrl}/ds/dsList/${body.dsUser}`, {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
+                ...authHeader()
+            },
+            credentials: "include"
+        });
+        let responseJson = null;
+        console.log("Finished API")
+        if (response.ok) {
+            responseJson = await response.json();
+            console.log('getDsList: ', responseJson);
+        }
+        return responseJson;
+    } catch (e) {
+        console.log(e);
+    }
+}
 
 async function deleteDs (body) {
     try {

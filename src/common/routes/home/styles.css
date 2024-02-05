@@ -941,3 +941,9 @@ body.tabulator-print-fullscreen-hide > *:not(.tabulator-print-fullscreen) {
   width: 7px;
   background: #333;
 }
+
+.pageButton {
+  display: flex;
+  width: 30%;
+  justify-content: space-between;
+}
