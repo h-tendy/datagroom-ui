@@ -2426,7 +2426,7 @@ class DsView extends Component {
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
                     if (value.startsWith("<noDivStyling/>")) {
-                        return `<div style="white-space: pre; overflow-x: auto; word-wrap: normal;">${value}</div>`;
+                        return `<div style="overflow-x: auto;">${value}</div>`;
                     } else {
                         return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
                     }
