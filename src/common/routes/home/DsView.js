@@ -2425,7 +2425,11 @@ class DsView extends Component {
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
                     value = MarkdownIt.render(value);
-                    return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
+                    if (value.startsWith("<noDivStyling/>")) {
+                        return `<div style="white-space: pre; overflow-x: auto; word-wrap: normal;">${value}</div>`;
+                    } else {
+                        return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
+                    }
                 }
                 // Control comes here during full table clipboard copy.
                 // from this.myCopyToClipboard function call. 
