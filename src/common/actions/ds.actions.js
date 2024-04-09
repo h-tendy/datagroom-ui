@@ -131,11 +131,11 @@ function insertOneDoc (dsName, dsView, dsUser, selectorObj, doc, uiRow) {
 }
 
 
-function downloadXlsx (dsName, dsView, dsUser) {
+function downloadXlsx(dsName, dsView, dsUser, query) {
     return async dispatch => {
         try {
             dispatch(request());
-            await dsService.downloadXlsx(dsName, dsView, dsUser);
+            await dsService.downloadXlsx({ dsName, dsView, dsUser, query });
             dispatch(success());
         } catch (error) {
             dispatch(failure("downloadXlsx failure"));

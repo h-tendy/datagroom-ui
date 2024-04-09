@@ -106,12 +106,19 @@ async function insertOneDoc (body) {
     }
 }
 
-async function downloadXlsx (dsName, dsView, dsUser) {
+async function downloadXlsx(body) {
+    let dsName = body.dsName;
+    let dsUser = body.dsUser;
+    let dsView = body.dsView;
     try {
         console.log("Starting API call: ", dsName, dsView, dsUser);
+        let dataLen = JSON.stringify(body).length.toString();
         let response = await fetch(`${config.apiUrl}/ds/downloadXlsx/${dsName}/${dsView}/${dsUser}`, {
-            method: "get",
+            method: "post",
+            body: JSON.stringify(body),
             headers: new Headers({
+                "Content-Type": "application/json",
+                "Content-Length": dataLen,
                 ...authHeader()
             }),
             credentials: "include"
