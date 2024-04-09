@@ -943,14 +943,18 @@ class DsView extends Component {
         return true;
     }
 
-    downloadXlsx () {
+    downloadXlsx(useQuery) {
         const { dispatch, match, user } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
+        let query = [];
+        if (useQuery) {
+            query = this.ref.table.getHeaderFilters();
+        }
         // XXX: Doesn't work from the front end. 
         // this.ref.table.download("xlsx", "data.xlsx", { sheetName: "export" })
 
-        dispatch(dsActions.downloadXlsx(dsName, dsView, user.user));
+        dispatch(dsActions.downloadXlsx(dsName, dsView, user.user, query));
     }
 
     addRowStatus () {
@@ -2330,6 +2334,27 @@ class DsView extends Component {
                 ]
             },
             {
+                label: "Get xlsx....",
+                menu: [
+                    {
+                        label: "Get xlsx for whole DS...",
+                        action: function () {
+                            // Pass false to signify that don't use query
+                            let useQuery = false;
+                            me.downloadXlsx(useQuery);
+                        }
+                    },
+                    {
+                        label: "Get xlsx in query...",
+                        action: function () {
+                            // Pass true to signify to use the query entered, if any.
+                            let useQuery = true;
+                            me.downloadXlsx(useQuery);
+                        }
+                    }
+                ]
+            },
+            {
                 label: "JIRA Menu....",
                 menu: [
                     {
@@ -2879,7 +2904,6 @@ class DsView extends Component {
                 {this.step1()}
                 <br/>
                 <Row>
-                    <button className="btn btn-link" onClick={this.downloadXlsx}> <i class='fas fa-file-export'></i> Get xlsx </button> | 
                     <button className="btn btn-link" onClick={this.copyToClipboard}> <i class='fas fa-clipboard'></i> Copy-to-clipboard </button> | 
                     <button className="btn btn-link" onClick={this.addRow}> <i class='fas fa-plus'></i> Add Row </button>
                     {/* 
