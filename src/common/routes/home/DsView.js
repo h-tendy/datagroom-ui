@@ -131,6 +131,8 @@ class DsView extends Component {
 
             connectedState: false,
             dbconnectivitystate: false,
+
+            queryString: "",
         };
         this.ref = null;
         
@@ -203,6 +205,10 @@ class DsView extends Component {
         this.normalizeAllImgRows = this.normalizeAllImgRows.bind(this);
         this.applyHighlightJsBadge = this.applyHighlightJsBadge.bind(this);
         this.displayConnectedStatus = this.displayConnectedStatus.bind(this);
+
+        this.processFilterViaUrl = this.processFilterViaUrl.bind(this);
+        this.urlGeneratorFunctionForView = this.urlGeneratorFunctionForView.bind(this);
+        this.copyTextToClipboard = this.copyTextToClipboard.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
@@ -361,6 +367,35 @@ class DsView extends Component {
         const { dispatch } = this.props;
         socket.disconnect();
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
+    }
+
+    processFilterViaUrl(queryString) {
+        if (!queryString) return;
+        if (this.state.queryString === queryString) return;
+        const { history } = this.props;
+        const { dispatch, match, user, dsHome } = this.props;
+        let dsName = match.params.dsName;
+        let dsView = match.params.dsView;
+        if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
+            let initialHeaderFilter = [];
+            let columns = Object.values(dsHome.dsViews[dsView].columns);
+            const params = new URLSearchParams(queryString);
+            //Iterate through params and keep on populating the initialHeaderFilter accordingly.
+            for (const [key, value] of params.entries()) {
+                if (columns.includes(key)) {
+                    initialHeaderFilter.push({
+                        "field": key,
+                        "value": value
+                    })
+                }
+            }
+            this.setState({
+                ...this.state,
+                queryString: queryString,
+                initialHeaderFilter: initialHeaderFilter,
+                refresh: this.state.refresh + 1
+            });
+        }
     }
 
     renderComplete () {
@@ -772,6 +807,80 @@ class DsView extends Component {
         let initialHeaderFilter = this.ref.table.getHeaderFilters();
         this.ref.table.setColumns(currentDefs);
         this.setState( { editingButtonText: newVal ? 'Disable Editing' : 'Enable Editing', initialHeaderFilter, refresh: this.state.refresh + 1 } );
+    }
+
+    urlGeneratorFunctionForView = () => {
+        const { match } = this.props;
+        //Get all current header filters
+        let currentHeaderFilters = this.ref.table.getHeaderFilters();
+        let queryParamsObject = {};
+        for (let headerFilter of currentHeaderFilters) {
+            if (headerFilter.field && headerFilter.value && headerFilter.type === 'like') {
+                queryParamsObject[headerFilter.field] = headerFilter.value;
+            }
+        }
+        //Make queryParams out of the header filters.
+        const queryParams = new URLSearchParams(Object.entries(queryParamsObject));
+        //Generate the Url
+        let finalUrlWithQueryString = window.location.origin + match.url;
+        /* In case there was no filter set and user generated the url for base view.
+        In such cases, No need to append anything. Just proceed with the current url*/
+        if (queryParams.toString()) {
+            finalUrlWithQueryString += '?' + queryParams.toString();
+        }
+        console.log("Url copied for view:", finalUrlWithQueryString);
+        this.copyTextToClipboard(finalUrlWithQueryString);
+    }
+
+    /**
+     * Given a text, this function copies the text to the clipboard.
+     * It uses navigator.clipboard for the latest browsers. 
+     * In case of older browser, it falls back to document.execCommand.
+     * Finally, it shows the modal of success or failure based on the copy to clipboard status.
+     */
+    copyTextToClipboard = (text) => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers (not recommended)
+                const successful = document.execCommand('copy');
+                const msg = successful ? 'successful' : 'failed';
+            }
+            this.showClipboardActionMessageModal(true, text);
+        } catch (err) {
+            console.error('Failed to copy text:', err);
+            this.showClipboardActionMessageModal(false, text);
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+
+    showClipboardActionMessageModal(isSuccess, url) {
+        let modalStatus = this.state.modalStatus;
+        if (isSuccess) {
+            modalStatus = `<b style="color:green">URL copied succesfully to clipboard</b>`;
+        } else {
+            if (url) {
+                modalStatus = `<b style="color:red">Copy url to clipboard failed.</b> <br/> Please copy the following Url manually: <br/> ${url}`;
+            } else {
+                modalStatus = `<b style="color:red">Failed to generate Url.</b>`;
+            }
+        }
+        let modalQuestion = <div dangerouslySetInnerHTML={{ __html: modalStatus }} />;
+        this.setState({
+            modalTitle: "Copy URL status",
+            modalQuestion: modalQuestion,
+            modalStatus: modalStatus,
+            modalOk: "Dismiss",
+            modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+            showModal: true
+        });
     }
 
     async addRow (e, cell, data, pos) {
@@ -2270,6 +2379,17 @@ class DsView extends Component {
                 action: this.startPreso
             },
             {
+                label: "Generate URL.....",
+                menu: [
+                    {
+                        label: "Copy URL for current view to clipboard...",
+                        action: function (e, cell) {
+                            me.urlGeneratorFunctionForView()
+                        }
+                    },
+                ]
+            },
+            {
                 separator: true
             },
             {
@@ -2750,10 +2870,22 @@ class DsView extends Component {
                 }
             }
         } else {
-            initialHeaderFilter = [];
+            if (this.state.filter !== filter) {
+            /**This case is hit when somebody has cleared the filter in the UI.
+             * Meaning some filter was set already and we are clearing it.
+             * In such case, we need to clear the initialHeaderFilter
+             */
+                initialHeaderFilter = [];
+            } else {
+                /**This case will be when this function is called generically but no filter is set. 
+                 * In such cases initialHeaderFilter can be set via url (processFilterViaUrl function).
+                 * So, we should not reset the header filter, instead copy the existing one.
+                 */
+                initialHeaderFilter = this.state.initialHeaderFilter;
+            }
             initialSort = [];
             filterColumnAttrs = {};
-            if (this.state.initialHeaderFilter.length === 0 && this.state.initialSort.length === 0 && Object.keys(this.state.filterColumnAttrs).length === 0) {
+            if (this.state.initialSort.length === 0 && Object.keys(this.state.filterColumnAttrs).length === 0) {
                 console.log("should not be coming here");
             } else /*if (this.state.initialHeaderFilter !== initialHeaderFilter || this.state.initialSort !== initialSort)*/ {
                 // Don't set showAllFilters to true here. This is the fix for
@@ -2862,7 +2994,7 @@ class DsView extends Component {
     }
 
     render () {
-        const { match, dsHome } = this.props;
+        const { match, dsHome, location } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
@@ -2888,6 +3020,7 @@ class DsView extends Component {
             dsDescription = <div dangerouslySetInnerHTML={{ __html: value }}/>
         } catch (e) {};
         this.processFilterChange(this.state.filter);
+        this.processFilterViaUrl(location.search);
         //this.retainColumnAttrs();
         return (
             <div>
