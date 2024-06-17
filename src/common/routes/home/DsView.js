@@ -133,6 +133,7 @@ class DsView extends Component {
             dbconnectivitystate: false,
 
             queryString: "",
+            _id: "",
         };
         this.ref = null;
         
@@ -207,6 +208,8 @@ class DsView extends Component {
         this.displayConnectedStatus = this.displayConnectedStatus.bind(this);
 
         this.processFilterViaUrl = this.processFilterViaUrl.bind(this);
+        this.urlGeneratorFunction = this.urlGeneratorFunction.bind(this);
+        this.urlGeneratorFunctionForRow = this.urlGeneratorFunctionForRow.bind(this);
         this.urlGeneratorFunctionForView = this.urlGeneratorFunctionForView.bind(this);
         this.copyTextToClipboard = this.copyTextToClipboard.bind(this);
 
@@ -369,6 +372,33 @@ class DsView extends Component {
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        // If the query parameter or filter has been cleared, make the necessary state changes.
+        if (prevProps.location.search !== this.props.location.search) {
+            if (this.props.location.search) {
+                this.processFilterViaUrl(this.props.location.search);
+            } else {
+                this.setState({
+                    ...this.state,
+                    queryString: "",
+                    _id: "",
+                    initialHeaderFilter: [],
+                    refresh: this.state.refresh + 1
+                })
+            }
+        } else if (prevProps.location.pathname !== this.props.location.pathname) {
+            if (!this.props.match.params.filter) {
+                this.setState({
+                    filter: "",
+                    initialHeaderFilter: [],
+                    initialSort: [],
+                    filterColumnAttrs: {},
+                    refresh: this.state.refresh + 1
+                })
+            }
+        }
+    }
+
     processFilterViaUrl(queryString) {
         if (!queryString) return;
         if (this.state.queryString === queryString) return;
@@ -378,10 +408,18 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let initialHeaderFilter = [];
+            let _id = ""; 
             let columns = Object.values(dsHome.dsViews[dsView].columns);
             const params = new URLSearchParams(queryString);
             //Iterate through params and keep on populating the initialHeaderFilter accordingly.
             for (const [key, value] of params.entries()) {
+                if (key === "_id") {
+                    _id = value;
+                    // once I get the _id field in the query string, only that row will be displayed.
+                    // There is no meaning of filter there after, so reset it and go out of loop.
+                    initialHeaderFilter = [];
+                    break;
+                }
                 if (columns.includes(key)) {
                     initialHeaderFilter.push({
                         "field": key,
@@ -392,6 +430,7 @@ class DsView extends Component {
             this.setState({
                 ...this.state,
                 queryString: queryString,
+                _id: _id,
                 initialHeaderFilter: initialHeaderFilter,
                 refresh: this.state.refresh + 1
             });
@@ -807,6 +846,30 @@ class DsView extends Component {
         let initialHeaderFilter = this.ref.table.getHeaderFilters();
         this.ref.table.setColumns(currentDefs);
         this.setState( { editingButtonText: newVal ? 'Disable Editing' : 'Enable Editing', initialHeaderFilter, refresh: this.state.refresh + 1 } );
+    }
+
+    urlGeneratorFunction = (e, cell, forView) => {
+        if (forView) {
+            this.urlGeneratorFunctionForView();
+        } else {
+            this.urlGeneratorFunctionForRow(e, cell);
+        }
+    }
+
+    urlGeneratorFunctionForRow = (e, cell) => {
+        const { match } = this.props;
+        // Get cell Id
+        let _id = "";
+        // Make the Url for the cell Id. 
+        _id = cell.getRow().getData()['_id'];
+        //Generate the Url
+        let finalUrlWithQueryString = window.location.origin + match.url;
+        if (_id) {
+            finalUrlWithQueryString += '?' + `_id=${_id}`;
+        }
+        // Call the copy to clipboard function with the url.
+        console.log("Url copied for row:", finalUrlWithQueryString);
+        this.copyTextToClipboard(finalUrlWithQueryString);
     }
 
     urlGeneratorFunctionForView = () => {
@@ -2381,10 +2444,18 @@ class DsView extends Component {
             {
                 label: "Generate URL.....",
                 menu: [
+                    //Pass false to signify the function that it should pe processed as the row url
+                    {
+                        label: "Copy URL for this row to clipboard...",
+                        action: function (e, cell) {
+                            me.urlGeneratorFunction(e, cell, false)
+                        }
+                    },
+                    // Pass true to indicate that the we want url for the current view.
                     {
                         label: "Copy URL for current view to clipboard...",
                         action: function (e, cell) {
-                            me.urlGeneratorFunctionForView()
+                            me.urlGeneratorFunction(e, cell, true);
                         }
                     },
                 ]
@@ -2743,13 +2814,17 @@ class DsView extends Component {
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let columns = this.setColumnDefinitions();
             let me = this;
+            let url = `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`;
+            if (this.state._id) {
+                url += `/${this.state._id}`;
+            }
             s2 = <Row>
                         <div id="tabulator">
                             <MyTabulator
                                 columns={columns}
                                 data={[]}
                                 options={{
-                                    ajaxURL: `${config.apiUrl}/ds/view/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                    ajaxURL: url,
                                     ajaxConfig: {
                                         headers: {
                                             ...authHeader(),
@@ -3026,7 +3101,9 @@ class DsView extends Component {
             <div>
                 <Row>
                     <Col md={12} sm={12} xs={12}> 
-                        <h3 style={{ 'float': 'center' }}> {match.params.dsName}</h3>
+                        <Link to={`/ds/${match.params.dsName}/${match.params.dsView}`}>
+                            <h3 style={{ 'float': 'center' }}> {match.params.dsName}</h3>
+                        </Link>
                     </Col>
                 </Row>
                 <Row>
