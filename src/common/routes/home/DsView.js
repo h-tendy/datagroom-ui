@@ -863,7 +863,7 @@ class DsView extends Component {
 
     urlGeneratorFunction = (e, cell, forView) => {
         if (forView) {
-            this.urlGeneratorFunctionForView();
+            this.urlGeneratorFunctionForView(e, cell);
         } else {
             this.urlGeneratorFunctionForRow(e, cell);
         }
@@ -885,8 +885,17 @@ class DsView extends Component {
         this.copyTextToClipboard(finalUrlWithQueryString);
     }
 
-    urlGeneratorFunctionForView = () => {
+    urlGeneratorFunctionForView = (e, cell) => {
         const { match } = this.props;
+        /**
+         * If the current view is of just a single row,
+         * no matter the filter in the headers,
+         * call the urlGenerator function for single row.
+         */
+        if (this.state._id) {
+            this.urlGeneratorFunctionForRow(e, cell);
+            return;
+        }
         //Get all current header filters
         let currentHeaderFilters = this.ref.table.getHeaderFilters();
         let queryParamsObject = {};
