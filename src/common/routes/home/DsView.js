@@ -25,6 +25,7 @@ import ModalEditor from './ModalEditor';
 import FilterControls from './FilterControls';
 import QueryParsers from './QueryParsers';
 import "reveal.js/dist/reveal.css";
+import Notification from './Notification.js';
 //import "reveal.js/dist/theme/white.css";
 import './rjs_white.css';
 import JiraForm from './jiraForm.js'
@@ -134,6 +135,14 @@ class DsView extends Component {
 
             queryString: "",
             _id: "",
+
+            showNotification: false,
+            notificationType: "success", // this can be "success" or "failure", defaults to success
+            // Needs to be provided in case we want custom message in notification.
+            // If not provided, the message will be SUCCESS for success notificationType and FAILURE for failure notificationtype
+            notificationMessage: "",
+            // If provided true, then it shows the fa icons like tick and cross in case of success and failure type respectively
+            showIconsInNotification: false,
         };
         this.ref = null;
         
@@ -213,6 +222,8 @@ class DsView extends Component {
         this.urlGeneratorFunctionForView = this.urlGeneratorFunctionForView.bind(this);
         this.copyTextToClipboard = this.copyTextToClipboard.bind(this);
 
+        this.showCopiedNotification = this.showCopiedNotification.bind(this);
+
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
         this.state.chronologyDescending = chronologyDescendingFrmLocal;
@@ -233,6 +244,8 @@ class DsView extends Component {
         this.fillLocalStorageItemData = this.fillLocalStorageItemData.bind(this)
         this.addJiraRow = this.addJiraRow.bind(this)
         this.formFinalJiraFormData = this.formFinalJiraFormData.bind(this)
+
+        this.showNotificationTimeInMs = 2000; // by default show notification alert for 2 seconds.
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -915,13 +928,43 @@ class DsView extends Component {
                 const successful = document.execCommand('copy');
                 const msg = successful ? 'successful' : 'failed';
             }
-            this.showClipboardActionMessageModal(true, text);
+            this.showCopiedNotification(true);
         } catch (err) {
             console.error('Failed to copy text:', err);
             this.showClipboardActionMessageModal(false, text);
         } finally {
             document.body.removeChild(textarea);
         }
+    }
+
+    showCopiedNotification(isSuccess) {
+        if (isSuccess) {
+            this.setState({
+                ...this.state,
+                showNotification: true,
+                notificationMessage: "Copied successfully..!!",
+                notificationType: "success",
+                showIconsInNotification: true,
+            });
+        } else {
+            this.setState({
+                ...this.state,
+                showNotification: true,
+                notificationMessage: "Copy failed..!!",
+                notificationType: "failure",
+                showIconsInNotification: true,
+            });
+        }
+        //After a period of 2 seconds, reset the notification related states.
+        setTimeout(() => {
+            this.setState({
+                ...this.state,
+                showNotification: false,
+                notificationMessage: "",
+                notificationType: "success",
+                showIconsInNotification: false,
+            })
+        }, this.showNotificationTimeInMs);
     }
 
     showClipboardActionMessageModal(isSuccess, url) {
@@ -3099,6 +3142,7 @@ class DsView extends Component {
         //this.retainColumnAttrs();
         return (
             <div>
+                {this.state.showNotification && <Notification show={this.state.showNotification} type={this.state.notificationType} message={this.state.notificationMessage} showIcon={this.state.showIconsInNotification} />}
                 <Row>
                     <Col md={12} sm={12} xs={12}> 
                         <Link to={`/ds/${match.params.dsName}/${match.params.dsView}`}>
