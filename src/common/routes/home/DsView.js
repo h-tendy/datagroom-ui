@@ -1164,9 +1164,20 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         let query = [];
         if (useQuery) {
-            query = this.ref.table.getHeaderFilters();
+            /**
+             * This is special case where there in frontend we are viewing just the single row.
+             * In such case, whatever the query might be in the header, we need to download only the single row.
+             */
+            if (this.state._id) {
+                query.push({
+                    field: "_id",
+                    value: this.state._id
+                });
+            } else {
+                query = this.ref.table.getHeaderFilters();
+            }
         }
-        // XXX: Doesn't work from the front end. 
+        // XXX: Doesn't work from the front end.
         // this.ref.table.download("xlsx", "data.xlsx", { sheetName: "export" })
 
         dispatch(dsActions.downloadXlsx(dsName, dsView, user.user, query));
