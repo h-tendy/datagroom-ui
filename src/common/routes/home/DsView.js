@@ -386,6 +386,8 @@ class DsView extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        let showAllFiltersFrmLocal = localStorage.getItem("showAllFilters");
+        showAllFiltersFrmLocal = JSON.parse(showAllFiltersFrmLocal);
         // If the query parameter or filter has been cleared, make the necessary state changes.
         if (prevProps.location.search !== this.props.location.search) {
             if (this.props.location.search) {
@@ -396,6 +398,7 @@ class DsView extends Component {
                     queryString: "",
                     _id: "",
                     initialHeaderFilter: [],
+                    showAllFilters: showAllFiltersFrmLocal,
                     refresh: this.state.refresh + 1
                 })
             }
@@ -406,6 +409,7 @@ class DsView extends Component {
                     initialHeaderFilter: [],
                     initialSort: [],
                     filterColumnAttrs: {},
+                    showAllFilters: showAllFiltersFrmLocal,
                     refresh: this.state.refresh + 1
                 })
             }
@@ -417,6 +421,7 @@ class DsView extends Component {
         if (this.state.queryString === queryString) return;
         const { history } = this.props;
         const { dispatch, match, user, dsHome } = this.props;
+        let showFilter = this.state.showAllFilters;
         let dsName = match.params.dsName;
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
@@ -431,6 +436,8 @@ class DsView extends Component {
                     // once I get the _id field in the query string, only that row will be displayed.
                     // There is no meaning of filter there after, so reset it and go out of loop.
                     initialHeaderFilter = [];
+                    //No need to show filter when user is viewing single row.
+                    showFilter = false;
                     break;
                 }
                 if (columns.includes(key)) {
@@ -445,6 +452,7 @@ class DsView extends Component {
                 queryString: queryString,
                 _id: _id,
                 initialHeaderFilter: initialHeaderFilter,
+                showAllFilters: showFilter,
                 refresh: this.state.refresh + 1
             });
         }
@@ -863,7 +871,7 @@ class DsView extends Component {
 
     urlGeneratorFunction = (e, cell, forView) => {
         if (forView) {
-            this.urlGeneratorFunctionForView();
+            this.urlGeneratorFunctionForView(e, cell);
         } else {
             this.urlGeneratorFunctionForRow(e, cell);
         }
@@ -885,8 +893,17 @@ class DsView extends Component {
         this.copyTextToClipboard(finalUrlWithQueryString);
     }
 
-    urlGeneratorFunctionForView = () => {
+    urlGeneratorFunctionForView = (e, cell) => {
         const { match } = this.props;
+        /**
+         * If the current view is of just a single row,
+         * no matter the filter in the headers,
+         * call the urlGenerator function for single row.
+         */
+        if (this.state._id) {
+            this.urlGeneratorFunctionForRow(e, cell);
+            return;
+        }
         //Get all current header filters
         let currentHeaderFilters = this.ref.table.getHeaderFilters();
         let queryParamsObject = {};
@@ -1164,9 +1181,20 @@ class DsView extends Component {
         let dsView = match.params.dsView;
         let query = [];
         if (useQuery) {
-            query = this.ref.table.getHeaderFilters();
+            /**
+             * This is special case where there in frontend we are viewing just the single row.
+             * In such case, whatever the query might be in the header, we need to download only the single row.
+             */
+            if (this.state._id) {
+                query.push({
+                    field: "_id",
+                    value: this.state._id
+                });
+            } else {
+                query = this.ref.table.getHeaderFilters();
+            }
         }
-        // XXX: Doesn't work from the front end. 
+        // XXX: Doesn't work from the front end.
         // this.ref.table.download("xlsx", "data.xlsx", { sheetName: "export" })
 
         dispatch(dsActions.downloadXlsx(dsName, dsView, user.user, query));
@@ -3226,7 +3254,7 @@ class DsView extends Component {
                                 }}/>
                     &nbsp; 1-click editing <i class='fas fa-bolt'></i>&nbsp;&nbsp;| &nbsp;
 
-                    <input type="checkbox" label="&nbsp;Show filters" checked={this.state.showAllFilters} onChange={(event) => {
+                        <input type="checkbox" disabled={this.state._id ? true : false} label="&nbsp;Show filters" checked={this.state.showAllFilters} onChange={(event) => {
                                     let checked = event.target.checked;
                                     me.setState({showAllFilters: checked});
                                     localStorage.setItem("showAllFilters", JSON.stringify(checked));
