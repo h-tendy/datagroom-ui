@@ -441,12 +441,14 @@ class DsView extends Component {
                     break;
                 }
                 if (columns.includes(key)) {
+                    showFilter = true;
                     initialHeaderFilter.push({
                         "field": key,
                         "value": value
                     })
                 }
             }
+            localStorage.setItem("showAllFilters", JSON.stringify(showFilter));
             this.setState({
                 ...this.state,
                 queryString: queryString,
