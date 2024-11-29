@@ -248,7 +248,7 @@ class DsEditLog extends Component {
                             columns={columns}
                             data={[]}
                             options={{
-                                ajaxURL: `${config.apiUrl}/ds/view/editLog/${this.props.match.params.dsName}/${dsView}/${user.user}`,
+                                ajaxURL: `${config.apiUrl}/ds/view/editlog/${this.props.match.params.dsName}/${dsView}/${user.user}`,
                                 ajaxConfig: {
                                     headers: {
                                         ...authHeader(),
