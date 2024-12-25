@@ -2935,6 +2935,7 @@ class DsView extends Component {
                                     index: "_id",
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
+                                    headerFilterLiveFilterDelay: 1000,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
                                     //columnResized: this.columnResized,
