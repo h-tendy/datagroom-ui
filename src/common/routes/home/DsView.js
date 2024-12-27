@@ -2938,6 +2938,7 @@ class DsView extends Component {
                                     headerFilterLiveFilterDelay: 1000,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
+                                    headerSortTristate:true,
                                     //columnResized: this.columnResized,
                                     //columnVisibilityChanged: this.columnVisibilityChanged,
                                     height: vh,
