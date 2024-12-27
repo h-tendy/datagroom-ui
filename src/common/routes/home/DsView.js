@@ -2468,6 +2468,8 @@ class DsView extends Component {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
         let me = this;
         let headerMenuWithoutHide = [
             {
@@ -2713,6 +2715,15 @@ class DsView extends Component {
                     doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
+                    /* If this is a jira row, do some special handling */
+                    let data = cell.getRow().getData()
+                    if (me.isJiraRow(data, jiraConfig, jiraAgileConfig)) {
+                        let arr = value.split("\n"); 
+                        if (arr.length >= 20) {
+                            value = `<noDivStyling/><div style="white-space:pre-wrap;overflow-wrap: break-all;word-wrap:break-all;word-break:break-all;overflow-x:auto;overflow-y:auto;height:250px;width:100%">${value}</div>`
+                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:400px;">$1</pre>`);
+                        }
+                    }            
                     value = MarkdownIt.render(value);
                     if (value.startsWith("<noDivStyling/>")) {
                         return `<div style="overflow-x: auto;">${value}</div>`;
