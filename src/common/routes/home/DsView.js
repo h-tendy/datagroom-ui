@@ -2739,6 +2739,8 @@ class DsView extends Component {
                             // if you add: white-space:pre-wrap;word-wrap:break-word;
                             // you'll get things to wrap without horizontal scrolling. But it looks ugly.
                             value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:${width - 30}px">$1</pre>`);
+                            // https://javascript.info/regexp-multiline-mode - reference
+                            value = value.replaceAll(/^==/gm, `\\==`);
                         }
                     }            
                     value = MarkdownIt.render(value);
