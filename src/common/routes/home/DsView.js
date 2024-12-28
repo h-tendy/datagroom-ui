@@ -2738,7 +2738,7 @@ class DsView extends Component {
                             value = `<noDivStyling/><div style="white-space:pre-wrap;overflow-wrap: break-all;word-wrap:break-all;word-break:break-all;overflow-x:auto;overflow-y:auto;height:250px;">${value}</div>`
                             // if you add: white-space:pre-wrap;word-wrap:break-word;
                             // you'll get things to wrap without horizontal scrolling. But it looks ugly.
-                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:${width - 200}px">$1</pre>`);
+                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:${width - 30}px">$1</pre>`);
                         }
                     }            
                     value = MarkdownIt.render(value);
