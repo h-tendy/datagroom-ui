@@ -153,6 +153,7 @@ class DsView extends Component {
         this.mouseDownOnHtmlLink = false;
         this.mouseDownOnBadgeCopyIcon = false;
         this.reqCount = 0;
+        this.columnResizedRecently = false;
 
         this.jiraFormData = {
             Project: "",
@@ -620,6 +621,12 @@ class DsView extends Component {
            with some more logic in col.formatter. When a column is resized,
            we want the cells to readjust. 
         */
+        let me = this;
+        this.timers["column-resized-recently"] = setTimeout(() => {
+            me.columnResizedRecently = false;
+            me.timers["column-resized-recently"] = null;
+        }, 1000)
+        this.columnResizedRecently = true;
         this.ref.table.redraw(true);
         return;
         /* Not sure what this was for, commenting it for now. */
@@ -3074,6 +3081,12 @@ class DsView extends Component {
 
     applyFilterColumnAttrs () {
         try {
+            if (this.columnResizedRecently) {
+                // This will allow you to resize columns while in filters
+                // and not immediately snap back to the stored filter values. 
+                // This is needed because we redraw the table when columnResized callback is called. 
+                return;
+            }
             console.log("Applying for: ", this.state.filter);
             // process filterColumnAttrs
             let cols = this.ref.table.getColumns();
