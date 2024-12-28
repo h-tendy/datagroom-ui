@@ -616,6 +616,13 @@ class DsView extends Component {
     }
 
     columnResized (column) {
+        /* redraw is triggered because we are now setting the width 
+           with some more logic in col.formatter. When a column is resized,
+           we want the cells to readjust. 
+        */
+        this.ref.table.redraw(true);
+        return;
+        /* Not sure what this was for, commenting it for now. */
         let forField = this.state.currentColumnAttrs[column.getField()];
         if (!forField) forField = {};
         if (forField.width !== column.getWidth()) {
@@ -2716,19 +2723,22 @@ class DsView extends Component {
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
                     /* If this is a jira row, do some special handling */
+                    let width = cell.getColumn().getWidth();
                     let data = cell.getRow().getData()
                     if (me.isJiraRow(data, jiraConfig, jiraAgileConfig)) {
                         let arr = value.split("\n"); 
                         if (arr.length >= 20) {
-                            value = `<noDivStyling/><div style="white-space:pre-wrap;overflow-wrap: break-all;word-wrap:break-all;word-break:break-all;overflow-x:auto;overflow-y:auto;height:250px;width:100%">${value}</div>`
-                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:400px;">$1</pre>`);
+                            value = `<noDivStyling/><div style="white-space:pre-wrap;overflow-wrap: break-all;word-wrap:break-all;word-break:break-all;overflow-x:auto;overflow-y:auto;height:250px;">${value}</div>`
+                            // if you add: white-space:pre-wrap;word-wrap:break-word;
+                            // you'll get things to wrap without horizontal scrolling. But it looks ugly.
+                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:${width - 200}px">$1</pre>`);
                         }
                     }            
                     value = MarkdownIt.render(value);
                     if (value.startsWith("<noDivStyling/>")) {
-                        return `<div style="overflow-x: auto;">${value}</div>`;
+                        return `<div style="overflow-x: auto;width:${width - 8}px">${value}</div>`;
                     } else {
-                        return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
+                        return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;width:${width - 8}px">${value}</div>`;
                     }
                 }
                 // Control comes here during full table clipboard copy.
@@ -2950,7 +2960,7 @@ class DsView extends Component {
                                     initialHeaderFilter: this.state.initialHeaderFilter,
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
                                     headerSortTristate:true,
-                                    //columnResized: this.columnResized,
+                                    columnResized: this.columnResized,
                                     //columnVisibilityChanged: this.columnVisibilityChanged,
                                     height: vh,
                                     //virtualDomBuffer: 500,
