@@ -1049,17 +1049,6 @@ class DsViewEdit extends Component {
                 this.setState({ aclConfig });
             }
         } catch (e) {};
-        let pushButton = ""
-        try {
-            if (dsHome.dsSetView.status === "setting") {
-                //console.log("Button is disabled");
-                pushButton = <Button disabled onClick={this.pushColumnDefs}> Set View </Button>
-            }
-        } catch (e) {};
-        if (!pushButton) {
-            //console.log("Button is enabled");
-            pushButton = <Button onClick={this.pushColumnDefs}> Set View </Button>
-        }
 
         let me = this;
         return (

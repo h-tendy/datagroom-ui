@@ -2,9 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Row, Col, Form, Button } from 'react-bootstrap'
-import { dsActions } from '../../actions/ds.actions';
-import Select from 'react-select';
-import { dsConstants } from '../../constants';
 
 class AccessCtrl extends React.Component {
     constructor (props) {
