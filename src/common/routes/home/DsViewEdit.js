@@ -8,6 +8,7 @@ import './simpleStyles.css';
 import { dsHome } from '../../reducers/dsHome.reducer';
 import Select from 'react-select';
 import AccessCtrl from './DsViewEditAccessCtrl';
+import PerRowAccessCtrl from './DsViewEditPerRowAccessCtrl';
 import { authHeader } from '../../helpers';
 
 
@@ -49,7 +50,7 @@ class DsViewEdit extends Component {
             fixedHeight: null,
             setViewStatus: '',
             aclConfig: null,
-
+            perRowAccessConfig: null,
             somethingChanged: 0,
             debounceTimers: {}
         };
@@ -319,7 +320,7 @@ class DsViewEdit extends Component {
         if (this.state.jiraProjectNameEnabled && this.state.jiraProjectName) {
             jiraProjectName = this.state.jiraProjectName;
         }
-        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig, jiraProjectName));
+        dispatch(dsActions.setViewDefinitions(dsName, dsView, user.user, currentDefs, jiraConfig, dsDescription, otherTableAttrs, this.state.aclConfig, jiraAgileConfig, jiraProjectName, this.state.perRowAccessConfig));
         this.timer = setTimeout(() => {
             dispatch(dsActions.clearViewDefs())
         }, 2000)
@@ -1049,6 +1050,14 @@ class DsViewEdit extends Component {
                 this.setState({ aclConfig });
             }
         } catch (e) {};
+        try {
+            if (this.state.perRowAccessConfig === null && dsHome.dsViews[dsView].perRowAccessConfig) {
+                let perRowAccessConfig = { enabled: dsHome.dsViews[dsView].perRowAccessConfig.enabled, 
+                    column: dsHome.dsViews[dsView].perRowAccessConfig.column
+                 }
+                this.setState({ perRowAccessConfig });
+            }
+        } catch (e) {};
 
         let me = this;
         return (
@@ -1218,6 +1227,9 @@ class DsViewEdit extends Component {
                     me.setState({aclConfig: value});
                 }}>
                 </AccessCtrl>
+                <PerRowAccessCtrl config={this.state.perRowAccessConfig} onChange={(cfg) => {
+                    me.setState({perRowAccessConfig: cfg});
+                }}/>
                 <br/>
                 <Row>
                     <Button onClick={this.pushColumnDefs}> Set View </Button>

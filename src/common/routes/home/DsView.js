@@ -1023,10 +1023,18 @@ class DsView extends Component {
     }
 
     async addRow (e, cell, data, pos) {
-        const { dispatch, match, dsHome } = this.props;
+        const { dispatch, match, user, dsHome } = this.props;
         //let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        if (!data) data = {};
+        if (!data) {
+            data = {};
+            try {
+                // We simply add the user-name if per-row access control is enabled for this dataset. 
+                if (dsHome.dsViews[dsView].perRowAccessConfig.enabled && dsHome.dsViews[dsView].perRowAccessConfig.column) {
+                    data[dsHome.dsViews[dsView].perRowAccessConfig.column] = user.user;
+                }
+            } catch (e) {}
+        }
         try {
             if (Object.keys(dsHome.dsRowAdds[dsView]).length) {
                 console.log("A row add is in progress..");
