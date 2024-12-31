@@ -282,15 +282,14 @@ async function setViewDefinitions (body) {
             credentials: "include"     
         });
         let responseJson = null;
-        console.log("Finished API")
-        if (response.ok) {
-            responseJson = await response.json();
-            console.log('setViewDefinition: ', responseJson);
-        }
-        return responseJson;
+        console.log("Finished API, setViewDefinitions:", response);
+        responseJson = await response.json();
+        console.log('setViewDefinition: ', responseJson);
+        return [response.ok, responseJson];
     } catch(e) {
         console.log(e);
     }
+    return [false, "setViewDefinitions service exception"];
 }
 
 async function refreshJira (body) {

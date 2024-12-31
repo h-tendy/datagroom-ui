@@ -164,10 +164,9 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsSetView)
                     newState.dsSetView = {};
-                newState.dsSetView.dsName = action.dsName;
-                newState.dsSetView.dsView = action.dsView;
+                newState.dsSetView = { ...action }
                 newState.dsSetView.status = "success";
-                newState.dsSetView.serverStatus = action.serverStatus;
+                delete newState.dsSetView.type;
                 return newState
             }
         case dsConstants.SET_VIEW_DEFS_FAILURE:
@@ -175,10 +174,9 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsSetView)
                     newState.dsSetView = {};
-                newState.dsSetView.dsName = action.dsName;
-                newState.dsSetView.dsView = action.dsView;
+                newState.dsSetView = { ...action }
                 newState.dsSetView.status = "fail";
-                newState.dsSetView.message = action.message;
+                delete newState.dsSetView.type;
                 return newState
             }
         case dsConstants.CLEAR_VIEW_DEFS_TRACER:

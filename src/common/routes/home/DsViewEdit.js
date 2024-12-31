@@ -331,7 +331,7 @@ class DsViewEdit extends Component {
         let status = '';
         try {
             if (dsHome.dsSetView.status === "fail") {
-                status = dsHome.dsSetView.message;
+                status = dsHome.dsSetView.serverStatus.message;
             }
         } catch (e) {};
         if (this.state.setViewStatus) status = this.state.setViewStatus;
@@ -732,7 +732,7 @@ class DsViewEdit extends Component {
                     condFormatExprStr = columnDef.formatterParams.conditionalExprs.join('\n');
                 } catch (e) {}
 
-                s1.push(<Row style={{'border': '1px solid black', 'border-radius': '5px', 'padding': '10px'}}>
+                s1.push(<Row style={{'border': '1px solid black', 'borderRadius': '5px', 'padding': '10px'}}>
                     <Col md={2} sm={2} xs={2}> 
                     <b>{col.field}</b>
                     </Col>
