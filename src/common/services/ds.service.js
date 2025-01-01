@@ -289,7 +289,7 @@ async function setViewDefinitions (body) {
     } catch(e) {
         console.log(e);
     }
-    return [false, "setViewDefinitions service exception"];
+    return [false, { status: 'fail', message: "setViewDefinitions service exception"}];
 }
 
 async function refreshJira (body) {
