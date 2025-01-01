@@ -1,13 +1,10 @@
 import React, { Component } from 'react'
-import { Row, Col, Button, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { dsActions } from '../../actions/ds.actions';
-import { dsConstants } from '../../constants';
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
 //import 'highlight.js/styles/solarized-light.css'
-import MyAutoCompleter from './MyAutoCompleter';
-import MySingleAutoCompleter from './MySingleAutoCompleter';
 
 import './simpleStyles.css';
 import { authHeader } from '../../helpers';
@@ -60,17 +57,11 @@ class DsEditLog extends Component {
         this.state.singleClickEdit = singleClickEditFrmLocal;
     }
     componentDidMount () {
-        const { dispatch, match, user, dsHome } = this.props;
-        let dsName = match.params.dsName; 
-        let dsView = match.params.dsView;
     }
     componentWillUnmount () {
-        const { dispatch } = this.props;
     }
 
     renderComplete () {
-        const { match } = this.props;
-        let dsName = match.params.dsName; 
     }
 
     cellEditCheck (cell) {      
@@ -132,7 +123,6 @@ class DsEditLog extends Component {
 
     toggleSingleFilter (e, column) {
         const { match, dsHome } = this.props;
-        let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
 
         let currentDefs = this.ref.table.getColumnDefinitions();
@@ -163,10 +153,6 @@ class DsEditLog extends Component {
     }
 
     setColumnDefinitions () {
-        const { match, dsHome } = this.props;
-        let dsName = match.params.dsName; 
-        let dsView = match.params.dsView;
-
         let headerMenu = [
             {
                 label:"Toggle Filters",
@@ -235,8 +221,7 @@ class DsEditLog extends Component {
     }
 
     step2 () {
-        const { match, user, dsHome } = this.props;
-        let dsName = match.params.dsName; 
+        const { match, user } = this.props;
         let dsView = match.params.dsView;
         let s2 = '';
 
