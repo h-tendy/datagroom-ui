@@ -26,7 +26,7 @@ class PerRowAccessCtrl extends React.Component {
                     </Col>
                     {config.enabled &&
                         <Col md={6} sm={6} xs={6}>
-                            <Form.Control type="text" defaultValue={config.column} onChange={(event) => {
+                            <Form.Control type="text" defaultValue={config.column} placeholder={"Column name to use for access control"} onChange={(event) => {
                                 let value = event.target.value;
                                 if (me.debounceTimers["__column"]) {
                                     clearTimeout(me.debounceTimers["__column"]);
