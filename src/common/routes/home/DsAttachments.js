@@ -1,10 +1,7 @@
 import React, { Component } from 'react'
-import { Row, Col, Button, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { connect } from 'react-redux';
-import { dsActions } from '../../actions/ds.actions';
-import { dsConstants } from '../../constants';
 import MyTabulator from './MyTabulator';
-import MyTextArea from './MyTextArea';
 //import 'highlight.js/styles/solarized-light.css'
 import { uploadService } from '../../services';
 import Modal from './Modal';
