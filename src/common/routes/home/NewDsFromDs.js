@@ -123,13 +123,13 @@ class NewDsFromDs extends Component {
                                     <b style={{color: 'red'}}>{this.state.incompleteInputErr}</b>
                                 </Col>
                            </Row>
-            } else if (newDs.createStatus.error) {
+            } else if (newDs.status === 'fail') {
                 s5Status = <Row>
                                 <Col md={6} sm={6} xs={6}> 
-                                    <b style={{color: 'red'}}>{newDs.createStatus.error}</b>
+                                    <b style={{color: 'red'}}>{newDs.serverStatus.message}</b>
                                 </Col>
                            </Row>
-            } else if (newDs.createStatus.createStatus && this.state.toDsName !== "") {
+            } else if (newDs.status === 'success' && this.state.toDsName !== "") {
                 let url = `/ds/${this.state.toDsName}/default`;
                 s5Status = <Row>
                                 <Col md={6} sm={6} xs={6}> 

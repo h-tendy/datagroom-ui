@@ -190,15 +190,12 @@ async function createDsFromDs (body) {
             credentials: "include"     
         });
         let responseJson = null;
-        console.log("Finished fetch")
-        if (response.ok) {
-            responseJson = await response.json();
-            console.log('createDsFromDs: ', responseJson);
-        }
-        return responseJson;
+        responseJson = await response.json();
+        return [response.ok, responseJson];
     } catch(e) {
         console.log(e);
     }
+    return [false, { status: 'fail', message: "createDsFromDs service exception"}];
 }
 
 

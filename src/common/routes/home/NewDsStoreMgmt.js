@@ -1,3 +1,4 @@
+// @ts-check
 import { uploadService } from '../../services';
 
 // Constants section
@@ -94,12 +95,14 @@ export function newDs(state = initialState, action) {
     case newDsConstants.CREATE_DS_SUCCESS:
         return {
             ...state,
-            createStatus: action.createStatus
+            status: 'success',
+            serverStatus: action.serverStatus
         }
     case newDsConstants.CREATE_DS_FAILURE:
         return {
             ...state,
-            createStatus: { status: 'fail', error: action.message }
+            status: 'fail',
+            serverStatus: action.serverStatus,
         }
     
     default:
@@ -162,7 +165,7 @@ function setSelectedSheet (sheetName) {
 function findHeadersInSheet (fileName, sheetName) {
     return async dispatch => {
         try {
-            dispatch(request(fileName, sheetName));
+            dispatch(request());
             let responseJson = await uploadService.findHeadersInSheet({fileName, sheetName});
             if (responseJson)
                 dispatch(success(fileName, sheetName, responseJson));
@@ -264,16 +267,17 @@ function createDsFromDs (fromDsName, toDsName, dsUser, retainData) {
     return async dispatch => {
         try {
             dispatch(request(toDsName));
-            let responseJson = await uploadService.createDsFromDs({fromDsName, toDsName, dsUser, retainData});
-            if (responseJson)
+            let ok, responseJson;
+            [ok, responseJson] = await uploadService.createDsFromDs({fromDsName, toDsName, dsUser, retainData});
+            if (ok)
                 dispatch(success(responseJson));
-            else 
-                dispatch(failure("Create DsFromDs failure"));
+            else
+                dispatch(failure(responseJson));
         } catch (error) {
-            dispatch(failure("Create DsFromDs exception"));
+            dispatch(failure({ status: 'fail', message: "createDsFromDs action exception"}));
         }
     }
     function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
-    function success(createStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fromDsName, toDsName, createStatus } }
-    function failure(message) { return { type: newDsConstants.CREATE_DS_FAILURE, message } }
+    function success(serverStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fromDsName, toDsName, serverStatus } }
+    function failure(serverStatus) { return { type: newDsConstants.CREATE_DS_FAILURE, serverStatus } }
 }
