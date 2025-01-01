@@ -1,4 +1,4 @@
-
+// @ts-check
 function parseExpr (exprStr) {
     let expr = {};
     // Example strings. 
@@ -25,7 +25,8 @@ function parseExpr (exprStr) {
 }
 
 function evalExpr (expr, data) {
-    for (let key in expr) {
+    let key;
+    for (key in expr) {
         if (key === "=") {
             let equalsExpr = expr[key];
             let rowValue = data[equalsExpr["key"]];

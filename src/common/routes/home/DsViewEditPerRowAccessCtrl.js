@@ -1,3 +1,4 @@
+// @ts-check
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, Form, Button } from 'react-bootstrap'

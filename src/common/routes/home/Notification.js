@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Alert } from 'react-bootstrap';
 import './Notification.css'; // Import your CSS file
 

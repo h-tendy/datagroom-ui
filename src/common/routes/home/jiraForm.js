@@ -1,7 +1,7 @@
-import React, { Component, useState } from "react";
+import React, { Component } from "react";
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable';
-import { Button, Col, Row, Container, FormControl, DropdownButton, Dropdown } from "react-bootstrap";
+import { Col, Row, Container } from "react-bootstrap";
 import Form from 'react-bootstrap/Form'
 
 class JiraForm extends Component {

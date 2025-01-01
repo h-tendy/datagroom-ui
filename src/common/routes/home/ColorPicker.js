@@ -1,7 +1,5 @@
-'use strict'
-
 import React from 'react'
-import { ChromePicker, SketchPicker, GithubPicker, PhotoshopPicker, CompactPicker, SwatchesPicker } from 'react-color'
+import { SketchPicker, /* ChromePicker, GithubPicker, PhotoshopPicker, CompactPicker, SwatchesPicker */ } from 'react-color'
 
 class ColorPicker extends React.Component {
 

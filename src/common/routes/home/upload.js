@@ -40,7 +40,7 @@ require('./styles.css');
             console.log("Toggle filters!");
             let currentDefs = column.getDefinition();
             let curHdrFilter = currentDefs.headerFilter;
-            let curWidth = currentDefs.width;
+            //let curWidth = currentDefs.width;
             column.updateDefinition({headerFilter: curHdrFilter ? false : 'input'});
         }
     }

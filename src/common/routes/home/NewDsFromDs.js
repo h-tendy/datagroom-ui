@@ -30,7 +30,6 @@ class NewDsFromDs extends Component {
     }
 
     dsSelectorOnChange (value) {
-        const { dispatch } = this.props;
         if (value)        
             this.setState({ fromDsName: value.value });
         else 

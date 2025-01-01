@@ -52,7 +52,7 @@ class LoginPage extends React.Component {
             <div>
                 <div className="logincontainer">
                     <section id="content">
-                        <h10>Welcome to Datagroom</h10>
+                        <h4>Welcome to Datagroom</h4>
                         <br/><br/><br/>
                         <form name="form" onSubmit={this.handleSubmit}>
                             <div>
@@ -63,7 +63,7 @@ class LoginPage extends React.Component {
                                 <br />
                             </div>
                             <div>
-                                <input type="password" name="password" id="password" placeholder="password" value={password} onChange={this.handleChange} autocomplete="current-password" />
+                                <input type="password" name="password" id="password" placeholder="password" value={password} onChange={this.handleChange} autoComplete="current-password" />
                                 {submitted && !password &&
                                     <div className="help-block">Password is required</div>
                                 }

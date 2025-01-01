@@ -276,7 +276,7 @@ class FilterControls extends React.Component {
     }
 
     render () {
-        const { dispatch, dsName, dsView, user, dsHome } = this.props;
+        const { /* dispatch, dsName,*/ dsView, /*user,*/ dsHome } = this.props;
         let me = this;
         if (!this.props.show) {
             me.props.onFilterChange(null);

@@ -8,9 +8,7 @@ function MySingleAutoCompleter (cell, onRendered, success, cancel, editorParams)
     initialDisplayValue = typeof initialValue !== "undefined" || initialValue === null ? initialValue : (typeof editorParams.defaultValue !== "undefined" ? editorParams.defaultValue : ""),
     input = document.createElement("input"),
     listEl = document.createElement("div"),
-    allItems = [],
     displayItems = [],
-    values = [],
     currentItem = false,
     blurable = true,
     uniqueColumnValues = false;
