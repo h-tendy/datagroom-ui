@@ -68,7 +68,7 @@ class NewDsFromDs extends Component {
             this.setState({ toDsName: event.target.value });
     }
     createDs () {
-        const { newDs, dispatch, user } = this.props;
+        const { dispatch, user } = this.props;
         console.log(`createDs: ${this.state.fromDsName}, ${this.state.toDsName}, ${this.state.retainData}`);
         if (!this.state.toDsName) {
             this.setState({incompleteInputErr: "Specify new DS name!"});
@@ -80,7 +80,6 @@ class NewDsFromDs extends Component {
         dispatch(newDsActions.createDsFromDs(this.state.fromDsName, this.state.toDsName, user.user, this.state.retainData));
     }
     step2 () {
-        const { newDs } = this.props;
         let s2 = '', me = this;
         if (!this.state.fromDsName) return s2;
 
