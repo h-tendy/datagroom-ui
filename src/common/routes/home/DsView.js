@@ -1,6 +1,6 @@
-import React, { Component, ReactDOM } from 'react'
+import React, { Component } from 'react'
 import { Route } from 'react-router-dom'
-import { Row, Col, Button, Form } from 'react-bootstrap'
+import { Row, Col } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { dsActions } from '../../actions/ds.actions';
 import { dsConstants } from '../../constants';
@@ -11,9 +11,8 @@ import { Link } from 'react-router-dom'
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
 import MyCodeMirror from './MyCodeMirror';
-import MyModalCodeMirror from './MyModalCodeMirror';
+//import MyModalCodeMirror from './MyModalCodeMirror';
 import DateEditor from "react-tabulator/lib/editors/DateEditor";
-import Select from 'react-select';
 //import 'highlight.js/styles/vs.css'
 //import 'highlight.js/styles/zenburn.css'
 import 'highlight.js/styles/solarized-light.css'
@@ -29,9 +28,9 @@ import Notification from './Notification.js';
 //import "reveal.js/dist/theme/white.css";
 import './rjs_white.css';
 import JiraForm from './jiraForm.js'
-import Reveal from 'reveal.js';
-import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
-import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
+//import Reveal from 'reveal.js';
+//import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
+//import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
 import io from 'socket.io-client'
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
@@ -349,7 +348,7 @@ class DsView extends Component {
                     let rows = me.ref.table.searchRows("_id", "=", unlockedObj._id);
                     // rows.length must be 1. 
                     if (!rows.length) return;
-                    let cell = rows[0].getCell(unlockedObj.field);
+                    //let cell = rows[0].getCell(unlockedObj.field);
                     let update = { _id: unlockedObj._id };
                     update[unlockedObj.field] = unlockedObj.newVal;
                     //console.log('Update2: ', update);
@@ -420,10 +419,8 @@ class DsView extends Component {
     processFilterViaUrl(queryString) {
         if (!queryString) return;
         if (this.state.queryString === queryString) return;
-        const { history } = this.props;
-        const { dispatch, match, user, dsHome } = this.props;
+        const { match, dsHome } = this.props;
         let showFilter = this.state.showAllFilters;
-        let dsName = match.params.dsName;
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let initialHeaderFilter = [];
@@ -510,7 +507,7 @@ class DsView extends Component {
         }
     }
     applyHighlightJsBadge() {
-        let me = this;
+        //let me = this;
         if (this.timers["applyHighlightJsBadge"]) {
             clearTimeout(this.timers["applyHighlightJsBadge"]);
             this.timers["applyHighlightJsBadge"] = null;
@@ -3196,7 +3193,7 @@ class DsView extends Component {
         this.fixOneTimeLocalStorage();
         let jiraRefreshButton = "";
         console.log("In DsView render..");
-        if (document.title != dsName) {
+        if (document.title !== dsName) {
             document.title = dsName;
         }        
         try {
