@@ -2697,7 +2697,7 @@ class DsView extends Component {
                         // XXX: Add more error checking here
                         let exprStr = formatterParams.conditionalExprs[i].split('->')[0].trim();
                         let expr = QueryParsers.parseExpr(exprStr);
-                        if (QueryParsers.evalExpr(expr, rowData)) {
+                        if (QueryParsers.evalExpr(expr, rowData, cell.getColumn().getField())) {
                             let values = formatterParams.conditionalExprs[i].split('->')[1].trim();
                             values = JSON.parse(values);
                             if (values.backgroundColor) {

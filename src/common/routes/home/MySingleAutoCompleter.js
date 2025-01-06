@@ -24,7 +24,7 @@ function MySingleAutoCompleter (cell, onRendered, success, cancel, editorParams)
             //console.log("exprStr is: ", exprStr);
             let expr = QueryParsers.parseExpr(exprStr);
             //console.log("expr is: ", expr);
-            if (QueryParsers.evalExpr(expr, rowData)) {
+            if (QueryParsers.evalExpr(expr, rowData, cell.getColumn().getField())) {
                 let values = editorParams.conditionalExprs[i].split(':')[1].trim();
                 values = JSON.parse(values);
                 //console.log("eval true: ", values);

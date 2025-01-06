@@ -24,12 +24,16 @@ function parseExpr (exprStr) {
     return expr;
 }
 
-function evalExpr (expr, data) {
+function evalExpr (expr, data, thisValue) {
     let key;
     for (key in expr) {
         if (key === "=") {
             let equalsExpr = expr[key];
-            let rowValue = data[equalsExpr["key"]];
+            let equalsExprKey = equalsExpr["key"];
+            if (equalsExprKey === "this") {
+                equalsExprKey = thisValue;
+            }
+            let rowValue = data[equalsExprKey];
             if (rowValue === equalsExpr["value"]) {
                 return true;
             } else {
@@ -38,7 +42,11 @@ function evalExpr (expr, data) {
         }
         if (key === "=~") {
             let equalsExpr = expr[key];
-            let rowValue = data[equalsExpr["key"]];
+            let equalsExprKey = equalsExpr["key"];
+            if (equalsExprKey === "this") {
+                equalsExprKey = thisValue;
+            }
+            let rowValue = data[equalsExprKey];
             let regex = new RegExp(equalsExpr["regex"], "i");
             if (regex.test(rowValue)) {
                 return true;
