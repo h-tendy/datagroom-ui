@@ -324,6 +324,18 @@ class DsViewEdit extends Component {
         this.timer = setTimeout(() => {
             dispatch(dsActions.clearViewDefs())
         }, 2000)
+        // Push the widths into the table's current definitions as well
+        for (let j = 0; j < currentDefs.length; j++) {
+            let cols = this.ref.table.getColumns();
+            for (let i = 0; i < cols.length; i++) {
+                if (currentDefs[j].field == cols[i].getField()) {
+                    let width = cols[i].getWidth(); 
+                    this.ref.table.updateColumnDefinition(currentDefs[j].field, { width });
+                    break;
+                }
+            }    
+        }
+
     }
 
     setViewStatus () {
