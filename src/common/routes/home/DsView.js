@@ -87,6 +87,7 @@ class DsView extends Component {
             editingButtonText: 'Disable Editing',
             pageSize: 30,
             totalRecs: 0, 
+            moreMatchingDocs: false,
             refresh: 0,
             initialHeaderFilter: [],
             initialSort: [],
@@ -162,6 +163,8 @@ class DsView extends Component {
             description: ""
         }
 
+        this.fetchAllMatchingRecordsFlag = false;
+
         this.applyHtmlLinkAndBadgeClickHandlers = this.applyHtmlLinkAndBadgeClickHandlers.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
         this.cellEditing = this.cellEditing.bind(this);
@@ -215,6 +218,7 @@ class DsView extends Component {
         this.normalizeAllImgRows = this.normalizeAllImgRows.bind(this);
         this.applyHighlightJsBadge = this.applyHighlightJsBadge.bind(this);
         this.displayConnectedStatus = this.displayConnectedStatus.bind(this);
+        this.fetchAllMatchingRecords = this.fetchAllMatchingRecords.bind(this);
 
         this.processFilterViaUrl = this.processFilterViaUrl.bind(this);
         this.urlGeneratorFunction = this.urlGeneratorFunction.bind(this);
@@ -2843,9 +2847,9 @@ class DsView extends Component {
     }
 
     ajaxResponse (url, params, response) {
-        //console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
+        // console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}, moreMatchingDocs: ${response.moreMatchingDocs}`);
         if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
-            this.setState({ totalRecs: response.total});
+            this.setState({ totalRecs: response.total, moreMatchingDocs: response.moreMatchingDocs});
         } else {
             console.log(`In ajaxResponse, avoided stale setting of response.total!`);
         }
@@ -2888,6 +2892,7 @@ class DsView extends Component {
     ajaxURLGenerator (url, config, params) {
         if(url){
             if(params && Object.keys(params).length) {
+                params.fetchAllMatchingRecords = this.fetchAllMatchingRecordsFlag;
                 // Pick this from a checkbox. 
                 params.chronology = this.state.chronologyDescending ? 'desc' : 'asc';
                 params.reqCount = ++(this.reqCount);
@@ -3161,6 +3166,7 @@ class DsView extends Component {
             localStorage.setItem(lsKey, JSON.stringify(lsValue));
         }
     }
+    
     pageSizeChange (value) {
         if (value && value.value) {
             console.log("Setting pageSize to: ", value.value);
@@ -3182,6 +3188,11 @@ class DsView extends Component {
             return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i>&nbsp;|</span>
 
         }
+    }
+
+    fetchAllMatchingRecords() {
+        this.fetchAllMatchingRecordsFlag = !this.fetchAllMatchingRecordsFlag;
+        this.ref.table.setData();
     }
 
     render () {
@@ -3330,13 +3341,36 @@ class DsView extends Component {
                 <br/>
                 <Row>
                 <Col md={12} sm={12} xs={12}> 
-                    <b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} | </b>
+                    {
+                        (this.ref && this.ref.table && this.ref.table.getHeaderFilters().length > 0) ? 
+                        (this.fetchAllMatchingRecordsFlag ? 
+                            (<b><i class='fas fa-clone'></i> Total matching records: {this.state.totalRecs} |  </b>) :
+                            (this.state.moreMatchingDocs ? 
+                                (<b><i class='fas fa-clone'></i> Top matching records: {this.state.totalRecs-1}+ | </b>):
+                                (<b><i class='fas fa-clone'></i> Top matching records: {this.state.totalRecs} | </b>)
+                            )
+                        ) : 
+                        (<b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} |  </b>)
+                    }
+
+                    {
+                        this.ref && this.ref.table && this.ref.table.getHeaderFilters().length > 0 ? 
+                        (this.fetchAllMatchingRecordsFlag ? 
+                            (<button className="btn btn-link" onClick={this.fetchAllMatchingRecords}> 
+                                <i class='fa fa-download'></i> Fetch top matches only | 
+                            </button>): 
+                            (<button className="btn btn-link" onClick={this.fetchAllMatchingRecords}> 
+                                <i class='fa fa-download'></i> Fetch all matches | 
+                            </button>)
+                        ) : 
+                        ''
+                    }
                     <Link to={`/dsEditLog/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Edit-log</b></Link> |&nbsp;
                     <Link to={`/dsViewEdit/${match.params.dsName}/${match.params.dsView}`} target="_blank"><i class='fas fa-edit'></i> <b>Edit-view</b></Link> |&nbsp;
                     <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link> |&nbsp;
                     <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link> |&nbsp;
                     {this.displayConnectedStatus()}
-                    <button className="btn btn-link" onClick={() => { this.ref.table.setData() }}> <i class='fas fa-redo'></i>&nbsp;<b>refresh</b> </button>
+                    <button className="btn btn-link" onClick={() => { this.ref.table.setData() }}> <i class='fas fa-redo'></i>&nbsp;<b>Refresh</b> </button>
                 </Col>
                 </Row>
                 {this.step2()}
