@@ -87,6 +87,7 @@ class DsView extends Component {
             editingButtonText: 'Disable Editing',
             pageSize: 30,
             totalRecs: 0, 
+            moreMatchingDocs: false,
             refresh: 0,
             initialHeaderFilter: [],
             initialSort: [],
@@ -2846,9 +2847,9 @@ class DsView extends Component {
     }
 
     ajaxResponse (url, params, response) {
-        //console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}`);
+        // console.log(`In ajaxResponse, params: ${JSON.stringify(params, null, 4)}, url: ${url},  response.total: ${response.total}, response.reqCount: ${response.reqCount}, state.initialHeaderFilter: ${JSON.stringify(this.state.initialHeaderFilter, null, 4)}, moreMatchingDocs: ${response.moreMatchingDocs}`);
         if ((response.reqCount == this.reqCount) || (response.reqCount == 0)) {
-            this.setState({ totalRecs: response.total});
+            this.setState({ totalRecs: response.total, moreMatchingDocs: response.moreMatchingDocs});
         } else {
             console.log(`In ajaxResponse, avoided stale setting of response.total!`);
         }
@@ -3344,7 +3345,10 @@ class DsView extends Component {
                         (this.ref && this.ref.table && this.ref.table.getHeaderFilters().length > 0) ? 
                         (this.fetchAllMatchingRecordsFlag ? 
                             (<b><i class='fas fa-clone'></i> Total matching records: {this.state.totalRecs} |  </b>) :
-                            (<b><i class='fas fa-clone'></i> Top matching records: {this.state.totalRecs} | </b>)
+                            (this.state.moreMatchingDocs ? 
+                                (<b><i class='fas fa-clone'></i> Top matching records: {this.state.totalRecs-1}+ | </b>):
+                                (<b><i class='fas fa-clone'></i> Top matching records: {this.state.totalRecs} | </b>)
+                            )
                         ) : 
                         (<b><i class='fas fa-clone'></i> Total records: {this.state.totalRecs} |  </b>)
                     }
