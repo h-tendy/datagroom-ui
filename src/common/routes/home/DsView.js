@@ -3370,7 +3370,7 @@ class DsView extends Component {
                     <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link> |&nbsp;
                     <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link> |&nbsp;
                     {this.displayConnectedStatus()}
-                    <button className="btn btn-link" onClick={() => { this.ref.table.setData() }}> <i class='fas fa-redo'></i>&nbsp;<b>refresh</b> </button>
+                    <button className="btn btn-link" onClick={() => { this.ref.table.setData() }}> <i class='fas fa-redo'></i>&nbsp;<b>Refresh</b> </button>
                 </Col>
                 </Row>
                 {this.step2()}
