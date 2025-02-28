@@ -324,30 +324,30 @@ function deleteManyDocs (dsName, dsView, dsUser, objects, rows) {
 }
 
 
-function setViewDefinitions(dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName) {
+function setViewDefinitions(dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName, perRowAccessConfig) {
     return async dispatch => {
         try {
             dispatch(request());
-            let responseJson;
+            let ok, responseJson;
             if (jiraConfig && jiraAgileConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName });
+                [ok, responseJson] = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName, perRowAccessConfig });
             else if (jiraConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraProjectName });
+                [ok, responseJson] = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, jiraConfig, dsDescription, otherTableAttrs, aclConfig, jiraProjectName, perRowAccessConfig });
             else if (jiraAgileConfig)
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName });
+                [ok, responseJson] = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraAgileConfig, jiraProjectName, perRowAccessConfig });
             else 
-                responseJson = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraProjectName });
-            if (responseJson)
+                [ok, responseJson] = await dsService.setViewDefinitions({ dsName, dsView, dsUser, viewDefs, dsDescription, otherTableAttrs, aclConfig, jiraProjectName, perRowAccessConfig });
+            if (ok)
                 dispatch(success(responseJson));
             else 
-                dispatch(failure("setViewDefinitions failure"));
+                dispatch(failure(responseJson));
         } catch (error) {
-            dispatch(failure("setViewDefinitions failure"));
+            dispatch(failure({ status: 'fail', message: "setViewDefinitions action exception"}));
         }
     }
     function request() { return { type: dsConstants.SET_VIEW_DEFS_REQUEST, dsName, dsView, dsUser } }
     function success(serverStatus) { return { type: dsConstants.SET_VIEW_DEFS_SUCCESS, dsName, dsView, dsUser, serverStatus } }
-    function failure(message) { return { type: dsConstants.SET_VIEW_DEFS_FAILURE, dsName, dsView, dsUser, message } }
+    function failure(serverStatus) { return { type: dsConstants.SET_VIEW_DEFS_FAILURE, dsName, dsView, dsUser, serverStatus } }
 }
 
 
