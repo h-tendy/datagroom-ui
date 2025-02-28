@@ -246,9 +246,9 @@ async function deleteColumn(body) {
 
 async function addColumn({ dsName, dsView, dsUser, columnName, position, referenceColumn, columnAttrs = {} }) {
     try {
-        position = position || "left"; // ✅ Default to "left" if undefined
+        position = position || "left"; // Default to "left" if undefined
 
-        console.log("📤 Sending addColumn request:", {
+        console.log("Sending addColumn request:", {
             dsName, dsView, dsUser, columnName, position, referenceColumn, columnAttrs
         });
 
@@ -263,23 +263,22 @@ async function addColumn({ dsName, dsView, dsUser, columnName, position, referen
                 dsView,
                 dsUser,
                 columnName,
-                position,  // ✅ Ensure position is always sent
+                position,  // Ensure position is always sent
                 referenceColumn,
                 columnAttrs
             }),
             credentials: "include"
         });
-
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Failed to add column.");
 
         return {
             ...data,
-            referenceColumn,  // ✅ Ensure Redux gets referenceColumn info
-            position          // ✅ Ensure Redux knows position ("left"/"right")
+            referenceColumn,  // Ensure Redux gets referenceColumn info
+            position          // Ensure Redux knows position ("left"/"right")
         };
     } catch (e) {
-        console.error("🚨 Error adding column:", e);
+        console.error("Error adding column:", e);
         return { error: e.message || "Failed to add column. Please try again." };
     }
 }
@@ -351,15 +350,14 @@ async function setViewDefinitions(body) {
             credentials: "include"
         });
         let responseJson = null;
-        console.log("Finished API")
-        if (response.ok) {
-            responseJson = await response.json();
-            console.log('setViewDefinition: ', responseJson);
-        }
-        return responseJson;
+        console.log("Finished API, setViewDefinitions:", response);
+        responseJson = await response.json();
+        console.log('setViewDefinition: ', responseJson);
+        return [response.ok, responseJson];
     } catch (e) {
         console.log(e);
     }
+    return [false, { status: 'fail', message: "setViewDefinitions service exception"}];
 }
 
 async function refreshJira(body) {

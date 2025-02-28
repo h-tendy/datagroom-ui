@@ -211,9 +211,8 @@ function deleteColumn(dsName, dsView, dsUser, columnField) {
             if (responseJson && responseJson.error) {
                 throw new Error(responseJson.error);
             }
-
+            
             dispatch(success(columnField, deleteTracker, responseJson));
-
             dispatch(loadColumnsForUserView(dsName, dsView, dsUser));
             // alternate option to reload whole window       
             // window.location.reload();
@@ -246,22 +245,23 @@ function addColumn({ dsName, dsView, dsUser, columnName, position, referenceColu
                 dsView,
                 dsUser,
                 columnName,
-                position: position || "left", // ✅ Ensure position is not undefined
+                position: position || "left", // Ensure position is not undefined
                 referenceColumn,
                 columnAttrs
             });
 
-            console.log("🔍 Backend response:", response);
+            console.log("Backend response:", response);
 
             if (!response) throw new Error("Server did not return a response");
+            if (response.error) throw new Error({message: response.error});
 
             dispatch(success(columnName, addTracker, response));
 
-            console.log("✅ Column added successfully, fetching updated columns...");
+            console.log("Column added successfully, fetching updated columns...");
             await dispatch(loadColumnsForUserView(dsName, dsView, dsUser));
             return response;
         } catch (error) {
-            console.error("🚨 Failed to add column:", error.message);
+            console.error("Failed to add column:", error.message);
             dispatch(failure(columnName, addTracker, error.message || "Unknown error"));
             return { error: error.message || "Unknown error" };
         }

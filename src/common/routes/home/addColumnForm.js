@@ -25,7 +25,7 @@ class AddColumnForm extends Component {
             this.setState({ position: newPosition });
     
             if (this.props.onPositionChange) {
-                this.props.onPositionChange(newPosition); // ✅ Pass updated position to parent
+                this.props.onPositionChange(newPosition); // Pass updated position to parent
             }
         }
     };
@@ -79,6 +79,9 @@ class AddColumnForm extends Component {
                                     checked={position === "right"}
                                     onChange={this.handlePositionChange}
                                 />
+                            </div>
+                            <div style={{ color: 'red', fontWeight: 'bold' }}>
+                                {this.state.modalError}
                             </div>
                         </Form.Group>
 

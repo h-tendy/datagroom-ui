@@ -1,7 +1,6 @@
 import { dsConstants } from '../constants';
 
-const initialState = {
-};
+const initialState = {};
 
 export function dsHome (state = initialState, action) {
     switch (action.type) {
@@ -18,7 +17,7 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsViews)
                     newState.dsViews = {};
-                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription, filters: action.columnsAndKeys.filters, otherTableAttrs: action.columnsAndKeys.otherTableAttrs, aclConfig: action.columnsAndKeys.aclConfig, jiraAgileConfig: action.columnsAndKeys.jiraAgileConfig, jiraProjectName: action.columnsAndKeys.jiraProjectName };
+                newState.dsViews[action.dsView] = { status: 'success', columns: action.columnsAndKeys.columns, columnAttrs: action.columnsAndKeys.columnAttrs, keys: action.columnsAndKeys.keys, jiraConfig: action.columnsAndKeys.jiraConfig, dsDescription: action.columnsAndKeys.dsDescription, filters: action.columnsAndKeys.filters, otherTableAttrs: action.columnsAndKeys.otherTableAttrs, aclConfig: action.columnsAndKeys.aclConfig, jiraAgileConfig: action.columnsAndKeys.jiraAgileConfig, jiraProjectName: action.columnsAndKeys.jiraProjectName, perRowAccessConfig: action.columnsAndKeys.perRowAccessConfig };
                 return newState
             }
         case dsConstants.LOAD_COLUMNS_FAILURE:
@@ -87,7 +86,7 @@ export function dsHome (state = initialState, action) {
 
             case dsConstants.ADD_COLUMN_REQUEST: {
                 let newState = { ...state };
-                let columnField = action.columnField;
+                let columnField = action.addTracker;
             
                 // Initialize the add tracker for the column
                 newState.dsColumnAdds = {
@@ -117,7 +116,7 @@ export function dsHome (state = initialState, action) {
                             columnsArray.splice(index + 1, 0, columnField);
                         }
                     } else {
-                        columnsArray.push(columnField); // ✅ Fallback if reference column is missing
+                        columnsArray.push(columnField); //Fallback if reference column is missing
                     }
                 }
             
@@ -133,7 +132,7 @@ export function dsHome (state = initialState, action) {
                     [columnField]: { addStatus: 'done', serverStatus: action.serverStatus } 
                 };
             
-                console.log("✅ Redux State Updated Correctly:", newState);
+                console.log("Redux State Updated Correctly:", newState);
                 return newState;
             }
             
@@ -142,17 +141,17 @@ export function dsHome (state = initialState, action) {
                     ...state,
                     dsColumnAdds: {
                         ...state.dsColumnAdds,
-                        [action.columnField]: { addStatus: 'fail', error: action.message }
+                        [action.addTracker]: { addStatus: 'fail', error: action.message }
                     }
                 };
             }
             
             case dsConstants.CLEAR_COLUMN_ADD_TRACKER: {
                 let newState = { ...state };
-                let columnField = action.columnField;
+                let columnField = action.addTracker;
             
                 // Clear the add tracker for the column
-                if (newState.dsColumnAdds[columnField]) {
+                if (newState.dsColumnAdds && newState.dsColumnAdds[columnField]) {
                     delete newState.dsColumnAdds[columnField];
                 }
             
@@ -295,10 +294,9 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsSetView)
                     newState.dsSetView = {};
-                newState.dsSetView.dsName = action.dsName;
-                newState.dsSetView.dsView = action.dsView;
+                newState.dsSetView = { ...action }
                 newState.dsSetView.status = "success";
-                newState.dsSetView.serverStatus = action.serverStatus;
+                delete newState.dsSetView.type;
                 return newState
             }
         case dsConstants.SET_VIEW_DEFS_FAILURE:
@@ -306,10 +304,9 @@ export function dsHome (state = initialState, action) {
                 let newState = {...state};
                 if (!newState.dsSetView)
                     newState.dsSetView = {};
-                newState.dsSetView.dsName = action.dsName;
-                newState.dsSetView.dsView = action.dsView;
+                newState.dsSetView = { ...action }
                 newState.dsSetView.status = "fail";
-                newState.dsSetView.message = action.message;
+                delete newState.dsSetView.type;
                 return newState
             }
         case dsConstants.CLEAR_VIEW_DEFS_TRACER:

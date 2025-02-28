@@ -1,6 +1,6 @@
-import React, { Component, ReactDOM , useState } from 'react'
+import React, { Component } from 'react'
 import { Route } from 'react-router-dom'
-import { Row, Col, Button, Form } from 'react-bootstrap'
+import { Row, Col } from 'react-bootstrap'
 import { connect } from 'react-redux';
 import { dsActions } from '../../actions/ds.actions';
 import { dsConstants } from '../../constants';
@@ -11,9 +11,8 @@ import { Link } from 'react-router-dom'
 import MyTabulator from './MyTabulator';
 import MyTextArea from './MyTextArea';
 import MyCodeMirror from './MyCodeMirror';
-import MyModalCodeMirror from './MyModalCodeMirror';
+//import MyModalCodeMirror from './MyModalCodeMirror';
 import DateEditor from "react-tabulator/lib/editors/DateEditor";
-import Select from 'react-select';
 //import 'highlight.js/styles/vs.css'
 //import 'highlight.js/styles/zenburn.css'
 import 'highlight.js/styles/solarized-light.css'
@@ -29,23 +28,21 @@ import Notification from './Notification.js';
 //import "reveal.js/dist/theme/white.css";
 import './rjs_white.css';
 import JiraForm from './jiraForm.js'
-import AddColumnForm from './addColumnForm.js';
-import Reveal from 'reveal.js';
-import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
-import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
+//import Reveal from 'reveal.js';
+//import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js';
+//import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm'
 import io from 'socket.io-client'
 //import '../../../../node_modules/react-tabulator/lib/styles.css'; // required styles
 //import '../../../../node_modules/react-tabulator/lib/css/tabulator.css';
 import './simpleStyles.css';
 import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 import { dsService } from '../../services';
+import AddColumnForm from './addColumnForm.js';
 import { authHeader } from '../../helpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
 }).use(require('markdown-it-bracketed-spans')).use(require('markdown-it-attrs')).use(require('markdown-it-container'), 'code').use(require('markdown-it-container'), 'indent1').use(require('markdown-it-container'), 'indent2').use(require('markdown-it-container'), 'indent3').use(require('markdown-it-highlightjs')).use(markdownItMermaid).use(require('markdown-it-plantuml'), {imageFormat: 'png'}).use(require('markdown-it-container'), 'slide').use(require('markdown-it-fancy-lists').markdownItFancyListPlugin);
-
-
 // From: https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
 // Remember old renderer, if overridden, or proxy to default renderer
 var defaultRender = MarkdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
@@ -104,9 +101,10 @@ class DsView extends Component {
             modalStatus: '',
             modalCancel: 'Cancel',
             modalOk: 'Do It!',
+            modalError:'',
             toggleModalOnClose: true,
             grayOutModalButtons: false,
-            newColumnName: '',
+
             showSecondaryModal: false,
             secondaryModalTitle: "Title of modal",
             secondaryModalQuestion: "",
@@ -155,6 +153,7 @@ class DsView extends Component {
         this.mouseDownOnHtmlLink = false;
         this.mouseDownOnBadgeCopyIcon = false;
         this.reqCount = 0;
+        this.columnResizedRecently = false;
 
         this.jiraFormData = {
             Project: "",
@@ -359,7 +358,7 @@ class DsView extends Component {
                     let rows = me.ref.table.searchRows("_id", "=", unlockedObj._id);
                     // rows.length must be 1. 
                     if (!rows.length) return;
-                    let cell = rows[0].getCell(unlockedObj.field);
+                    //let cell = rows[0].getCell(unlockedObj.field);
                     let update = { _id: unlockedObj._id };
                     update[unlockedObj.field] = unlockedObj.newVal;
                     //console.log('Update2: ', update);
@@ -430,10 +429,8 @@ class DsView extends Component {
     processFilterViaUrl(queryString) {
         if (!queryString) return;
         if (this.state.queryString === queryString) return;
-        const { history } = this.props;
-        const { dispatch, match, user, dsHome } = this.props;
+        const { match, dsHome } = this.props;
         let showFilter = this.state.showAllFilters;
-        let dsName = match.params.dsName;
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let initialHeaderFilter = [];
@@ -520,7 +517,7 @@ class DsView extends Component {
         }
     }
     applyHighlightJsBadge() {
-        let me = this;
+        //let me = this;
         if (this.timers["applyHighlightJsBadge"]) {
             clearTimeout(this.timers["applyHighlightJsBadge"]);
             this.timers["applyHighlightJsBadge"] = null;
@@ -627,6 +624,19 @@ class DsView extends Component {
     }
 
     columnResized (column) {
+        /* redraw is triggered because we are now setting the width 
+           with some more logic in col.formatter. When a column is resized,
+           we want the cells to readjust. 
+        */
+        let me = this;
+        this.timers["column-resized-recently"] = setTimeout(() => {
+            me.columnResizedRecently = false;
+            me.timers["column-resized-recently"] = null;
+        }, 1000)
+        this.columnResizedRecently = true;
+        this.ref.table.redraw(true);
+        return;
+        /* Not sure what this was for, commenting it for now. */
         let forField = this.state.currentColumnAttrs[column.getField()];
         if (!forField) forField = {};
         if (forField.width !== column.getWidth()) {
@@ -1020,10 +1030,18 @@ class DsView extends Component {
     }
 
     async addRow (e, cell, data, pos) {
-        const { dispatch, match, dsHome } = this.props;
+        const { dispatch, match, user, dsHome } = this.props;
         //let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-        if (!data) data = {};
+        if (!data) {
+            data = {};
+            try {
+                // We simply add the user-name if per-row access control is enabled for this dataset. 
+                if (dsHome.dsViews[dsView].perRowAccessConfig.enabled && dsHome.dsViews[dsView].perRowAccessConfig.column) {
+                    data[dsHome.dsViews[dsView].perRowAccessConfig.column] = user.user;
+                }
+            } catch (e) {}
+        }
         try {
             if (Object.keys(dsHome.dsRowAdds[dsView]).length) {
                 console.log("A row add is in progress..");
@@ -1234,7 +1252,7 @@ class DsView extends Component {
         } catch (e) {}
         return <b style={{color: "red"}}> {status} </b>;
     }
-       
+
     cellEditStatus () {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
@@ -1491,6 +1509,7 @@ class DsView extends Component {
         //cell.setValue("");
     }
 
+    /* Start: Handling of single row delete */
     rowDeleteStatus () {
         const { dispatch, dsHome } = this.props;
         let status = ''
@@ -1543,188 +1562,7 @@ class DsView extends Component {
         });
     }
 
-    deleteColumnStatus() { 
-        const { dispatch, dsHome } = this.props;
-        let status = '';
-    
-        try {
-            Object.entries(dsHome.dsDeletes || {}).forEach(([k, deleteObj]) => {
-                if (deleteObj.deleteStatus === 'done' && deleteObj.serverStatus) {
-                    if (deleteObj.serverStatus.status === 'fail') {
-                        status += `Delete failed on server `;
-                    } else if (deleteObj.serverStatus.status === 'success') {
-                        let column = deleteObj.deleteTracker.column;
-                        if (column && column.delete) {
-                            column.delete();
-                        }
-                        dispatch({ type: dsConstants.DELETE_SINGLE_DELETE_TRACKER, _id: k });
-    
-                        // Force UI update
-                        this.setState((prevState) => ({ forceUpdateKey: prevState.forceUpdateKey + 1 }));
-                    }
-                } else if (deleteObj.deleteStatus === 'fail') {
-                    status += `Delete API failed`;
-                }
-            });
-        } catch (e) {
-            console.error("Error in deleteColumnStatus:", e);
-        }
-    
-        return <b style={{ color: "red" }}> {status} </b>;
-    }
-    
-deleteColumnHandler(e, cell, confirmed, columnField) {
-    const { dispatch, match, user } = this.props;
-    const dsName = match.params.dsName;
-    const dsView = match.params.dsView;
-
-    console.log("Delete column handler called:", confirmed);
-
-    if (confirmed) {
-        dispatch(dsActions.deleteColumn(dsName, dsView, user.user, columnField))
-            .then(() => {
-                // Force a refresh of the table data
-                this.setState({ refresh: this.state.refresh + 1 });
-            })
-            .catch(error => {
-                console.error("Delete column failed:", error);
-            });
-    }
-
-    this.setState({ showModal: false });
-}
-
-deleteColumnQuestion(e, cell) {
-    const columnField = cell.getColumn().getField(); 
-    if (this.isKey(columnField)) {
-        // If it's a key column, show an error message without a cancel button
-        this.setState({
-            modalTitle: "Error",
-            modalQuestion: `This is a Key Column. This Column cannot be deleted.`,
-            modalOk: "Dismiss",
-            modalCallback: (confirmed) => this.setState({ showModal: false }), // Just close the modal
-            showModal: true, 
-        });
-    } else {
-        // Proceed with the existing logic for non-key columns
-        this.setState({
-            modalTitle: "Delete current column?",
-            modalQuestion: `This will delete the current column: ${columnField}. Please confirm. Undoing support is not yet available!`,
-            modalOk: "Delete",
-            modalCancel: "Cancel",
-            modalCallback: (confirmed) => this.deleteColumnHandler(e, cell, confirmed, columnField), // Pass cell and columnField
-            showModal: true, 
-        });
-    }
-}
-
-addColumnQuestion(referenceColumn) {
-    this.setState({
-        modalTitle: "Add New Column",
-        showModal: true,
-        modalQuestion: 
-            <AddColumnForm
-                visible={true}
-                position={this.state.newColumnPosition}  // ✅ Pass the position correctly
-                referenceColumn={referenceColumn}
-                dsName={this.props.match.params.dsName}
-                dsView={this.props.match.params.dsView}
-                dsUser={this.props.user.user}
-                columnName={this.state.newColumnName}
-                onCancel={() => this.setState({ showModal: false })}
-                onChange={(e) => { 
-                    console.log("New column name: ", e.target.value);
-                    this.setState({ newColumnName: e.target.value });
-                }}
-                onPositionChange={(position) => { // ✅ Sync position correctly
-                    console.log("Selected position:", position);
-                    this.setState({ newColumnPosition: position });
-                }}
-            />,
-        modalCallback: (confirmed) => {
-            if (!confirmed) return;
-            this.addColumnHandler({
-                dsName: this.props.match.params.dsName,
-                dsView: this.props.match.params.dsView,
-                dsUser: this.props.user.user,
-                position: this.state.newColumnPosition,  // ✅ Ensure position is included
-                referenceColumn: referenceColumn,
-                columnAttrs: {}
-            });
-        },
-        modalOk: null,  
-        modalCancel: null
-    });
-}
-
-addColumnHandler = async ({ dsName, dsView, dsUser, referenceColumn, columnAttrs }) => {
-    const { dispatch } = this.props;
-    const { newColumnName, newColumnPosition } = this.state; // ✅ Ensure correct position extraction
-
-    if (!newColumnName) {
-        this.setState({ modalError: "Column name cannot be empty!" });
-        return;
-    }
-
-    try {
-        console.log("🔄 Adding new column:", { newColumnName, newColumnPosition });
-
-        const response = await dispatch(dsActions.addColumn({
-            dsName,
-            dsView,
-            dsUser,
-            columnName: newColumnName,
-            position: newColumnPosition || "left",  // ✅ Ensure position is always defined
-            referenceColumn,
-            columnAttrs
-        }));
-
-        if (response && response.message) {
-            console.log("✅ Column added successfully. Refreshing UI...");
-            this.setState({
-                showModal: false,
-                modalError: null,
-                newColumnName: "",
-                newColumnPosition: "left", // ✅ Reset position
-            });
-        } else {
-            console.error("❌ Failed to add column:", response);
-            this.setState({ modalError: response.error || "Failed to add column. Please try again." });
-        }
-    } catch (error) {
-        console.error("Error adding column:", error);
-        this.setState({ modalError: "Failed to add column. Please try again." });
-    }
-};
-
-
-addColumnStatus() {
-    const { dispatch, dsHome } = this.props;
-    let status = '';
-
-    try {
-        Object.entries(dsHome.dsColumnAdds || {}).forEach(([key, addObj]) => {
-            if (addObj.addStatus === 'done') {
-                if (addObj.serverStatus && addObj.serverStatus.status === 'fail') {
-                    status += `Add failed on server `;
-                } else if (addObj.serverStatus && addObj.serverStatus.status === 'success') {
-                    const column = key; // ✅ Ensure correct column name usage
-                    if (column) {
-                        let table = this.ref.table;
-                        table.addColumn({ title: column, field: column });
-                    }
-
-                    dispatch({ type: dsConstants.CLEAR_COLUMN_ADD_TRACKER, columnField: key });
-                }
-            } else if (addObj.addStatus === 'fail') {
-                status += `Add API failed`;
-            }
-        });
-    } catch (e) {
-        console.error("Error in addColumnStatus:", e);
-    }
-    return <b style={{ color: "green" }}>{status}</b>;
-}
+    /* End: Handling of single row delete */
 
     /* Start: Handling of delete all rows in view */
 
@@ -1758,7 +1596,6 @@ addColumnStatus() {
         const { dispatch, match, user, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
-
         console.log("Confirmed is: ", confirmed);
         if (confirmed) {
             let rows = this.ref.table.getRows();
@@ -1784,14 +1621,211 @@ addColumnStatus() {
             showModal: !this.state.showModal
         });
     }
-
     /* End: Handling of all rows in view */
+    
+    /* Delete Column Start */
+    deleteColumnHandler(e, cell, confirmed, columnField) {
+        const { dispatch, match, user } = this.props;
+        const dsName = match.params.dsName;
+        const dsView = match.params.dsView;
+        console.log("Delete column handler called:", confirmed);
+        if (confirmed) {
+            dispatch(dsActions.deleteColumn(dsName, dsView, user.user, columnField))
+                .then(() => {
+                    // Force a refresh of the table data
+                    this.setState({ refresh: this.state.refresh + 1 });
+                })
+                .catch(error => {
+                    console.error("Delete column failed:", error);
+                });
+        }
+        this.setState({ showModal: false });
+    }
 
+    deleteColumnQuestion(e, cell) {
+        const columnField = cell.getColumn().getField();
+        if (this.isKey(columnField)) {
+            // If it's a key column, show an error message without a cancel button
+            this.setState({
+                modalTitle: "Error",
+                modalQuestion: `This is a Key Column. This Column cannot be deleted.`,
+                modalOk: "Dismiss",
+                modalCancel: "Cancel",
+                modalCallback: (confirmed) => this.setState({ showModal: false }), // Just close the modal
+                showModal: true,
+            });
+        } else {
+            // Proceed with the existing logic for non-key columns
+            this.setState({
+                modalTitle: "Delete current column?",
+                modalQuestion: `This will delete the current column: ${columnField}. Please confirm. Undoing support is not yet available!`,
+                modalOk: "Delete",
+                modalCancel: "Cancel",
+                modalCallback: (confirmed) => this.deleteColumnHandler(e, cell, confirmed, columnField), // Pass cell and columnField
+                showModal: true,
+                //grayOutModalButtons: false,
+            });
+        }
+    }
+ 
+    deleteColumnStatus() {
+        const { dispatch, dsHome } = this.props;
+        let status = '';
+        try {
+            Object.entries(dsHome.dsDeletes || {}).forEach(([k, deleteObj]) => {
+                if (deleteObj.deleteStatus === 'done' && deleteObj.serverStatus) {
+                    if (deleteObj.serverStatus.status === 'fail') {
+                        status += `Delete failed on server `;
+                    } else if (deleteObj.serverStatus.status === 'success') {
+                        let column = deleteObj.deleteTracker.column;
+                        if (column && column.delete) {
+                            column.delete();
+                        }
+                        dispatch({ type: dsConstants.DELETE_SINGLE_DELETE_TRACKER, _id: k });
+
+                        // Force UI update
+                        this.setState((prevState) => ({ forceUpdateKey: prevState.forceUpdateKey + 1 }));
+                    }
+                } else if (deleteObj.deleteStatus === 'fail') {
+                    status += `Delete API failed`;
+                }
+            });
+        } catch (e) {
+            console.error("Error in deleteColumnStatus:", e);
+        }
+
+        return <b style={{ color: "red" }}> {status} </b>;
+    }
+    /*Delete Column End*/
+
+    /*Add Column Start*/
+    addColumnQuestion(referenceColumn) {
+        const { dispatch } = this.props;
+        this.setState({
+            modalTitle: "Add New Column",
+            showModal: true,
+            toggleModalOnClose: false,
+            modalQuestion:
+                <AddColumnForm
+                    visible={true}
+                    position={this.state.newColumnPosition}  //Pass the position correctly
+                    referenceColumn={referenceColumn}
+                    dsName={this.props.match.params.dsName}
+                    dsView={this.props.match.params.dsView}
+                    dsUser={this.props.user.user}
+                    columnName={this.state.newColumnName}
+                    onCancel={() => this.setState({ showModal: false })}
+                    onChange={(e) => {
+                        console.log("New column name: ", e.target.value);
+                        this.setState({ newColumnName: e.target.value });
+                    }}
+                    onPositionChange={(position) => { //Sync position correctly
+                        console.log("Selected position:", position);
+                        this.setState({ newColumnPosition: position });
+                    }}
+                />,
+            modalCallback: (confirmed) => {
+                if (!confirmed) {
+                    const addTracker = `${this.props.match.params.dsName}_${this.state.newColumnName}`;
+                    dispatch({ type: dsConstants.CLEAR_COLUMN_ADD_TRACKER, addTracker });
+                    this.setState({ showModal: false, newColumnName: "", newColumnPosition: "", modalError: "", grayOutModalButtons: false, toggleModalOnClose: true });
+                    return;
+                }
+                this.addColumnHandler({
+                    dsName: this.props.match.params.dsName,
+                    dsView: this.props.match.params.dsView,
+                    dsUser: this.props.user.user,
+                    position: this.state.newColumnPosition,  // Ensure position is included
+                    referenceColumn: referenceColumn,
+                    columnAttrs: {}
+                });
+            },
+            modalOk: null,
+            modalCancel: null
+        });
+    }
+
+    addColumnHandler = async ({ dsName, dsView, dsUser, referenceColumn, columnAttrs }) => {
+        const { dispatch } = this.props;
+        const { newColumnName, newColumnPosition } = this.state; // Ensure correct position extraction
+        if (!newColumnName) {
+            this.setState({ modalError: "Column name cannot be empty!" });
+            return;
+        }
+        try {
+            console.log("Adding new column:", { newColumnName, newColumnPosition });
+            const response = await dispatch(dsActions.addColumn({
+                dsName,
+                dsView,
+                dsUser,
+                columnName: newColumnName,
+                position: newColumnPosition || "left",  // Ensure position is always defined
+                referenceColumn,
+                columnAttrs
+            }));
+
+            if (response && response.message) {
+                console.log("Column added successfully. Refreshing UI...");
+                this.setState({
+                    showModal: false,
+                    toggleModalOnClose: true,
+                    modalError: null,
+                    newColumnName: "",
+                    newColumnPosition: "left", // Reset position
+                    grayOutModalButtons: false
+                });
+            } else {
+                console.log("Failed to add column:", response);
+                this.setState({
+                    grayOutModalButtons: false,
+                    modalError: response.error || "Failed to add column. Please try again."
+                });
+            }
+        } catch (error) {
+            console.error("Error adding column:", error);
+            this.setState({
+                grayOutModalButtons: false,
+                modalError: "Failed to add column. Please try again."
+            });
+        }
+    };
+
+    addColumnStatus() {
+        const { dispatch, dsHome } = this.props;
+        let status = '';
+        try {
+            Object.entries(dsHome.dsColumnAdds || {}).forEach(([key, addObj]) => {
+                if (addObj.addStatus === 'done') {
+                    if (addObj.serverStatus && addObj.serverStatus.status === 'fail') {
+                        status += `Add failed on server `;
+                    } else if (addObj.serverStatus && addObj.serverStatus.status === 'success') {
+                        const column = addObj.columnName || key; // Ensure correct column name usage
+                        if (column) {
+                            let table = this.ref.table;
+                            table.addColumn({ title: column, field: column });
+                        }
+                        dispatch({ type: dsConstants.CLEAR_COLUMN_ADD_TRACKER, columnField: key });
+                    }
+                } else if (addObj.addStatus === 'fail') {
+                    const column = addObj.columnName || key; // Use correct column name
+                    status = `Column addition failed!!! ${column} already exists.`;
+                }
+            });
+        } catch (e) {
+            console.error("Error in addColumnStatus:", e);
+        }
+        if (this.state.modalError !== status) {
+            this.setState({ modalError: status });
+        }
+        return '';
+    }
+    
+    /* Add Column End */
 
     /* Start: Handling of delete all rows in queries */
     async deleteAllRowsInQuery() {
         const { match, user } = this.props;
-        let dsName = match.params.dsName; 
+        let dsName = match.params.dsName;
         let dsView = match.params.dsView;
         let body = {};
         let baseUrl = `${config.apiUrl}/ds/deleteFromQuery/${dsName}/${dsView}/${user.user}`
@@ -1806,7 +1840,7 @@ addColumnStatus() {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"  
+            credentials: "include"
         });
         let responseJson = null;
         if (response.ok) {
@@ -1839,11 +1873,13 @@ addColumnStatus() {
                     }
                 },
                 showModal: !this.state.showModal
-            });            
+            });
         }
         return responseJson;
     }
-    
+
+    /* End: Handling of delete all rows in queries */
+
     jiraRefreshStatus () {
         const { dispatch, dsHome } = this.props;
         if (dsHome && dsHome.dsJiraRefresh && dsHome.dsJiraRefresh.status === 'done') {
@@ -2657,6 +2693,8 @@ addColumnStatus() {
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
+        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
         let me = this;
         let headerMenuWithoutHide = [
             {
@@ -2770,17 +2808,6 @@ addColumnStatus() {
                 ]
             },
             {
-                label: "Add Column",
-                menu: [
-                    {
-                        label: "Add Column",
-                        action: function (_, cell) {
-                            me.addColumnQuestion(cell.getColumn().getField());
-                        }
-                    }
-                ]
-            },
-            {
                 label: "Delete row....",
                 menu: [
                     {
@@ -2796,7 +2823,7 @@ addColumnStatus() {
                         action: this.deleteRowQuestion
                     }
                 ]
-            },            
+            },
             {
                 label: "Delete column...",
                 menu: [
@@ -2804,6 +2831,17 @@ addColumnStatus() {
                         label: "Delete column...",
                         action: function (e, cell) {
                             me.deleteColumnQuestion(e, cell); // Prompt for deleting the current column
+                        }
+                    }
+                ]
+            },
+            {
+                label: "Add Column",
+                menu: [
+                    {
+                        label: "Add Column",
+                        action: function (_, cell) {
+                            me.addColumnQuestion(cell.getColumn().getField());
                         }
                     }
                 ]
@@ -2887,7 +2925,7 @@ addColumnStatus() {
                         // XXX: Add more error checking here
                         let exprStr = formatterParams.conditionalExprs[i].split('->')[0].trim();
                         let expr = QueryParsers.parseExpr(exprStr);
-                        if (QueryParsers.evalExpr(expr, rowData)) {
+                        if (QueryParsers.evalExpr(expr, rowData, cell.getColumn().getField())) {
                             let values = formatterParams.conditionalExprs[i].split('->')[1].trim();
                             values = JSON.parse(values);
                             if (values.backgroundColor) {
@@ -2924,11 +2962,25 @@ addColumnStatus() {
                     doConditionalFormatting(cell, formatterParams);
                     if (value === undefined) return "";
                     if (typeof value != "string") return value;
+                    /* If this is a jira row, do some special handling */
+                    let width = cell.getColumn().getWidth();
+                    let data = cell.getRow().getData()
+                    if (me.isJiraRow(data, jiraConfig, jiraAgileConfig)) {
+                        let arr = value.split("\n"); 
+                        if (arr.length >= 20) {
+                            value = `<noDivStyling/><div style="white-space:pre-wrap;overflow-wrap: break-all;word-wrap:break-all;word-break:break-all;overflow-x:auto;overflow-y:auto;height:250px;">${value}</div>`
+                            // if you add: white-space:pre-wrap;word-wrap:break-word;
+                            // you'll get things to wrap without horizontal scrolling. But it looks ugly.
+                            value = value.replace(/{noformat}([\s\S]*?){noformat}/gi, `<pre style="width:${width - 30}px">$1</pre>`);
+                            // https://javascript.info/regexp-multiline-mode - reference
+                            value = value.replaceAll(/^==/gm, `\\==`);
+                        }
+                    }            
                     value = MarkdownIt.render(value);
                     if (value.startsWith("<noDivStyling/>")) {
-                        return `<div style="overflow-x: auto;">${value}</div>`;
+                        return `<div style="overflow-x: auto;width:${width - 8}px">${value}</div>`;
                     } else {
-                        return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;">${value}</div>`;
+                        return `<div style="white-space:normal;word-wrap:break-word;margin-bottom:-12px;width:${width - 8}px">${value}</div>`;
                     }
                 }
                 // Control comes here during full table clipboard copy.
@@ -3147,9 +3199,11 @@ addColumnStatus() {
                                     index: "_id",
                                     ajaxSorting: true,
                                     ajaxFiltering: true,
+                                    headerFilterLiveFilterDelay: 1000,
                                     initialHeaderFilter: this.state.initialHeaderFilter,
                                     initialSort: JSON.parse(JSON.stringify(this.state.initialSort)), // it'll mess up the state otherwise!
-                                    //columnResized: this.columnResized,
+                                    headerSortTristate:true,
+                                    columnResized: this.columnResized,
                                     //columnVisibilityChanged: this.columnVisibilityChanged,
                                     height: vh,
                                     //virtualDomBuffer: 500,
@@ -3263,6 +3317,12 @@ addColumnStatus() {
 
     applyFilterColumnAttrs () {
         try {
+            if (this.columnResizedRecently) {
+                // This will allow you to resize columns while in filters
+                // and not immediately snap back to the stored filter values. 
+                // This is needed because we redraw the table when columnResized callback is called. 
+                return;
+            }
             console.log("Applying for: ", this.state.filter);
             if (!this.ref || !this.ref.table)
                 return;
@@ -3346,12 +3406,12 @@ addColumnStatus() {
     displayConnectedStatus(){
         if ( this.state.connectedState ) {
             if ( this.state.dbconnectivitystate ){
-                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b></span>
+                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'darkgreen' }}>Connected</b>&nbsp;|</span>
             } else {
-                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b> <i>(Database connectivity is down)</i></span>
+                return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b> <i>(Database connectivity is down)</i>&nbsp;|</span>
             }
         } else{
-            return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i></span>
+            return <span><i class='fas fa-server'></i> <b>Connection Status:</b> <b style={{ 'color': 'red' }}>Disconnected</b><i>(Server connectivity is down)</i>&nbsp;|</span>
 
         }
     }
@@ -3370,8 +3430,7 @@ addColumnStatus() {
         this.fixOneTimeLocalStorage();
         let jiraRefreshButton = "";
         console.log("In DsView render..");
-        console.log("Test something here");
-        if (document.title != dsName) {
+        if (document.title !== dsName) {
             document.title = dsName;
         }        
         try {
@@ -3539,12 +3598,14 @@ addColumnStatus() {
                     <Link to={`/dsBulkEdit/${match.params.dsName}`} target="_blank"><i class='fas fa-edit'></i> <b>Bulk-edit</b></Link> |&nbsp;
                     <Link to={`/dsAttachments/${match.params.dsName}`} target="_blank"><i class='fas fa-file-alt'></i> <b>Attachments</b></Link> |&nbsp;
                     {this.displayConnectedStatus()}
+                    <button className="btn btn-link" onClick={() => { this.ref.table.setData() }}> <i class='fas fa-redo'></i>&nbsp;<b>Refresh</b> </button>
                 </Col>
                 </Row>
                 {this.step2()}
                 <Modal show={this.state.showModal}
                     onClose={this.toggleModal} title={this.state.modalTitle} cancel={this.state.modalCancel} ok={this.state.modalOk} toggleModalOnClose={this.state.toggleModalOnClose} grayOutModalButtons={this.state.grayOutModalButtons}>
                     {this.state.modalQuestion}
+                    {this.state.modalError}
                 </Modal>
                 <Modal show={this.state.showSecondaryModal}
                     onClose={this.secondaryToggleModal} title={this.state.secondaryModalTitle} cancel={this.state.secondaryModalCancel} ok={this.state.secondaryModalOk}>
