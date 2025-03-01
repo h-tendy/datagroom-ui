@@ -6,12 +6,14 @@ export const dsService = {
     editSingleAttribute,
     insertOneDoc,
     downloadXlsx,
-    getDsList, 
+    getDsList,
     getFilteredDsList,
     deleteDs,
     deleteOneDoc,
     deleteManyDocs,
     setViewDefinitions,
+    deleteColumn,
+    addColumn,
     refreshJira,
     addFilter,
     editFilter,
@@ -31,7 +33,6 @@ if (process.env.NODE_ENV === 'development') {
     config.apiUrl = ""
 }
 
-
 async function loadColumnsForUserView(dsName, dsView, dsUser) {
     try {
         console.log("Starting API call: ", dsName, dsView, dsUser);
@@ -49,12 +50,12 @@ async function loadColumnsForUserView(dsName, dsView, dsUser) {
             console.log('loadColumnsForUserView: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function editSingleAttribute (body) {
+async function editSingleAttribute(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -66,7 +67,7 @@ async function editSingleAttribute (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"  
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -75,12 +76,12 @@ async function editSingleAttribute (body) {
             console.log('editSingleAttribute: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function insertOneDoc (body) {
+async function insertOneDoc(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -92,7 +93,7 @@ async function insertOneDoc (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"  
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -101,7 +102,7 @@ async function insertOneDoc (body) {
             console.log('insertOneDoc: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
@@ -136,12 +137,12 @@ async function downloadXlsx(body) {
                 throw new Error("downloadXlsx: file is empty");
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function getDsList (dsUser) {
+async function getDsList(dsUser) {
     try {
         console.log("Starting getDsList API call: ", dsUser);
         let response = await fetch(`${config.apiUrl}/ds/dsList/${dsUser}`, {
@@ -158,7 +159,7 @@ async function getDsList (dsUser) {
             console.log('getDsList: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
@@ -189,7 +190,7 @@ async function getFilteredDsList(body) {
     }
 }
 
-async function deleteDs (body) {
+async function deleteDs(body) {
     try {
         console.log("Starting deleteDs API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -201,7 +202,7 @@ async function deleteDs (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"   
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -210,12 +211,79 @@ async function deleteDs (body) {
             console.log('deleteDs: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function deleteOneDoc (body) {
+async function deleteColumn(body) {
+    try {
+        console.log("Starting deleteColumn API: ", body);
+
+        let response = await fetch(config.apiUrl + "/ds/view/deleteColumn", {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: Object.assign({
+                "Content-Type": "application/json"
+            }, authHeader()),
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            var errorMessage = "API error: " + response.statusText;
+            console.error(errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        var responseJson = await response.json();
+        console.log("deleteColumn response: ", responseJson);
+        return responseJson;
+    } catch (e) {
+        console.error("Error in deleteColumn API: ", e);
+        return { error: e.message ? e.message : "Delete operation failed" };
+    }
+}
+
+async function addColumn({ dsName, dsView, dsUser, columnName, position, referenceColumn, columnAttrs = {} }) {
+    try {
+        position = position || "left"; // Default to "left" if undefined
+
+        console.log("Sending addColumn request:", {
+            dsName, dsView, dsUser, columnName, position, referenceColumn, columnAttrs
+        });
+
+        const response = await fetch(config.apiUrl + "/ds/view/addColumn", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeader()
+            },
+            body: JSON.stringify({
+                dsName,
+                dsView,
+                dsUser,
+                columnName,
+                position,  // Ensure position is always sent
+                referenceColumn,
+                columnAttrs
+            }),
+            credentials: "include"
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to add column.");
+
+        return {
+            ...data,
+            referenceColumn,  // Ensure Redux gets referenceColumn info
+            position          // Ensure Redux knows position ("left"/"right")
+        };
+    } catch (e) {
+        console.error("Error adding column:", e);
+        return { error: e.message || "Failed to add column. Please try again." };
+    }
+}
+
+async function deleteOneDoc(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -227,7 +295,7 @@ async function deleteOneDoc (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"   
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -236,12 +304,12 @@ async function deleteOneDoc (body) {
             console.log('deleteOneDoc: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function deleteManyDocs (body) {
+async function deleteManyDocs(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -253,7 +321,7 @@ async function deleteManyDocs (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"    
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -262,12 +330,12 @@ async function deleteManyDocs (body) {
             console.log('deleteManyDocs: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function setViewDefinitions (body) {
+async function setViewDefinitions(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -279,20 +347,20 @@ async function setViewDefinitions (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"     
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API, setViewDefinitions:", response);
         responseJson = await response.json();
         console.log('setViewDefinition: ', responseJson);
         return [response.ok, responseJson];
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
     return [false, { status: 'fail', message: "setViewDefinitions service exception"}];
 }
 
-async function refreshJira (body) {
+async function refreshJira(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -304,7 +372,7 @@ async function refreshJira (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"     
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -313,13 +381,13 @@ async function refreshJira (body) {
             console.log('refreshJira: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
 
-async function addFilter (body) {
+async function addFilter(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -331,7 +399,7 @@ async function addFilter (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"    
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -340,13 +408,13 @@ async function addFilter (body) {
             console.log('addFilter: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
 
-async function editFilter (body) {
+async function editFilter(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -358,7 +426,7 @@ async function editFilter (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"    
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -367,12 +435,12 @@ async function editFilter (body) {
             console.log('editFilter: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function deleteFilter (body) {
+async function deleteFilter(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -384,7 +452,7 @@ async function deleteFilter (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"     
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished API")
@@ -393,13 +461,11 @@ async function deleteFilter (body) {
             console.log('deleteFilter: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
-
-
-async function doBulkEditRequest (body) {
+async function doBulkEditRequest(body) {
     try {
         console.log("Starting API call: ", body);
         let dataLen = JSON.stringify(body).length.toString();
@@ -411,7 +477,7 @@ async function doBulkEditRequest (body) {
                 "Content-Length": dataLen,
                 ...authHeader()
             },
-            credentials: "include"     
+            credentials: "include"
         });
         let responseJson = null;
         console.log("Finished fetch")
@@ -420,11 +486,10 @@ async function doBulkEditRequest (body) {
             console.log('doBulkEditRequest: ', responseJson);
         }
         return responseJson;
-    } catch(e) {
+    } catch (e) {
         console.log(e);
     }
 }
-
 async function getProjectsMetaData(body) {
     try {
         console.log("Starting getProjectsMetaData API call: ", body);

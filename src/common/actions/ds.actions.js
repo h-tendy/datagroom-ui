@@ -1,6 +1,7 @@
 import { dsConstants, allDsConstants } from '../constants';
 import { dsService, uploadService } from '../services';
 
+
 export const dsActions = {
     loadColumnsForUserView,
     clearViewDefs,
@@ -14,6 +15,8 @@ export const dsActions = {
     deleteDs,
     deleteOneDoc,
     deleteManyDocs,
+    deleteColumn,
+    addColumn,
     setViewDefinitions,
     refreshJira,
     addFilter,
@@ -190,6 +193,95 @@ function deleteDs ( dsName, dsUser ) {
     function success(deleteStatus) { return { type: allDsConstants.DELETE_DS_SUCCESS, dsName, deleteStatus } }
     function failure(message) { return { type: allDsConstants.LOAD_DSLIST_FAILURE, dsName, message } }
 }
+// Redux Action: Delete Column
+function deleteColumn(dsName, dsView, dsUser, columnField) {
+    return async dispatch => {
+        let deleteTracker = { columnField };
+        
+        try {
+            dispatch(request(columnField, deleteTracker));
+
+            let responseJson = await dsService.deleteColumn({
+                dsName: dsName,
+                dsView: dsView,
+                dsUser: dsUser,
+                columnName: columnField
+            });
+
+            if (responseJson && responseJson.error) {
+                throw new Error(responseJson.error);
+            }
+            
+            dispatch(success(columnField, deleteTracker, responseJson));
+            dispatch(loadColumnsForUserView(dsName, dsView, dsUser));
+            // alternate option to reload whole window       
+            // window.location.reload();
+        } catch (error) {
+            console.error("Delete column failed:", error.message);
+            dispatch(failure(columnField, deleteTracker, error.message));
+        }
+    };
+
+    function request(columnField, deleteTracker) { 
+        return { type: dsConstants.DELETE_COLUMN_REQUEST, columnField: columnField, deleteTracker: deleteTracker };
+    }
+
+    function success(columnField, deleteTracker, serverStatus) { 
+        return { type: dsConstants.DELETE_COLUMN_SUCCESS, columnField: columnField, deleteTracker: deleteTracker, serverStatus: serverStatus };
+    }
+
+    function failure(columnField, deleteTracker, message) { 
+        return { type: dsConstants.DELETE_COLUMN_FAILURE, columnField: columnField, deleteTracker: deleteTracker, message: message };
+    }
+}
+
+function addColumn({ dsName, dsView, dsUser, columnName, position, referenceColumn, columnAttrs }) {
+    return async dispatch => {
+        const addTracker = `${dsName}_${columnName}`;
+        dispatch(request(columnName, addTracker));
+        try {
+            const response = await dsService.addColumn({
+                dsName,
+                dsView,
+                dsUser,
+                columnName,
+                position: position || "left", // Ensure position is not undefined
+                referenceColumn,
+                columnAttrs
+            });
+
+            console.log("Backend response:", response);
+
+            if (!response) throw new Error("Server did not return a response");
+            if (response.error) throw new Error({message: response.error});
+
+            dispatch(success(columnName, addTracker, response));
+
+            console.log("Column added successfully, fetching updated columns...");
+            await dispatch(loadColumnsForUserView(dsName, dsView, dsUser));
+            return response;
+        } catch (error) {
+            console.error("Failed to add column:", error.message);
+            dispatch(failure(columnName, addTracker, error.message || "Unknown error"));
+            return { error: error.message || "Unknown error" };
+        }
+    };
+
+    function request(columnName, addTracker) {
+        return { type: dsConstants.ADD_COLUMN_REQUEST, columnName, addTracker };
+    }
+
+    function success(columnName, addTracker, response) {
+        return { type: dsConstants.ADD_COLUMN_SUCCESS, columnName, addTracker, response };
+    }
+
+    function failure(columnName, addTracker, error) {
+        return { type: dsConstants.ADD_COLUMN_FAILURE, columnName, addTracker, error };
+    }
+}
+
+
+
 
 function deleteOneDoc (dsName, dsView, dsUser, _id, row) {
     return async dispatch => {

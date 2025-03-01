@@ -28,7 +28,137 @@ export function dsHome (state = initialState, action) {
                 newState.dsViews[action.dsView] = { status: 'fail', error: action.message };
                 return newState
             }
+            // Column Reducers:
+            case dsConstants.DELETE_COLUMN_REQUEST: {
+                let newState = { ...state };
+                let columnField = action.columnField;
+            
+                // Initialize the delete tracker for the column
+                newState.dsColumnDeletes = {
+                    ...state.dsColumnDeletes,
+                    [columnField]: { deleteStatus: 'pending' }
+                };
+            
+                return newState;
+            }
 
+            case dsConstants.DELETE_COLUMN_SUCCESS: {
+                let newState = { ...state };
+                let columnField = action.columnField;
+            
+                // Ensure `columns` and `columnAttrs` are properly initialized
+                let columnsArray = state.columns ? state.columns.slice() : [];
+                let columnAttrsArray = state.columnAttrs ? state.columnAttrs.slice() : [];
+            
+                // Remove deleted column
+                newState.columns = columnsArray.filter(col => col !== columnField);
+                newState.columnAttrs = columnAttrsArray.filter(attr => attr.field !== columnField);
+            
+                // Update delete tracker
+                newState.dsColumnDeletes = { 
+                    ...state.dsColumnDeletes, 
+                    [columnField]: { deleteStatus: 'done', serverStatus: action.serverStatus } 
+                };
+            
+                return newState;
+            }
+            
+            case dsConstants.DELETE_COLUMN_FAILURE: {
+                return {
+                    ...state,
+                    dsColumnDeletes: {
+                        ...state.dsColumnDeletes,
+                        [action.columnField]: { deleteStatus: 'fail', error: action.error }
+                    }
+                };
+            }
+            case dsConstants.CLEAR_DELETE_COLUMN_TRACKER: {
+                let newState = { ...state };
+                let columnField = action.columnField;
+            
+                // Clear the delete tracker for the column
+                if (newState.dsColumnDeletes[columnField]) {
+                    delete newState.dsColumnDeletes[columnField];
+                }
+            
+                return newState;
+            }
+
+            case dsConstants.ADD_COLUMN_REQUEST: {
+                let newState = { ...state };
+                let columnField = action.addTracker;
+            
+                // Initialize the add tracker for the column
+                newState.dsColumnAdds = {
+                    ...state.dsColumnAdds,
+                    [columnField]: { addStatus: 'pending' }
+                };
+            
+                return newState;
+            }
+            
+            case dsConstants.ADD_COLUMN_SUCCESS: {
+                let newState = { ...state };
+                let columnField = action.columnName; 
+                let referenceColumn = action.response.referenceColumn;
+                let position = action.response.position; 
+            
+                let columnsArray = state.columns ? [...state.columns] : [];
+                let columnAttrsArray = state.columnAttrs ? [...state.columnAttrs] : [];
+            
+                if (!columnsArray.includes(columnField)) {
+                    let index = columnsArray.indexOf(referenceColumn);
+            
+                    if (index !== -1) {
+                        if (position === "left") {
+                            columnsArray.splice(index, 0, columnField);
+                        } else if (position === "right") {
+                            columnsArray.splice(index + 1, 0, columnField);
+                        }
+                    } else {
+                        columnsArray.push(columnField); //Fallback if reference column is missing
+                    }
+                }
+            
+                if (!columnAttrsArray.some(attr => attr.field === columnField)) {
+                    columnAttrsArray.push({ field: columnField });
+                }
+            
+                newState.columns = columnsArray;
+                newState.columnAttrs = columnAttrsArray;
+            
+                newState.dsColumnAdds = { 
+                    ...state.dsColumnAdds, 
+                    [columnField]: { addStatus: 'done', serverStatus: action.serverStatus } 
+                };
+            
+                console.log("Redux State Updated Correctly:", newState);
+                return newState;
+            }
+            
+            case dsConstants.ADD_COLUMN_FAILURE: {
+                return {
+                    ...state,
+                    dsColumnAdds: {
+                        ...state.dsColumnAdds,
+                        [action.addTracker]: { addStatus: 'fail', error: action.message }
+                    }
+                };
+            }
+            
+            case dsConstants.CLEAR_COLUMN_ADD_TRACKER: {
+                let newState = { ...state };
+                let columnField = action.addTracker;
+            
+                // Clear the add tracker for the column
+                if (newState.dsColumnAdds && newState.dsColumnAdds[columnField]) {
+                    delete newState.dsColumnAdds[columnField];
+                }
+            
+                return newState;
+            }
+            
+                      
         case dsConstants.GET_DEFAULT_TYPE_FIELDS_VALUES_REQUEST:
             {
                 let newState = { ...state };
