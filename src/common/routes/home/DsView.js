@@ -431,6 +431,7 @@ class DsView extends Component {
         if (this.state.queryString === queryString) return;
         const { match, dsHome } = this.props;
         let showFilter = this.state.showAllFilters;
+        let chronologyDescending = this.state.chronologyDescending;
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let initialHeaderFilter = [];
@@ -448,6 +449,10 @@ class DsView extends Component {
                     showFilter = false;
                     break;
                 }
+                if (key === "chronologyDescending") {
+                    chronologyDescending = value.toLowerCase() === "true";
+                    continue;
+                }
                 if (columns.includes(key)) {
                     showFilter = true;
                     initialHeaderFilter.push({
@@ -457,12 +462,14 @@ class DsView extends Component {
                 }
             }
             localStorage.setItem("showAllFilters", JSON.stringify(showFilter));
+            localStorage.setItem("chronologyDescending", JSON.stringify(chronologyDescending));
             this.setState({
                 ...this.state,
                 queryString: queryString,
                 _id: _id,
                 initialHeaderFilter: initialHeaderFilter,
                 showAllFilters: showFilter,
+                chronologyDescending: chronologyDescending,
                 refresh: this.state.refresh + 1
             });
         }
@@ -935,6 +942,8 @@ class DsView extends Component {
                 queryParamsObject[headerFilter.field] = headerFilter.value;
             }
         }
+        // Get the table chronology and add it to query parameters object.
+        queryParamsObject["chronologyDescending"] = this.state.chronologyDescending ? this.state.chronologyDescending : false;
         //Make queryParams out of the header filters.
         const queryParams = new URLSearchParams(Object.entries(queryParamsObject));
         //Generate the Url
