@@ -63,6 +63,19 @@ MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self)
     return defaultRender(tokens, idx, options, env, self);
 };
 
+MarkdownIt.renderer.rules.fence = function (tokens, idx) {
+    console.log("Debug : ", tokens, idx);
+
+    const token = tokens[idx];
+    if (token.info === "plotly" && token.content) {
+        const encoded = encodeURIComponent(token.content);
+        const id = `plotly-graph-${idx}`;
+        return `<div id=${id} class="plotly-graph" data-plot='${encoded}'></div>`;
+    }
+    return `<pre><code>${MarkdownIt.utils.escapeHtml(token.content)}</code></pre>`;
+    // return `<div>${token.content}</div>`;
+};
+
 const config = {};
 if (process.env.NODE_ENV === 'development') {
     config.apiUrl = "http://in-mvlb52:8887"
@@ -254,6 +267,7 @@ class DsView extends Component {
         this.fillLocalStorageItemData = this.fillLocalStorageItemData.bind(this)
         this.addJiraRow = this.addJiraRow.bind(this)
         this.formFinalJiraFormData = this.formFinalJiraFormData.bind(this)
+        this.renderPlotlyInCells = this.renderPlotlyInCells.bind(this)
 
         this.showNotificationTimeInMs = 2000; // by default show notification alert for 2 seconds.
     }
@@ -378,6 +392,7 @@ class DsView extends Component {
                         me.ref.table.rowManager.adjustTableSize(false);
                         me.normalizeAllImgRows();
                         me.applyHighlightJsBadge();
+                        me.renderPlotlyInCells();
                     } else {
                         console.log("Skipping adjusttablesie (unlockReq)... ");
                     }
@@ -487,6 +502,8 @@ class DsView extends Component {
         this.normalizeAllImgRows();
         // add HighlightJS-badge
         this.applyHighlightJsBadge();
+        //Render plotly graphs
+        this.renderPlotlyInCells();
     }
 
     // Since we generate html after editing, we need to attach
@@ -535,6 +552,27 @@ class DsView extends Component {
         }, 1000);
     }
 
+    renderPlotlyInCells() {
+        const plots = document.querySelectorAll('.plotly-graph');
+        plots.forEach((div) => {
+            const data = div.getAttribute('data-plot');
+            try {
+                const json = JSON.parse(decodeURIComponent(data));
+                if (window.Plotly) {
+                    window.Plotly.newPlot(div, json.data, json.layout || {});
+                    let rows = this.ref.table.getRows();
+                    for (let i = 0; i < rows.length; i++) {
+                        rows[i].normalizeHeight();
+                    }
+                } else {
+                    div.innerHTML = `<div style="color:red;">Plotly CDN not loaded</div>`;
+                }
+            } catch (e) {
+                div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
+            }
+        })
+    }
+
     fixImgSizeForClipboard(output) {
 
         let imgList = document.querySelectorAll("img");
@@ -571,6 +609,12 @@ class DsView extends Component {
             //console.log("normalizeAllImgRows periodic fn...:", extraIters);
             if (document.readyState === 'complete') {
                 let imgList = document.querySelectorAll("img");
+                let graphList = document.querySelectorAll(".plotly-graph");
+                // if (imgList) {
+                //     imgList.push(graphList);
+                // } else {
+                //     imgList = graphList;
+                // }
                 let allImgsRead = true;
                 for (let i = 0; i < imgList.length; i++) {
                     //console.log(`imgList[${i}]: `, imgList[i].complete, imgList[i].naturalHeight);
@@ -791,6 +835,7 @@ class DsView extends Component {
                 this.ref.table.rowManager.adjustTableSize(false);
                 this.normalizeAllImgRows();
                 this.applyHighlightJsBadge();
+                this.renderPlotlyInCells();
             } else {
                 console.log("Skipping adjusttablesize (cellEditCancelled)...");
             }
@@ -1395,6 +1440,7 @@ class DsView extends Component {
             this.ref.table.rowManager.adjustTableSize(false);
             this.normalizeAllImgRows();
             this.applyHighlightJsBadge();
+            this.renderPlotlyInCells();
         }, 500);
 
         //This maybe too expensive? Not good because it loses scrolling position
