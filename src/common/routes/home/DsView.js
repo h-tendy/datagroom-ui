@@ -65,8 +65,6 @@ MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self)
 };
 
 MarkdownIt.renderer.rules.fence = function (tokens, idx, options, env, self) {
-    console.log("Debug : ", tokens, idx);
-
     const token = tokens[idx];
     if (token.info === "plotly" && token.content) {
         const encoded = encodeURIComponent(token.content);
