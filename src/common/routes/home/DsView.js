@@ -610,11 +610,6 @@ class DsView extends Component {
             if (document.readyState === 'complete') {
                 let imgList = document.querySelectorAll("img");
                 let graphList = document.querySelectorAll(".plotly-graph");
-                // if (imgList) {
-                //     imgList.push(graphList);
-                // } else {
-                //     imgList = graphList;
-                // }
                 let allImgsRead = true;
                 for (let i = 0; i < imgList.length; i++) {
                     //console.log(`imgList[${i}]: `, imgList[i].complete, imgList[i].naturalHeight);
