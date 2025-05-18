@@ -49,6 +49,7 @@ var defaultRender = MarkdownIt.renderer.rules.link_open || function(tokens, idx,
     return self.renderToken(tokens, idx, options);
   };
 
+var defaultFence = MarkdownIt.renderer.rules.fence;
 MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     // If you are sure other plugins can't add `target` - drop check below
     var aIndex = tokens[idx].attrIndex('target');
@@ -63,7 +64,7 @@ MarkdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self)
     return defaultRender(tokens, idx, options, env, self);
 };
 
-MarkdownIt.renderer.rules.fence = function (tokens, idx) {
+MarkdownIt.renderer.rules.fence = function (tokens, idx, options, env, self) {
     console.log("Debug : ", tokens, idx);
 
     const token = tokens[idx];
@@ -72,8 +73,7 @@ MarkdownIt.renderer.rules.fence = function (tokens, idx) {
         const id = `plotly-graph-${idx}`;
         return `<div id=${id} class="plotly-graph" data-plot='${encoded}'></div>`;
     }
-    return `<pre><code>${MarkdownIt.utils.escapeHtml(token.content)}</code></pre>`;
-    // return `<div>${token.content}</div>`;
+    return defaultFence(tokens, idx, options, env, self)
 };
 
 const config = {};
