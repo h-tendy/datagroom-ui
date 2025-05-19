@@ -557,7 +557,7 @@ class DsView extends Component {
             try {
                 const json = JSON.parse(decodeURIComponent(data));
                 if (window.Plotly) {
-                    window.Plotly.newPlot(div, json.data, json.layout || {});
+                    window.Plotly.newPlot(div, json.data, json.layout, json.config || {});
                     let rows = this.ref.table.getRows();
                     for (let i = 0; i < rows.length; i++) {
                         rows[i].normalizeHeight();
