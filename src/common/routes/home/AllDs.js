@@ -22,18 +22,13 @@ class AllDs extends Component {
         super(props);
         this.deleteRequest = this.deleteRequest.bind(this);
         this.deleteControls = this.deleteControls.bind(this);
-        this.pageTabs = ["A-I", "J-S", "T-Z", "ALL DS"];
-        this.state = {
-            activeTab: "A-I",
-        }
+        // Remove pageTabs and activeTab state
+        this.state = {};
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
-        if (this.state.activeTab === "ALL DS") {
-            dispatch(dsActions.getDsList(user.user));
-        } else {
-            dispatch(dsActions.getFilteredDsList(user.user, this.state.activeTab));
-        }
+        // Always fetch all datasets
+        dispatch(dsActions.getDsList(user.user));
     }
 
     deleteRequest ( dsName ) {
@@ -70,6 +65,14 @@ class AllDs extends Component {
         return '';
     }
 
+    formatSize(bytes) {
+        if (bytes === 0 || bytes == null) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
     dsList () {
         const { allDs } = this.props;
         try {
@@ -79,11 +82,24 @@ class AllDs extends Component {
                 if (allDs.dsList.dbList.length == 0) {
                     return <h3> OOPS..!! No Dataset found....!!</h3>
                 } else {
-                    let listItems = allDs.dsList.dbList.map((v) => {
-                        let url = `/ds/${v.name}/default`;
-                        return <li><Link to={url}>{v.name}</Link>{this.deleteControls(v.name)}</li>
-                    })
-                    return (<Row><Col md={12} sm={12} xs={12}><ul>{listItems}</ul></Col></Row>)
+                    return (
+                        <Row>
+                            {allDs.dsList.dbList.map((ds, idx) => (
+                                <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
+                                    <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
+                                        <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
+                                        </h5>
+                                        <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
+                                            <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                        </div>
+                                    </div>
+                                </Col>
+                            ))}
+                        </Row>
+                    );
                 }
             }
         } catch (e) {
@@ -93,17 +109,7 @@ class AllDs extends Component {
     }
 
     onFilterClickHandler = (e) => {
-        e.preventDefault();
-        const { dispatch, user } = this.props;
-        if (e.target.innerText === "ALL DS") {
-            dispatch(dsActions.getDsList(user.user));
-        } else {
-            dispatch(dsActions.getFilteredDsList(user.user, e.target.innerText));
-        }
-        this.setState({
-            ...this.state,
-            activeTab: e.target.innerText
-        })
+        // Remove filter handler logic
     }
 
     render () {
@@ -115,15 +121,7 @@ class AllDs extends Component {
                     <h3 style={{ 'float': 'center' }}><label className="underline">Your Datasets</label></h3>
                     </Col>
                 </Row>
-                <div className='pageButton'>
-                    {this.pageTabs.map((pageTab) => {
-                        if (this.state.activeTab == pageTab) {
-                            return <Button size="sm" onClick={this.onFilterClickHandler} active> {pageTab}</Button>
-                        } else {
-                            return <Button size="sm" onClick={this.onFilterClickHandler}> {pageTab}</Button>
-                        }
-                    })}
-                </div>
+                {/* Removed pageButton filter buttons */}
                 {this.dsList()}
                 <Row>
                 <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
