@@ -83,20 +83,22 @@ class AllDs extends Component {
                     return <h3> OOPS..!! No Dataset found....!!</h3>
                 } else {
                     return (
-                        <div className="datasets-grid">
+                        <Row className="dataset-row-flex">
                             {allDs.dsList.dbList.map((ds, idx) => (
-                                <div key={ds.name} className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
-                                    <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                                        <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
-                                    </h5>
-                                    <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
-                                        <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
+                                    <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
+                                        <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
+                                        </h5>
+                                        <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
+                                            <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                </Col>
                             ))}
-                        </div>
+                        </Row>
                     );
                 }
             }
