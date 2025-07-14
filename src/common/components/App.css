@@ -31,3 +31,51 @@
     transform: rotate(360deg);
   }
 }
+
+.dataset-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1.5px solid #3a6ea5;
+  box-shadow: 0 4px 16px rgba(44,62,80,0.10);
+  padding: 24px 28px 18px 28px;
+  margin: 16px 0;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 210px;
+  max-width: 100%;
+}
+.dataset-card:hover {
+  box-shadow: 0 8px 24px rgba(44,62,80,0.18);
+  border-color: #1d4e89;
+  background: #eaf1fb;
+}
+.dataset-card-box h5 {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.dataset-card-box .dataset-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.dataset-card-box .delete-btn {
+  margin-left: 8px;
+  color: #e74c3c;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.98em;
+  transition: color 0.15s;
+  display: inline-block;
+}
+.dataset-card-box .delete-btn:hover {
+  color: #b71c1c;
+  text-decoration: underline;
+}
+
+body, .App, .main-content, .container-fluid {
+  background: #f9fafb !important;
+}
