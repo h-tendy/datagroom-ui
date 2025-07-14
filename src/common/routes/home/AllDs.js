@@ -83,7 +83,7 @@ class AllDs extends Component {
                     return <h3> OOPS..!! No Dataset found....!!</h3>
                 } else {
                     return (
-                        <Row>
+                        <Row className="dataset-row-flex">
                             {allDs.dsList.dbList.map((ds, idx) => (
                                 <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
                                     <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
