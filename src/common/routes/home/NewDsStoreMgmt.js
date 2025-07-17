@@ -96,12 +96,14 @@ export function newDs(state = initialState, action) {
         return {
             ...state,
             status: 'success',
+            createStatus: action.createStatus,
             serverStatus: action.serverStatus
         }
     case newDsConstants.CREATE_DS_FAILURE:
         return {
             ...state,
             status: 'fail',
+            createStatus: action.createStatus,
             serverStatus: action.serverStatus,
         }
     
