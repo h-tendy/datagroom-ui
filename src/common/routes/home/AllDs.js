@@ -23,7 +23,10 @@ class AllDs extends Component {
         this.deleteRequest = this.deleteRequest.bind(this);
         this.deleteControls = this.deleteControls.bind(this);
         // Remove pageTabs and activeTab state
-        this.state = {};
+        this.state = {
+            viewMode: 'list', // 'grid' or 'list'
+        };
+        this.toggleViewMode = this.toggleViewMode.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -73,8 +76,15 @@ class AllDs extends Component {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     }
 
+    toggleViewMode() {
+        this.setState((prevState) => ({
+            viewMode: prevState.viewMode === 'grid' ? 'list' : 'grid'
+        }));
+    }
+
     dsList () {
         const { allDs } = this.props;
+        const { viewMode } = this.state;
         try {
             if (allDs.dsListStatus === 'loading') {
                 return <h5>Loading....</h5>
@@ -82,24 +92,44 @@ class AllDs extends Component {
                 if (allDs.dsList.dbList.length == 0) {
                     return <h3> OOPS..!! No Dataset found....!!</h3>
                 } else {
-                    return (
-                        <Row className="dataset-row-flex">
-                            {allDs.dsList.dbList.map((ds, idx) => (
-                                <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
-                                    <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
-                                        <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
-                                        </h5>
-                                        <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
-                                            <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                    if (viewMode === 'list') {
+                        // List view: one card per row, half the screen width, left-aligned
+                        return (
+                            <Row className="dataset-row-flex">
+                                {allDs.dsList.dbList.map((ds, idx) => (
+                                    <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '12px' }}>
+                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700 }}>
+                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1.15rem', fontWeight: 600 }}>{ds.name}</Link>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                                <span style={{ borderLeft: '1.5px solid #ccc', height: 24, marginLeft: 16 }}></span>
+                                            </span>
                                         </div>
-                                    </div>
-                                </Col>
-                            ))}
-                        </Row>
-                    );
+                                    </Col>
+                                ))}
+                            </Row>
+                        );
+                    } else {
+                        // Grid view: 4 columns
+                        return (
+                            <Row className="dataset-row-flex">
+                                {allDs.dsList.dbList.map((ds, idx) => (
+                                    <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
+                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
+                                            <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
+                                            </h5>
+                                            <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
+                                                <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                            </div>
+                                        </div>
+                                    </Col>
+                                ))}
+                            </Row>
+                        );
+                    }
                 }
             }
         } catch (e) {
@@ -116,9 +146,17 @@ class AllDs extends Component {
         document.title = "Datagroom - browse data-sets";
         return (
             <div>
-                <Row>
-                    <Col md={12} sm={12} xs={12}> 
-                    <h3 style={{ 'float': 'center' }}><label className="underline">Your Datasets</label></h3>
+                <div style={{height: 32}} />
+                <Row style={{ alignItems: 'center', marginTop: 32, marginBottom: 32 }}>
+                    <Col md={12} sm={12} xs={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}> 
+                        <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
+                        <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
+                            {this.state.viewMode === 'grid' ? (
+                                <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                            ) : (
+                                <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                            )}
+                        </span>
                     </Col>
                 </Row>
                 {/* Removed pageButton filter buttons */}
