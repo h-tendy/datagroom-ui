@@ -195,9 +195,9 @@ class AllDs extends Component {
                         <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                             <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
                                 {this.state.viewMode === 'grid' ? (
-                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
-                                ) : (
                                     <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                ) : (
+                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
                                 )}
                             </span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
