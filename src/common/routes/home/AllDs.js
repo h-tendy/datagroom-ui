@@ -25,8 +25,10 @@ class AllDs extends Component {
         // Remove pageTabs and activeTab state
         this.state = {
             viewMode: 'list', // 'grid' or 'list'
+            searchText: '',
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
+        this.handleSearchChange = this.handleSearchChange.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -82,21 +84,44 @@ class AllDs extends Component {
         }));
     }
 
+    handleSearchChange(e) {
+        this.setState({ searchText: e.target.value });
+    }
+
     dsList () {
         const { allDs } = this.props;
-        const { viewMode } = this.state;
+        const { viewMode, searchText } = this.state;
         try {
             if (allDs.dsListStatus === 'loading') {
                 return <h5>Loading....</h5>
             } else if (allDs.dsListStatus === 'success') {
-                if (allDs.dsList.dbList.length == 0) {
-                    return <h3> OOPS..!! No Dataset found....!!</h3>
+                let dbList = allDs.dsList.dbList;
+                if (!dbList || dbList.length === 0) {
+                    return (
+                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
+                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                            No datasets found.
+                        </div>
+                    );
+                }
+                let filteredList = dbList;
+                if (searchText && searchText.trim() !== '') {
+                    const search = searchText.trim().toLowerCase();
+                    filteredList = filteredList.filter(ds => ds.name.toLowerCase().includes(search));
+                }
+                if (filteredList.length == 0) {
+                    return (
+                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
+                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                            No datasets found.
+                        </div>
+                    );
                 } else {
                     if (viewMode === 'list') {
                         // List view: one card per row, half the screen width, left-aligned
                         return (
                             <Row className="dataset-row-flex">
-                                {allDs.dsList.dbList.map((ds, idx) => (
+                                {filteredList.map((ds, idx) => (
                                     <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '12px' }}>
                                         <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700 }}>
                                             <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1.15rem', fontWeight: 600 }}>{ds.name}</Link>
@@ -113,7 +138,7 @@ class AllDs extends Component {
                         // Grid view: 4 columns
                         return (
                             <Row className="dataset-row-flex">
-                                {allDs.dsList.dbList.map((ds, idx) => (
+                                {filteredList.map((ds, idx) => (
                                     <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
                                         <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
                                             <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
@@ -150,12 +175,24 @@ class AllDs extends Component {
                 <Row style={{ alignItems: 'center', marginTop: 32, marginBottom: 32 }}>
                     <Col md={12} sm={12} xs={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}> 
                         <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
-                        <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
-                            {this.state.viewMode === 'grid' ? (
-                                <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
-                            ) : (
-                                <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
-                            )}
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
+                                {this.state.viewMode === 'grid' ? (
+                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                ) : (
+                                    <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                )}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="fas fa-search" style={{ fontSize: '1.5rem', color: '#888' }}></i>
+                                <input
+                                    type="text"
+                                    placeholder="Search datasets..."
+                                    value={this.state.searchText}
+                                    onChange={this.handleSearchChange}
+                                    style={{ fontSize: '1.1rem', padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', outline: 'none', minWidth: 180 }}
+                                />
+                            </span>
                         </span>
                     </Col>
                 </Row>
