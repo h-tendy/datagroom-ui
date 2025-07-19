@@ -120,6 +120,10 @@ class AllDs extends Component {
                     filteredList = filteredList.slice().sort((a, b) => a.name.localeCompare(b.name));
                 } else if (sortBy === 'Z-A') {
                     filteredList = filteredList.slice().sort((a, b) => b.name.localeCompare(a.name));
+                } else if (sortBy === 'SIZE_ASC') {
+                    filteredList = filteredList.slice().sort((a, b) => (a.sizeOnDisk || 0) - (b.sizeOnDisk || 0));
+                } else if (sortBy === 'SIZE_DESC') {
+                    filteredList = filteredList.slice().sort((a, b) => (b.sizeOnDisk || 0) - (a.sizeOnDisk || 0));
                 }
                 if (filteredList.length == 0) {
                     return (
@@ -181,6 +185,7 @@ class AllDs extends Component {
 
     render () {
         document.title = "Datagroom - browse data-sets";
+        const { sortBy } = this.state;
         return (
             <div>
                 <div style={{height: 32}} />
@@ -205,16 +210,21 @@ class AllDs extends Component {
                                     style={{ fontSize: '1.1rem', padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', outline: 'none', minWidth: 180 }}
                                 />
                             </span>
-                            <span className="sort-native-dropdown-wrapper">
-                                <label className="sort-native-dropdown-label">Sort by:</label>
-                                <select
-                                    className="sort-native-dropdown"
-                                    value={this.state.sortBy}
-                                    onChange={this.handleSortChange}
-                                >
-                                    <option value="A-Z">A-Z</option>
-                                    <option value="Z-A">Z-A</option>
-                                </select>
+                            <span className="sort-native-dropdown-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <label className="sort-native-dropdown-label" style={{ marginBottom: 0, marginRight: 6 }}>Sort by:</label>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <select
+                                        className="sort-native-dropdown"
+                                        value={this.state.sortBy}
+                                        onChange={this.handleSortChange}
+                                        style={{ marginLeft: 8 }}
+                                    >
+                                        <option value="A-Z">A-Z</option>
+                                        <option value="Z-A">Z-A</option>
+                                        <option value="SIZE_ASC">Size (small to large)</option>
+                                        <option value="SIZE_DESC">Size (large to small)</option>
+                                    </select>
+                                </span>
                             </span>
                         </span>
                     </Col>
