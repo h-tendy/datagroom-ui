@@ -26,9 +26,11 @@ class AllDs extends Component {
         this.state = {
             viewMode: 'list', // 'grid' or 'list'
             searchText: '',
+            sortBy: 'A-Z',
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
+        this.handleSortChange = this.handleSortChange.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -88,9 +90,13 @@ class AllDs extends Component {
         this.setState({ searchText: e.target.value });
     }
 
+    handleSortChange(e) {
+        this.setState({ sortBy: e.target.value });
+    }
+
     dsList () {
         const { allDs } = this.props;
-        const { viewMode, searchText } = this.state;
+        const { viewMode, searchText, sortBy } = this.state;
         try {
             if (allDs.dsListStatus === 'loading') {
                 return <h5>Loading....</h5>
@@ -108,6 +114,12 @@ class AllDs extends Component {
                 if (searchText && searchText.trim() !== '') {
                     const search = searchText.trim().toLowerCase();
                     filteredList = filteredList.filter(ds => ds.name.toLowerCase().includes(search));
+                }
+                // Sort logic
+                if (sortBy === 'A-Z') {
+                    filteredList = filteredList.slice().sort((a, b) => a.name.localeCompare(b.name));
+                } else if (sortBy === 'Z-A') {
+                    filteredList = filteredList.slice().sort((a, b) => b.name.localeCompare(a.name));
                 }
                 if (filteredList.length == 0) {
                     return (
@@ -192,6 +204,17 @@ class AllDs extends Component {
                                     onChange={this.handleSearchChange}
                                     style={{ fontSize: '1.1rem', padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', outline: 'none', minWidth: 180 }}
                                 />
+                            </span>
+                            <span className="sort-native-dropdown-wrapper">
+                                <label className="sort-native-dropdown-label">Sort by:</label>
+                                <select
+                                    className="sort-native-dropdown"
+                                    value={this.state.sortBy}
+                                    onChange={this.handleSortChange}
+                                >
+                                    <option value="A-Z">A-Z</option>
+                                    <option value="Z-A">Z-A</option>
+                                </select>
                             </span>
                         </span>
                     </Col>
