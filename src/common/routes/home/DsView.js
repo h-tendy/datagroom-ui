@@ -477,7 +477,6 @@ class DsView extends Component {
                     })
                 }
             }
-            localStorage.setItem("showAllFilters", JSON.stringify(showFilter));
             localStorage.setItem("chronologyDescending", JSON.stringify(chronologyDescending));
             this.setState({
                 ...this.state,
