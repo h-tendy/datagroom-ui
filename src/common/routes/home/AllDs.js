@@ -28,11 +28,13 @@ class AllDs extends Component {
             searchText: '',
             sortBy: 'A-Z',
             expandedInfo: {}, // Track which cards have info expanded
+            globalInfoExpanded: false, // Track global info expansion
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.toggleInfo = this.toggleInfo.bind(this);
+        this.toggleGlobalInfo = this.toggleGlobalInfo.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -105,6 +107,27 @@ class AllDs extends Component {
         }));
     }
 
+    toggleGlobalInfo() {
+        const { allDs } = this.props;
+        this.setState(prevState => {
+            const newGlobalInfoExpanded = !prevState.globalInfoExpanded;
+            const newExpandedInfo = {};
+            
+            if (newGlobalInfoExpanded) {
+                // Add all datasets to expandedInfo
+                allDs.dsList.dbList.forEach(ds => {
+                    newExpandedInfo[ds.name] = true;
+                });
+            }
+            // If false, newExpandedInfo remains empty, clearing all expansions
+            
+            return {
+                globalInfoExpanded: newGlobalInfoExpanded,
+                expandedInfo: newExpandedInfo
+            };
+        });
+    }
+
     dsList () {
         const { allDs } = this.props;
         const { viewMode, searchText, sortBy } = this.state;
@@ -153,7 +176,7 @@ class AllDs extends Component {
                                         <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '6px', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700, border: '1px solid #e0e0e0' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                 <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1rem', fontWeight: 600 }}>{ds.name}</Link>
-                                                {this.state.expandedInfo[ds.name] && (
+                                                {(this.state.expandedInfo[ds.name]) && (
                                                     <>
                                                         <span style={{ color: '#888' }}>|</span>
                                                         <span style={{ fontSize: '0.9rem', color: '#666' }}>
@@ -218,13 +241,18 @@ class AllDs extends Component {
                 <div style={{height: 32}} />
                 <Row style={{ alignItems: 'center', marginTop: 32, marginBottom: 32 }}>
                     <Col md={12} sm={12} xs={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}> 
-                        <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
+                            <span style={{ cursor: 'pointer' }} onClick={this.toggleGlobalInfo} title="Toggle Info for All Datasets">
+                                <i className="fas fa-info-circle" style={{ fontSize: '1.5rem', color: '#888' }}></i>
+                            </span>
+                        </div>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ cursor: 'pointer', marginRight: '16px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
                                 {this.state.viewMode === 'grid' ? (
-                                    <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                    <i className="fas fa-list" style={{ fontSize: '2.1rem', color: '#333' }}></i>
                                 ) : (
-                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                    <i className="fas fa-th" style={{ fontSize: '2.1rem', color: '#333' }}></i>
                                 )}
                             </span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -238,13 +266,13 @@ class AllDs extends Component {
                                 />
                             </span>
                             <span className="sort-native-dropdown-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <label className="sort-native-dropdown-label" style={{ marginBottom: 0, marginRight: 6 }}>Sort by:</label>
+                                <label className="sort-native-dropdown-label" style={{ marginBottom: 0, marginRight: 3 }}>Sort by:</label>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                     <select
                                         className="sort-native-dropdown"
                                         value={this.state.sortBy}
                                         onChange={this.handleSortChange}
-                                        style={{ marginLeft: 8 }}
+                                        style={{ marginLeft: 4 }}
                                     >
                                         <option value="A-Z">A-Z</option>
                                         <option value="Z-A">Z-A</option>
@@ -253,15 +281,17 @@ class AllDs extends Component {
                                     </select>
                                 </span>
                             </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Button size="sm" onClick={() => {history.push('/newDsXlsx')}} style={{ fontSize: '0.9rem', padding: '6px 12px' }}> New Ds (xlsx)</Button> 
+                                <Button size="sm" onClick={() => {history.push('/newDsCsv')}} style={{ fontSize: '0.9rem', padding: '6px 12px' }}> New Ds (csv)</Button> 
+                                <Button size="sm" onClick={() => {history.push('/newDsFrmDs')}} style={{ fontSize: '0.9rem', padding: '6px 12px' }}> Copy Ds</Button> 
+                            </span>
                         </span>
                     </Col>
                 </Row>
                 {/* Removed pageButton filter buttons */}
                 {this.dsList()}
                 <Row>
-                <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
-                <Button size="sm" onClick={() => {history.push('/newDsCsv')}}> New Ds (csv)</Button> 
-                <Button size="sm" onClick={() => {history.push('/newDsFrmDs')}}> Copy Ds</Button> 
                 </Row>
             </div>
         );
