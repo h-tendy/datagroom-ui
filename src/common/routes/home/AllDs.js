@@ -7,6 +7,7 @@ import 'react-tabulator/lib/styles.css'; // required styles
 import 'react-tabulator/lib/css/tabulator.min.css'; // theme
 import { allDsConstants } from '../../constants';
 import { history } from '../../helpers';
+import '../../components/AllDs.css';
 
 const config = {};
 if (process.env.NODE_ENV === 'development') {
@@ -24,20 +25,40 @@ class AllDs extends Component {
         this.deleteControls = this.deleteControls.bind(this);
         // Remove pageTabs and activeTab state
         this.state = {
-            viewMode: 'list', // 'grid' or 'list'
-            searchText: '',
-            sortBy: 'A-Z',
+            viewMode: localStorage.getItem('allDsViewMode') || 'list', // 'grid' or 'list' - remember last selection
+            searchText: localStorage.getItem('allDsSearchText') || '', // Remember last search text
+            sortBy: localStorage.getItem('allDsSortBy') || 'A-Z', // Remember last sort selection
             expandedInfo: {}, // Track which cards have info expanded
+            globalInfoExpanded: localStorage.getItem('allDsGlobalInfoExpanded') === 'true', // Remember global info state
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.toggleInfo = this.toggleInfo.bind(this);
+        this.toggleGlobalInfo = this.toggleGlobalInfo.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
         // Always fetch all datasets
         dispatch(dsActions.getDsList(user.user));
+    }
+
+    componentDidUpdate(prevProps) {
+        // Restore expandedInfo when datasets are loaded and global info was enabled
+        const { allDs } = this.props;
+        if (this.state.globalInfoExpanded && 
+            allDs.dsListStatus === 'success' && 
+            allDs.dsList.dbList && 
+            allDs.dsList.dbList.length > 0 &&
+            Object.keys(this.state.expandedInfo).length === 0) {
+            
+            const newExpandedInfo = {};
+            allDs.dsList.dbList.forEach(ds => {
+                newExpandedInfo[ds.name] = true;
+            });
+            
+            this.setState({ expandedInfo: newExpandedInfo });
+        }
     }
 
     deleteRequest ( dsName ) {
@@ -83,17 +104,25 @@ class AllDs extends Component {
     }
 
     toggleViewMode() {
-        this.setState((prevState) => ({
-            viewMode: prevState.viewMode === 'grid' ? 'list' : 'grid'
-        }));
+        this.setState((prevState) => {
+            const newViewMode = prevState.viewMode === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('allDsViewMode', newViewMode);
+            return {
+                viewMode: newViewMode
+            };
+        });
     }
 
     handleSearchChange(e) {
-        this.setState({ searchText: e.target.value });
+        const newSearchText = e.target.value;
+        localStorage.setItem('allDsSearchText', newSearchText);
+        this.setState({ searchText: newSearchText });
     }
 
     handleSortChange(e) {
-        this.setState({ sortBy: e.target.value });
+        const newSortBy = e.target.value;
+        localStorage.setItem('allDsSortBy', newSortBy);
+        this.setState({ sortBy: newSortBy });
     }
 
     toggleInfo(dsName) {
@@ -103,6 +132,30 @@ class AllDs extends Component {
                 [dsName]: !prevState.expandedInfo[dsName]
             }
         }));
+    }
+
+    toggleGlobalInfo() {
+        const { allDs } = this.props;
+        this.setState(prevState => {
+            const newGlobalInfoExpanded = !prevState.globalInfoExpanded;
+            const newExpandedInfo = {};
+            
+            if (newGlobalInfoExpanded) {
+                // Add all datasets to expandedInfo
+                allDs.dsList.dbList.forEach(ds => {
+                    newExpandedInfo[ds.name] = true;
+                });
+            }
+            // If false, newExpandedInfo remains empty, clearing all expansions
+            
+            // Save to localStorage
+            localStorage.setItem('allDsGlobalInfoExpanded', newGlobalInfoExpanded.toString());
+            
+            return {
+                globalInfoExpanded: newGlobalInfoExpanded,
+                expandedInfo: newExpandedInfo
+            };
+        });
     }
 
     dsList () {
@@ -115,8 +168,8 @@ class AllDs extends Component {
                 let dbList = allDs.dsList.dbList;
                 if (!dbList || dbList.length === 0) {
                     return (
-                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
-                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                        <div className="no-datasets-container">
+                            <span role="img" aria-label="sad" className="no-datasets-emoji">😢</span>
                             No datasets found.
                         </div>
                     );
@@ -138,8 +191,8 @@ class AllDs extends Component {
                 }
                 if (filteredList.length == 0) {
                     return (
-                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
-                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                        <div className="no-datasets-container">
+                            <span role="img" aria-label="sad" className="no-datasets-emoji">😢</span>
                             No datasets found.
                         </div>
                     );
@@ -149,27 +202,27 @@ class AllDs extends Component {
                         return (
                             <Row className="dataset-row-flex">
                                 {filteredList.map((ds, idx) => (
-                                    <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '4px' }}>
-                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '6px', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700, border: '1px solid #e0e0e0' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1rem', fontWeight: 600 }}>{ds.name}</Link>
-                                                {this.state.expandedInfo[ds.name] && (
+                                    <Col key={ds.name} md={12} sm={12} xs={12} className="list-card-col">
+                                        <div className="dataset-card dataset-card-box list-card">
+                                            <div className="list-card-content">
+                                                <Link to={`/ds/${ds.name}/default`} className="list-card-link">{ds.name}</Link>
+                                                {(this.state.expandedInfo[ds.name]) && (
                                                     <>
-                                                        <span style={{ color: '#888' }}>|</span>
-                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                        <span className="list-card-separator">|</span>
+                                                        <span className="list-card-info">
                                                             <strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}
                                                         </span>
-                                                        <span style={{ color: '#888' }}>|</span>
-                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                        <span className="list-card-separator">|</span>
+                                                        <span className="list-card-info">
                                                             <strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}
                                                         </span>
                                                     </>
                                                 )}
                                             </div>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <span className="list-card-actions">
                                                 <span className="delete-btn">{this.deleteControls(ds.name)}</span>
-                                                <span style={{ cursor: 'pointer', marginLeft: 8 }} onClick={() => this.toggleInfo(ds.name)} title="Toggle Info">
-                                                    <i className="fas fa-info-circle" style={{ fontSize: '1.2rem', color: '#888' }}></i>
+                                                <span className="list-card-info-icon" onClick={() => this.toggleInfo(ds.name)} title="Toggle Info">
+                                                    <i className="fas fa-info-circle"></i>
                                                 </span>
                                             </span>
                                         </div>
@@ -182,13 +235,13 @@ class AllDs extends Component {
                         return (
                             <Row className="dataset-row-flex">
                                 {filteredList.map((ds, idx) => (
-                                    <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
-                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
-                                            <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
+                                    <Col key={ds.name} md={3} sm={6} xs={12} className="grid-card-col">
+                                        <div className="dataset-card dataset-card-box grid-card">
+                                            <h5 className="grid-card-title">
+                                                <Link to={`/ds/${ds.name}/default`} className="grid-card-link">{ds.name}</Link>
                                             </h5>
-                                            <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div className="grid-card-owner"><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
+                                            <div className="grid-card-size-actions">
                                                 <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
                                                 <span className="delete-btn">{this.deleteControls(ds.name)}</span>
                                             </div>
@@ -215,36 +268,40 @@ class AllDs extends Component {
         const { sortBy } = this.state;
         return (
             <div>
-                <div style={{height: 32}} />
-                <Row style={{ alignItems: 'center', marginTop: 32, marginBottom: 32 }}>
-                    <Col md={12} sm={12} xs={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}> 
-                        <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
+                <div className="all-ds-container" />
+                <Row className="all-ds-header-row">
+                    <Col md={12} sm={12} xs={12} className="all-ds-header-col"> 
+                        <div className="all-ds-title-container">
+                            <h3 className="all-ds-title"><label className="underline">Your Datasets</label></h3>
+                            <span style={{ cursor: 'pointer' }} onClick={this.toggleGlobalInfo} title="Toggle Info for All Datasets">
+                                <i className={`fas fa-info-circle global-info-icon ${this.state.globalInfoExpanded ? 'active' : ''}`}></i>
+                            </span>
+                        </div>
+                        <span className="all-ds-controls-container">
+                            <span className="view-toggle-icon" onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
                                 {this.state.viewMode === 'grid' ? (
-                                    <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                    <i className="fas fa-list"></i>
                                 ) : (
-                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                    <i className="fas fa-th"></i>
                                 )}
                             </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <i className="fas fa-search" style={{ fontSize: '1.5rem', color: '#888' }}></i>
+                            <span className="search-container">
+                                <i className="fas fa-search search-icon"></i>
                                 <input
                                     type="text"
                                     placeholder="Search datasets..."
                                     value={this.state.searchText}
                                     onChange={this.handleSearchChange}
-                                    style={{ fontSize: '1.1rem', padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', outline: 'none', minWidth: 180 }}
+                                    className="search-input"
                                 />
                             </span>
-                            <span className="sort-native-dropdown-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <label className="sort-native-dropdown-label" style={{ marginBottom: 0, marginRight: 6 }}>Sort by:</label>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span className="sort-dropdown-wrapper">
+                                <label className="sort-dropdown-label">Sort by:</label>
+                                <span className="sort-dropdown-container">
                                     <select
-                                        className="sort-native-dropdown"
+                                        className="sort-dropdown"
                                         value={this.state.sortBy}
                                         onChange={this.handleSortChange}
-                                        style={{ marginLeft: 8 }}
                                     >
                                         <option value="A-Z">A-Z</option>
                                         <option value="Z-A">Z-A</option>
@@ -253,15 +310,17 @@ class AllDs extends Component {
                                     </select>
                                 </span>
                             </span>
+                            <span className="action-buttons-container">
+                                <Button size="sm" className="action-button" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
+                                <Button size="sm" className="action-button" onClick={() => {history.push('/newDsCsv')}}> New Ds (csv)</Button> 
+                                <Button size="sm" className="action-button" onClick={() => {history.push('/newDsFrmDs')}}> Copy Ds</Button> 
+                            </span>
                         </span>
                     </Col>
                 </Row>
                 {/* Removed pageButton filter buttons */}
                 {this.dsList()}
                 <Row>
-                <Button size="sm" onClick={() => {history.push('/newDsXlsx')}}> New Ds (xlsx)</Button> 
-                <Button size="sm" onClick={() => {history.push('/newDsCsv')}}> New Ds (csv)</Button> 
-                <Button size="sm" onClick={() => {history.push('/newDsFrmDs')}}> Copy Ds</Button> 
                 </Row>
             </div>
         );
