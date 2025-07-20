@@ -132,7 +132,7 @@ class DsView extends Component {
             showModalEditor: false,
 
 
-            chronologyDescending: true,
+            chronologyDescending: false,
             singleClickEdit: false,
             showAllFilters: false,
             disableEditing: false,
@@ -245,9 +245,12 @@ class DsView extends Component {
 
         this.showCopiedNotification = this.showCopiedNotification.bind(this);
 
-        let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending") || "true";
-        chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
-        this.state.chronologyDescending = chronologyDescendingFrmLocal;
+        let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
+        if (chronologyDescendingFrmLocal === "false") {
+            this.state.chronologyDescending = false;
+        } else {
+            this.state.chronologyDescending = true;
+        }
         let singleClickEditFrmLocal = localStorage.getItem("singleClickEdit");
         singleClickEditFrmLocal = JSON.parse(singleClickEditFrmLocal);
         this.state.singleClickEdit = singleClickEditFrmLocal;
