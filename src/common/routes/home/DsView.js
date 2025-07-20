@@ -508,7 +508,10 @@ class DsView extends Component {
     // the handlers again. 
     applyHtmlLinkAndBadgeClickHandlers() {
         let me = this;
-        let splElements = document.getElementById("tabulator").getElementsByTagName('a');
+        let splElements = [];
+        if (document.getElementById("tabulator")) {
+            splElements = document.getElementById("tabulator").getElementsByTagName('a');
+        }
         for(var i = 0, len = splElements.length; i < len; i++) {
             splElements[i].onclick = function (e) {
                 me.mouseDownOnHtmlLink = true;
@@ -520,7 +523,9 @@ class DsView extends Component {
             }
         }
         // This querySelectorAll is borrowed from highlightjs-badge.js code
-        splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
+        if (document.getElementById("tabulator")) {
+            splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
+        }
         for(i = 0, len = splElements.length; i < len; i++) {
             // Have to setup for 'focus' event because that fires first! And
             // tabulator already has this setup on the cell.

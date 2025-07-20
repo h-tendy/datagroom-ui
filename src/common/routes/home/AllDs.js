@@ -25,11 +25,11 @@ class AllDs extends Component {
         this.deleteControls = this.deleteControls.bind(this);
         // Remove pageTabs and activeTab state
         this.state = {
-            viewMode: 'list', // 'grid' or 'list'
-            searchText: '',
-            sortBy: 'A-Z',
+            viewMode: localStorage.getItem('allDsViewMode') || 'list', // 'grid' or 'list' - remember last selection
+            searchText: localStorage.getItem('allDsSearchText') || '', // Remember last search text
+            sortBy: localStorage.getItem('allDsSortBy') || 'A-Z', // Remember last sort selection
             expandedInfo: {}, // Track which cards have info expanded
-            globalInfoExpanded: false, // Track global info expansion
+            globalInfoExpanded: localStorage.getItem('allDsGlobalInfoExpanded') === 'true', // Remember global info state
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
@@ -41,6 +41,24 @@ class AllDs extends Component {
         const { dispatch, user } = this.props;
         // Always fetch all datasets
         dispatch(dsActions.getDsList(user.user));
+    }
+
+    componentDidUpdate(prevProps) {
+        // Restore expandedInfo when datasets are loaded and global info was enabled
+        const { allDs } = this.props;
+        if (this.state.globalInfoExpanded && 
+            allDs.dsListStatus === 'success' && 
+            allDs.dsList.dbList && 
+            allDs.dsList.dbList.length > 0 &&
+            Object.keys(this.state.expandedInfo).length === 0) {
+            
+            const newExpandedInfo = {};
+            allDs.dsList.dbList.forEach(ds => {
+                newExpandedInfo[ds.name] = true;
+            });
+            
+            this.setState({ expandedInfo: newExpandedInfo });
+        }
     }
 
     deleteRequest ( dsName ) {
@@ -86,17 +104,25 @@ class AllDs extends Component {
     }
 
     toggleViewMode() {
-        this.setState((prevState) => ({
-            viewMode: prevState.viewMode === 'grid' ? 'list' : 'grid'
-        }));
+        this.setState((prevState) => {
+            const newViewMode = prevState.viewMode === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('allDsViewMode', newViewMode);
+            return {
+                viewMode: newViewMode
+            };
+        });
     }
 
     handleSearchChange(e) {
-        this.setState({ searchText: e.target.value });
+        const newSearchText = e.target.value;
+        localStorage.setItem('allDsSearchText', newSearchText);
+        this.setState({ searchText: newSearchText });
     }
 
     handleSortChange(e) {
-        this.setState({ sortBy: e.target.value });
+        const newSortBy = e.target.value;
+        localStorage.setItem('allDsSortBy', newSortBy);
+        this.setState({ sortBy: newSortBy });
     }
 
     toggleInfo(dsName) {
@@ -121,6 +147,9 @@ class AllDs extends Component {
                 });
             }
             // If false, newExpandedInfo remains empty, clearing all expansions
+            
+            // Save to localStorage
+            localStorage.setItem('allDsGlobalInfoExpanded', newGlobalInfoExpanded.toString());
             
             return {
                 globalInfoExpanded: newGlobalInfoExpanded,
