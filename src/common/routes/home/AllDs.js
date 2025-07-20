@@ -23,7 +23,16 @@ class AllDs extends Component {
         this.deleteRequest = this.deleteRequest.bind(this);
         this.deleteControls = this.deleteControls.bind(this);
         // Remove pageTabs and activeTab state
-        this.state = {};
+        this.state = {
+            viewMode: 'list', // 'grid' or 'list'
+            searchText: '',
+            sortBy: 'A-Z',
+            expandedInfo: {}, // Track which cards have info expanded
+        };
+        this.toggleViewMode = this.toggleViewMode.bind(this);
+        this.handleSearchChange = this.handleSearchChange.bind(this);
+        this.handleSortChange = this.handleSortChange.bind(this);
+        this.toggleInfo = this.toggleInfo.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -73,33 +82,122 @@ class AllDs extends Component {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     }
 
+    toggleViewMode() {
+        this.setState((prevState) => ({
+            viewMode: prevState.viewMode === 'grid' ? 'list' : 'grid'
+        }));
+    }
+
+    handleSearchChange(e) {
+        this.setState({ searchText: e.target.value });
+    }
+
+    handleSortChange(e) {
+        this.setState({ sortBy: e.target.value });
+    }
+
+    toggleInfo(dsName) {
+        this.setState(prevState => ({
+            expandedInfo: {
+                ...prevState.expandedInfo,
+                [dsName]: !prevState.expandedInfo[dsName]
+            }
+        }));
+    }
+
     dsList () {
         const { allDs } = this.props;
+        const { viewMode, searchText, sortBy } = this.state;
         try {
             if (allDs.dsListStatus === 'loading') {
                 return <h5>Loading....</h5>
             } else if (allDs.dsListStatus === 'success') {
-                if (allDs.dsList.dbList.length == 0) {
-                    return <h3> OOPS..!! No Dataset found....!!</h3>
-                } else {
+                let dbList = allDs.dsList.dbList;
+                if (!dbList || dbList.length === 0) {
                     return (
-                        <Row className="dataset-row-flex">
-                            {allDs.dsList.dbList.map((ds, idx) => (
-                                <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
-                                    <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
-                                        <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
-                                        </h5>
-                                        <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
-                                            <span className="delete-btn">{this.deleteControls(ds.name)}</span>
-                                        </div>
-                                    </div>
-                                </Col>
-                            ))}
-                        </Row>
+                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
+                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                            No datasets found.
+                        </div>
                     );
+                }
+                let filteredList = dbList;
+                if (searchText && searchText.trim() !== '') {
+                    const search = searchText.trim().toLowerCase();
+                    filteredList = filteredList.filter(ds => ds.name.toLowerCase().includes(search));
+                }
+                // Sort logic
+                if (sortBy === 'A-Z') {
+                    filteredList = filteredList.slice().sort((a, b) => a.name.localeCompare(b.name));
+                } else if (sortBy === 'Z-A') {
+                    filteredList = filteredList.slice().sort((a, b) => b.name.localeCompare(a.name));
+                } else if (sortBy === 'SIZE_ASC') {
+                    filteredList = filteredList.slice().sort((a, b) => (a.sizeOnDisk || 0) - (b.sizeOnDisk || 0));
+                } else if (sortBy === 'SIZE_DESC') {
+                    filteredList = filteredList.slice().sort((a, b) => (b.sizeOnDisk || 0) - (a.sizeOnDisk || 0));
+                }
+                if (filteredList.length == 0) {
+                    return (
+                        <div style={{ textAlign: 'center', color: '#888', margin: '40px 0', fontSize: '2rem' }}>
+                            <span role="img" aria-label="sad" style={{ fontSize: '3.5rem', display: 'block', marginBottom: 12 }}>😢</span>
+                            No datasets found.
+                        </div>
+                    );
+                } else {
+                    if (viewMode === 'list') {
+                        // List view: ultra-compact cards
+                        return (
+                            <Row className="dataset-row-flex">
+                                {filteredList.map((ds, idx) => (
+                                    <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '4px' }}>
+                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '6px', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700, border: '1px solid #e0e0e0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1rem', fontWeight: 600 }}>{ds.name}</Link>
+                                                {this.state.expandedInfo[ds.name] && (
+                                                    <>
+                                                        <span style={{ color: '#888' }}>|</span>
+                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                            <strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}
+                                                        </span>
+                                                        <span style={{ color: '#888' }}>|</span>
+                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                            <strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                                <span style={{ cursor: 'pointer', marginLeft: 8 }} onClick={() => this.toggleInfo(ds.name)} title="Toggle Info">
+                                                    <i className="fas fa-info-circle" style={{ fontSize: '1.2rem', color: '#888' }}></i>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </Col>
+                                ))}
+                            </Row>
+                        );
+                    } else {
+                        // Grid view: 4 columns
+                        return (
+                            <Row className="dataset-row-flex">
+                                {filteredList.map((ds, idx) => (
+                                    <Col key={ds.name} md={3} sm={6} xs={12} style={{ marginBottom: '24px' }}>
+                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px' }}>
+                                            <h5 style={{ marginBottom: 12, wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block' }}>{ds.name}</Link>
+                                            </h5>
+                                            <div style={{ marginBottom: 8 }}><strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span><strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}</span>
+                                                <span className="delete-btn">{this.deleteControls(ds.name)}</span>
+                                            </div>
+                                        </div>
+                                    </Col>
+                                ))}
+                            </Row>
+                        );
+                    }
                 }
             }
         } catch (e) {
@@ -114,11 +212,48 @@ class AllDs extends Component {
 
     render () {
         document.title = "Datagroom - browse data-sets";
+        const { sortBy } = this.state;
         return (
             <div>
-                <Row>
-                    <Col md={12} sm={12} xs={12}> 
-                    <h3 style={{ 'float': 'center' }}><label className="underline">Your Datasets</label></h3>
+                <div style={{height: 32}} />
+                <Row style={{ alignItems: 'center', marginTop: 32, marginBottom: 32 }}>
+                    <Col md={12} sm={12} xs={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}> 
+                        <h3 style={{ margin: 0 }}><label className="underline">Your Datasets</label></h3>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <span style={{ cursor: 'pointer', marginRight: '24px' }} onClick={this.toggleViewMode} title={this.state.viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}>
+                                {this.state.viewMode === 'grid' ? (
+                                    <i className="fas fa-list" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                ) : (
+                                    <i className="fas fa-th" style={{ fontSize: '2.5rem', color: '#333' }}></i>
+                                )}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <i className="fas fa-search" style={{ fontSize: '1.5rem', color: '#888' }}></i>
+                                <input
+                                    type="text"
+                                    placeholder="Search datasets..."
+                                    value={this.state.searchText}
+                                    onChange={this.handleSearchChange}
+                                    style={{ fontSize: '1.1rem', padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', outline: 'none', minWidth: 180 }}
+                                />
+                            </span>
+                            <span className="sort-native-dropdown-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <label className="sort-native-dropdown-label" style={{ marginBottom: 0, marginRight: 6 }}>Sort by:</label>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <select
+                                        className="sort-native-dropdown"
+                                        value={this.state.sortBy}
+                                        onChange={this.handleSortChange}
+                                        style={{ marginLeft: 8 }}
+                                    >
+                                        <option value="A-Z">A-Z</option>
+                                        <option value="Z-A">Z-A</option>
+                                        <option value="SIZE_ASC">DS Size (small to large)</option>
+                                        <option value="SIZE_DESC">DS Size (large to small)</option>
+                                    </select>
+                                </span>
+                            </span>
+                        </span>
                     </Col>
                 </Row>
                 {/* Removed pageButton filter buttons */}

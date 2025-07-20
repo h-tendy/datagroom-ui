@@ -90,3 +90,35 @@
 body, .App, .main-content, .container-fluid {
   background: #f9fafb !important;
 }
+
+.sort-native-dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f4f4;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  padding: 7px 18px 7px 14px;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+.sort-native-dropdown-label {
+  margin-right: 4px;
+  color: #222;
+}
+.sort-native-dropdown {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 1.08rem;
+  outline: none;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 18px 4px 8px;
+  background: #fff;
+  border: 1px solid #ccc;
+  transition: border 0.2s;
+}
+.sort-native-dropdown:focus {
+  border: 1.5px solid #3a6ea5;
+}
