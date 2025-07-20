@@ -246,8 +246,11 @@ class DsView extends Component {
         this.showCopiedNotification = this.showCopiedNotification.bind(this);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
-        chronologyDescendingFrmLocal = JSON.parse(chronologyDescendingFrmLocal);
-        this.state.chronologyDescending = chronologyDescendingFrmLocal;
+        if (chronologyDescendingFrmLocal === "false") {
+            this.state.chronologyDescending = false;
+        } else {
+            this.state.chronologyDescending = true;
+        }
         let singleClickEditFrmLocal = localStorage.getItem("singleClickEdit");
         singleClickEditFrmLocal = JSON.parse(singleClickEditFrmLocal);
         this.state.singleClickEdit = singleClickEditFrmLocal;
