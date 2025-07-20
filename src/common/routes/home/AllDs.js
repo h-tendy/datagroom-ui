@@ -27,10 +27,12 @@ class AllDs extends Component {
             viewMode: 'list', // 'grid' or 'list'
             searchText: '',
             sortBy: 'A-Z',
+            expandedInfo: {}, // Track which cards have info expanded
         };
         this.toggleViewMode = this.toggleViewMode.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
+        this.toggleInfo = this.toggleInfo.bind(this);
     }
     componentDidMount () {
         const { dispatch, user } = this.props;
@@ -94,6 +96,15 @@ class AllDs extends Component {
         this.setState({ sortBy: e.target.value });
     }
 
+    toggleInfo(dsName) {
+        this.setState(prevState => ({
+            expandedInfo: {
+                ...prevState.expandedInfo,
+                [dsName]: !prevState.expandedInfo[dsName]
+            }
+        }));
+    }
+
     dsList () {
         const { allDs } = this.props;
         const { viewMode, searchText, sortBy } = this.state;
@@ -134,16 +145,32 @@ class AllDs extends Component {
                     );
                 } else {
                     if (viewMode === 'list') {
-                        // List view: one card per row, half the screen width, left-aligned
+                        // List view: ultra-compact cards
                         return (
                             <Row className="dataset-row-flex">
                                 {filteredList.map((ds, idx) => (
-                                    <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '12px' }}>
-                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '10px', padding: '24px 28px 18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700 }}>
-                                            <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1.15rem', fontWeight: 600 }}>{ds.name}</Link>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <Col key={ds.name} md={12} sm={12} xs={12} style={{ marginBottom: '4px' }}>
+                                        <div className="dataset-card dataset-card-box" style={{ background: '#fff', borderRadius: '6px', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '50vw', minWidth: 300, maxWidth: 700, border: '1px solid #e0e0e0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <Link to={`/ds/${ds.name}/default`} style={{ wordBreak: 'break-word', whiteSpace: 'normal', display: 'inline-block', fontSize: '1rem', fontWeight: 600 }}>{ds.name}</Link>
+                                                {this.state.expandedInfo[ds.name] && (
+                                                    <>
+                                                        <span style={{ color: '#888' }}>|</span>
+                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                            <strong>Owner:</strong> {ds.perms && ds.perms.owner ? ds.perms.owner : "Unknown"}
+                                                        </span>
+                                                        <span style={{ color: '#888' }}>|</span>
+                                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                                            <strong>Size:</strong> {this.formatSize(ds.sizeOnDisk)}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                 <span className="delete-btn">{this.deleteControls(ds.name)}</span>
-                                                <span style={{ borderLeft: '1.5px solid #ccc', height: 24, marginLeft: 16 }}></span>
+                                                <span style={{ cursor: 'pointer', marginLeft: 8 }} onClick={() => this.toggleInfo(ds.name)} title="Toggle Info">
+                                                    <i className="fas fa-info-circle" style={{ fontSize: '1.2rem', color: '#888' }}></i>
+                                                </span>
                                             </span>
                                         </div>
                                     </Col>
@@ -221,8 +248,8 @@ class AllDs extends Component {
                                     >
                                         <option value="A-Z">A-Z</option>
                                         <option value="Z-A">Z-A</option>
-                                        <option value="SIZE_ASC">Size (small to large)</option>
-                                        <option value="SIZE_DESC">Size (large to small)</option>
+                                        <option value="SIZE_ASC">DS Size (small to large)</option>
+                                        <option value="SIZE_DESC">DS Size (large to small)</option>
                                     </select>
                                 </span>
                             </span>
