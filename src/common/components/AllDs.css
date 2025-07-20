@@ -1,0 +1,215 @@
+/* Global Info Icon Styles */
+.global-info-icon {
+  font-size: 1.5rem;
+  color: #888;
+  transition: all 0.2s ease;
+  transform: scale(1);
+  filter: none;
+}
+
+.global-info-icon.active {
+  color: #28a745;
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(40, 167, 69, 0.3));
+}
+
+.global-info-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Layout Styles */
+.all-ds-container {
+  height: 32px;
+}
+
+.all-ds-header-row {
+  align-items: center;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.all-ds-header-col {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.all-ds-title-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.all-ds-title {
+  margin: 0;
+}
+
+.all-ds-controls-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Grid/List Toggle Icon */
+.view-toggle-icon {
+  cursor: pointer;
+  margin-right: 16px;
+  font-size: 2.1rem;
+  color: #333;
+}
+
+/* Search Bar */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-icon {
+  font-size: 1.5rem;
+  color: #888;
+}
+
+.search-input {
+  font-size: 1.1rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  min-width: 180px;
+}
+
+/* Sort Dropdown */
+.sort-dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-dropdown-label {
+  margin-bottom: 0;
+  margin-right: 3px;
+}
+
+.sort-dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sort-dropdown {
+  margin-left: 4px;
+}
+
+/* Action Buttons */
+.action-buttons-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-button {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+}
+
+/* No Datasets Message */
+.no-datasets-container {
+  text-align: center;
+  color: #888;
+  margin: 40px 0;
+  font-size: 2rem;
+}
+
+.no-datasets-emoji {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* List View Styles */
+.list-card-col {
+  margin-bottom: 4px;
+}
+
+.list-card {
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 50vw;
+  min-width: 300px;
+  max-width: 700px;
+  border: 1px solid #e0e0e0;
+}
+
+.list-card-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-card-link {
+  word-break: break-word;
+  white-space: normal;
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.list-card-separator {
+  color: #888;
+}
+
+.list-card-info {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.list-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.list-card-info-icon {
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 1.2rem;
+  color: #888;
+}
+
+/* Grid View Styles */
+.grid-card-col {
+  margin-bottom: 24px;
+}
+
+.grid-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px 28px 18px 28px;
+}
+
+.grid-card-title {
+  margin-bottom: 12px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.grid-card-link {
+  word-break: break-word;
+  white-space: normal;
+  display: inline-block;
+}
+
+.grid-card-owner {
+  margin-bottom: 8px;
+}
+
+.grid-card-size-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+} 
