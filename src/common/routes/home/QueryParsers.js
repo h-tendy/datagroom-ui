@@ -8,6 +8,7 @@ function parseExpr (exprStr) {
     // "this" =~ ">9\d%" && "sanity_G32" =~ "92%" -> { "backgroundColor": "green"}
     // "this" =~ "93%" && "94%" -> { "backgroundColor": "yellow"}
     // (("this" =~ ">9\d%" && "sanity_G32" =~ "94%") && ("this" =~ "93%" || "this" =~ "94%")) -> { "backgroundColor": "orange"}
+    // More examples can be added in QueryParsersTest.js file
     exprStr = exprStr.trim();
     
     // Remove outer quotes if they exist
@@ -134,7 +135,7 @@ function evalExpr (expr, data, thisValue) {
     }
 }
 
-export default {
-    parseExpr, 
+module.exports = {
+    parseExpr,
     evalExpr
-}
+};
