@@ -448,6 +448,9 @@ class DsView extends Component {
         const { match, dsHome } = this.props;
         let showFilter = this.state.showAllFilters;
         let chronologyDescending = this.state.chronologyDescending;
+        let pageSize = this.state.pageSize;
+        let initialSort = JSON.parse(JSON.stringify(this.state.initialSort));
+        let filterColumnAttrs = JSON.parse(JSON.stringify(this.state.filterColumnAttrs));
         let dsView = match.params.dsView;
         if (dsHome && dsHome.dsViews && dsHome.dsViews[dsView] && dsHome.dsViews[dsView].columns) {
             let initialHeaderFilter = [];
@@ -455,7 +458,9 @@ class DsView extends Component {
             let columns = Object.values(dsHome.dsViews[dsView].columns);
             const params = new URLSearchParams(queryString);
             //Iterate through params and keep on populating the initialHeaderFilter accordingly.
-            for (const [key, value] of params.entries()) {
+            let entries = params.entries();
+            for (const [key, value] of entries) {
+                console.log(`${key}: ${value}`);
                 if (key === "_id") {
                     _id = value;
                     // once I get the _id field in the query string, only that row will be displayed.
@@ -467,6 +472,35 @@ class DsView extends Component {
                 }
                 if (key === "chronologyDescending") {
                     chronologyDescending = value.toLowerCase() === "true";
+                    continue;
+                }
+                if (key === "hdrSorters") {
+                    try {
+                        let sorters = JSON.parse(value);
+                        initialSort = sorters;
+                    } catch (e) {
+                        console.error("Error parsing hdrSorters:", e);
+                    }
+                    continue;
+                }
+                if (key === "filterColumnAttrs") {
+                    try {
+                        let fca = JSON.parse(value);
+                        filterColumnAttrs = fca;
+                    } catch (e) {
+                        console.error("Error parsing filterColumnAttrs:", e);
+                    }
+                    continue;
+                }
+                if (key === "fetchAllMatchingRecords") {
+                    this.fetchAllMatchingRecordsFlag = value.toLowerCase() === "true";
+                    continue;
+                }
+                if (key === "pageSize") {
+                    let ps = parseInt(value);
+                    if (ps && ps > 0) {
+                        pageSize = ps;
+                    }
                     continue;
                 }
                 if (columns.includes(key)) {
@@ -483,6 +517,9 @@ class DsView extends Component {
                 queryString: queryString,
                 _id: _id,
                 initialHeaderFilter: initialHeaderFilter,
+                pageSize: pageSize,
+                initialSort: initialSort,
+                filterColumnAttrs: filterColumnAttrs,
                 showAllFilters: showFilter,
                 chronologyDescending: chronologyDescending,
                 refresh: this.state.refresh + 1
@@ -987,6 +1024,35 @@ class DsView extends Component {
                 queryParamsObject[headerFilter.field] = headerFilter.value;
             }
         }
+        //Get table column sorters and add it to queryParamsObject
+        let hdrSortersTmp = this.ref.table.getSorters();
+        let hdrSorters = [];
+        for (let i = 0; i < hdrSortersTmp.length; i++) {
+            let sorter = {};
+            sorter.column = hdrSortersTmp[i].field;
+            sorter.dir = hdrSortersTmp[i].dir;
+            hdrSorters.push(sorter);
+        }
+        if (hdrSorters.length) {
+            queryParamsObject["hdrSorters"] = JSON.stringify(hdrSorters);
+        }
+        // Get filter column attributes and add it to query parameters object.
+        let filterColumnAttrs = {};
+        let cols = this.ref.table.getColumns();
+        for (let i = 0; i < cols.length; i++) {
+            let field = cols[i].getField();
+            let attrsForField = {};
+            if (!cols[i].isVisible()) {
+                attrsForField.hidden = true;
+            }
+            attrsForField.width = cols[i].getWidth();
+            filterColumnAttrs[field] = attrsForField;
+        }
+        queryParamsObject["filterColumnAttrs"] = JSON.stringify(filterColumnAttrs);
+        // Get show matches setting
+        queryParamsObject["fetchAllMatchingRecords"] = this.fetchAllMatchingRecordsFlag ? this.fetchAllMatchingRecordsFlag : false;
+        // Get the page size and add it to query parameters object.
+        queryParamsObject["pageSize"] = this.ref.table.getPageSize() ? this.ref.table.getPageSize() : 30;
         // Get the table chronology and add it to query parameters object.
         queryParamsObject["chronologyDescending"] = this.state.chronologyDescending ? this.state.chronologyDescending : false;
         //Make queryParams out of the header filters.
@@ -3345,24 +3411,10 @@ class DsView extends Component {
              * In such case, we need to clear the initialHeaderFilter
              */
                 initialHeaderFilter = [];
-            } else {
-                /**This case will be when this function is called generically but no filter is set. 
-                 * In such cases initialHeaderFilter can be set via url (processFilterViaUrl function).
-                 * So, we should not reset the header filter, instead copy the existing one.
-                 */
-                initialHeaderFilter = this.state.initialHeaderFilter;
+                initialSort = [];
+                filterColumnAttrs = {};
+                this.setState({ filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
             }
-            initialSort = [];
-            filterColumnAttrs = {};
-            if (this.state.initialSort.length === 0 && Object.keys(this.state.filterColumnAttrs).length === 0) {
-                console.log("should not be coming here");
-            } else /*if (this.state.initialHeaderFilter !== initialHeaderFilter || this.state.initialSort !== initialSort)*/ {
-                // Don't set showAllFilters to true here. This is the fix for
-                // navigating correctly when you click on 'show filters' checkbox. 
-                this.setState({ /*showAllFilters: true,*/ filter, initialHeaderFilter, initialSort, filterColumnAttrs, refresh: this.state.refresh + 1});
-            }
-            //console.log("match:", match);
-            //console.log("location:", this.props.location)
             if (newUrl !== this.props.location.pathname)
                 history.push(newUrl);
         }
