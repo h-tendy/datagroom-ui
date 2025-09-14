@@ -1,5 +1,5 @@
 // Import the actual QueryParsers functions using CommonJS require
-const { parseExpr, evalExpr } = require('./QueryParsers.js');
+const { parseExpr, evalExpr, validateExpr } = require('./QueryParsers.js');
 
 // Test cases with embedded test data - each test is self-contained
 const testCases = [
@@ -57,14 +57,14 @@ const testCases = [
         description: "Original pattern expects literal '>' character in data"
     },
     {
-        name: "Example 6 - Fixed",
-        expression: '"Performance" =~ "93%" && "Rating" =~ "94%"',
+        name: "Example 6 - Valid expression",
+        expression: '"this" =~ "93%" && "this" =~ "94%"',
         testData: {
-            "Performance": "93%",
-            "Rating": "94%"
+            "Performance": "93%"
         },
-        expected: true,
-        description: "Fixed version of comment: \"this\" =~ \"93%\" && \"94%\""
+        thisValue: "Performance",
+        expected: false,
+        description: "\"this\" =~ \"93%\" && \"this\" =~ \"94%\""
     },
     {
         name: "Example 7 - Fixed Pattern",
@@ -116,15 +116,159 @@ const testCases = [
         description: "This keyword resolving to Status field"
     },
     {
-        name: "Operator precedence",
+        name: "Operator precedence without brackets (INVALID)",
         expression: '"Team" = "INVALID" || "Department" = "SIT" && "Status" = "Active"',
         testData: {
             "Team": "VIT",
             "Department": "SIT", 
             "Status": "Active"
         },
+        expected: false,
+        description: "Cannot mix && and || at same level without brackets - should be gracefully rejected"
+    },
+    {
+        name: "Operator precedence with brackets (VALID)",
+        expression: '("Team" = "INVALID" || "Department" = "SIT") && "Status" = "Active"',
+        testData: {
+            "Team": "VIT",
+            "Department": "SIT", 
+            "Status": "Active"
+        },
         expected: true,
-        description: "Test AND has higher precedence than OR"
+        description: "With brackets, mixing && and || is allowed and should work correctly"
+    },
+    {
+        name: "Invalid syntax graceful handling",
+        expression: '"this" =~ "93%" && "94%"',
+        testData: {
+            "Score": "93%"
+        },
+        thisValue: "Score",
+        expected: false,
+        description: "Invalid syntax should be gracefully rejected (no styling applied) - missing field and operator in second part"
+    },
+    {
+        name: "Standalone string graceful handling",
+        expression: '"94%"',
+        testData: {
+            "Score": "94%"
+        },
+        expected: false,
+        description: "Standalone strings without operators should be gracefully rejected (no styling applied)"
+    },
+    {
+        name: "Mixed operators without brackets",
+        expression: '"Team" = "INVALID" || "Department" = "SIT" && "Status" = "Active"',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: false,
+        description: "This is confusing for non-programmers - requires brackets for clarity"
+    },
+    {
+        name: "Same expression with proper brackets",
+        expression: '("Team" = "INVALID" || "Department" = "SIT") && "Status" = "Active"',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Clear intention: (OR condition) AND another condition"
+    },
+    {
+        name: "Alternative bracketing", 
+        expression: '"Team" = "INVALID" || ("Department" = "SIT" && "Status" = "Active")',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Clear intention: OR condition OR (AND condition)"
+    },
+    {
+        name: "Another mixed example",
+        expression: '"Score" =~ "9[0-9]%" && "Grade" = "A" || "Bonus" = "Yes"',
+        testData: { "Score": "95%", "Grade": "A", "Bonus": "No" },
+        expected: false,
+        description: "Ambiguous - could be (Score AND Grade) OR Bonus, or Score AND (Grade OR Bonus)"
+    },
+    {
+        name: "Same with brackets (interpretation 1)",
+        expression: '("Score" =~ "9[0-9]%" && "Grade" = "A") || "Bonus" = "Yes"',
+        testData: { "Score": "95%", "Grade": "A", "Bonus": "No" },
+        expected: true,
+        description: "Clear: High score with A grade, OR has bonus"
+    },
+    {
+        name: "Same with brackets (interpretation 2)",
+        expression: '"Score" =~ "9[0-9]%" && ("Grade" = "A" || "Bonus" = "Yes")',
+        testData: { "Score": "95%", "Grade": "A", "Bonus": "No" },
+        expected: true,
+        description: "Clear: High score AND (has A grade OR has bonus)"
+    },
+    {
+        name: "Invalid partial expression",
+        expression: '"this" =~ "92%" || "94%"',
+        testData: { "Score": "92%" },
+        thisValue: "Score",
+        expected: false,
+        description: "Invalid expression should be gracefully rejected"
+    },
+    {
+        name: "Another invalid partial expression",
+        expression: '"this" =~ "93%" && "94%"',
+        testData: { "Score": "93%" },
+        thisValue: "Score",
+        expected: false,
+        description: "Invalid expression should be gracefully rejected"
+    },
+    {
+        name: "Standalone string validation",
+        expression: '"standalone"',
+        testData: { "Field": "standalone" },
+        expected: false,
+        description: "Standalone string should be gracefully rejected"
+    },
+    {
+        name: "Valid simple expression check",
+        expression: '"Team" = "VIT"',
+        testData: { "Team": "VIT" },
+        expected: true,
+        description: "Simple valid expression"
+    },
+    {
+        name: "Completely invalid syntax",
+        expression: 'invalid expression',
+        testData: { "Field": "value" },
+        expected: false,
+        description: "Invalid syntax should be gracefully rejected"
+    },
+    {
+        name: "Incomplete expression",
+        expression: '"Team" = ',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Incomplete expression should be gracefully rejected"
+    },
+    {
+        name: "Mixed operators without brackets validation",
+        expression: '"Team" = "VIT" || "Department" = "SIT" && "Status" = "Active"',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: false,
+        description: "Mixed operators without brackets should be rejected"
+    },
+    {
+        name: "Mixed operators with brackets validation",
+        expression: '("Team" = "VIT" || "Department" = "SIT") && "Status" = "Active"',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Mixed operators with proper brackets should be valid"
+    },
+    {
+        name: "Another mixed operators pattern validation",
+        expression: '"Team" = "VIT" && "Department" = "SIT" || "Status" = "Active"',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: false,
+        description: "Mixed operators without brackets should be rejected"
+    },
+    {
+        name: "Mixed operators with brackets alternate validation",
+        expression: '"Team" = "VIT" && ("Department" = "SIT" || "Status" = "Active")',
+        testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Mixed operators with proper brackets should be valid"
     }
 ];
 
@@ -162,10 +306,9 @@ function runTest(testCase, index) {
         // Check if test passed
         const passed = result === testCase.expected;
         const resultColor = passed ? 'green' : 'red';
-        const statusIcon = passed ? '✅' : '❌';
         
         console.log(`Expected: ${colorize(testCase.expected, 'blue')}, Got: ${colorize(result, resultColor)}`);
-        console.log(`${statusIcon} ${colorize(passed ? 'PASS' : 'FAIL', resultColor)}`);
+        console.log(colorize(passed ? 'PASS' : 'FAIL', resultColor));
         
         if (!passed) {
             console.log(colorize(`   Parsed AST: ${JSON.stringify(parsedExpr, null, 2)}`, 'yellow'));
@@ -173,7 +316,8 @@ function runTest(testCase, index) {
         
         return passed;
     } catch (error) {
-        console.log(colorize(`❌ ERROR: ${error.message}`, 'red'));
+        console.log(colorize(`UNEXPECTED ERROR: ${error.message}`, 'red'));
+        console.log(colorize(`   This should not happen with graceful error handling!`, 'red'));
         return false;
     }
 }
@@ -195,14 +339,13 @@ function runAllTests() {
     });
     
     console.log(colorize('\n' + '='.repeat(70), 'bold'));
-    console.log(colorize(`TEST SUMMARY: ${passedTests}/${totalTests} tests passed`, 'bold'));
+    console.log(colorize(`OVERALL TEST SUMMARY: ${passedTests}/${totalTests} tests passed`, 'bold'));
     console.log(colorize('='.repeat(70), 'bold'));
     
     if (passedTests === totalTests) {
-        console.log(colorize('🎉 ALL TESTS PASSED!', 'green'));
-        console.log(colorize('All example expressions from QueryParsers.js comments work correctly!', 'green'));
+        console.log(colorize('ALL TESTS PASSED!', 'green'));
     } else {
-        console.log(colorize(`⚠️ ${totalTests - passedTests} test(s) failed`, 'yellow'));
+        console.log(colorize(`${totalTests - passedTests} test(s) failed`, 'yellow'));
     }
     
     return passedTests === totalTests;

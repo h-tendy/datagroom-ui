@@ -1,4 +1,3 @@
-// @ts-check
 function parseExpr (exprStr) {
     let expr = {};
     // Example strings. 
@@ -6,7 +5,8 @@ function parseExpr (exprStr) {
     // ' "Team" = "SIT" '
     // "Team" = "VIT" (simpler)
     // "this" =~ ">9\d%" && "sanity_G32" =~ "92%" -> { "backgroundColor": "green"}
-    // "this" =~ "93%" && "94%" -> { "backgroundColor": "yellow"}
+    // "this" =~ "92%" && "94%" -> { "backgroundColor": "yellow"} (INVALID: gracefully rejected)
+    // "this" =~ "92%" && "this" =~ "94%" -> { "backgroundColor": "yellow"} (CORRECTED: valid syntax)
     // (("this" =~ ">9\d%" && "sanity_G32" =~ "94%") && ("this" =~ "93%" || "this" =~ "94%")) -> { "backgroundColor": "orange"}
     // More examples can be added in QueryParsersTest.js file
     exprStr = exprStr.trim();
@@ -34,75 +34,226 @@ function parseExpr (exprStr) {
         }
     }
     
-    // Handle '||' operations (lower precedence)
-    let orParts = splitByOperator(exprStr, '||');
-    if (orParts.length > 1) {
-        expr["||"] = orParts.map(part => parseExpr(part.trim()));
-        return expr;
-    }
-    
-    // Handle '&&' operations (higher precedence)
-    let andParts = splitByOperator(exprStr, '&&');
-    if (andParts.length > 1) {
-        expr["&&"] = andParts.map(part => parseExpr(part.trim()));
-        return expr;
-    }
-    
-    // Handle basic comparison operations
-    let m = exprStr.match(/^\s*"(.*?)"\s*=\s*"(.*?)"\s*$/);
-    if (m && (m.length >= 2)) {
-        expr["="] = {};
-        let key = m[1], value = m[2];
-        expr["="].key = key;
-        expr["="].value = value;
-        return expr;
-    }
-    m = exprStr.match(/^\s*"(.*?)"\s*=~\s*"(.*?)"\s*$/);
-    if (m && (m.length >= 2)) {
-        expr["=~"] = {};
-        let key = m[1], regex = m[2];
-        expr["=~"].key = key;
-        expr["=~"].regex = regex;
-        return expr;
-    }
-    return expr;
+    return parseExpressionWithBraces(exprStr, false);
 }
 
-// Helper function to split expression by operator while respecting parentheses
-function splitByOperator(exprStr, operator) {
-    let parts = [];
-    let currentPart = '';
-    let parenCount = 0;
-    let i = 0;
+// New function to validate expressions more strictly and provide detailed error information
+function validateExpr(exprStr) {
+    const originalExpr = exprStr.trim();
     
-    while (i < exprStr.length) {
-        let char = exprStr[i];
-        
-        if (char === '(') {
-            parenCount++;
-            currentPart += char;
-        } else if (char === ')') {
-            parenCount--;
-            currentPart += char;
-        } else if (parenCount === 0 && exprStr.substring(i, i + operator.length + 2) === ` ${operator} `) {
-            // Found operator at top level (not inside parentheses)
-            parts.push(currentPart);
-            currentPart = '';
-            i += operator.length + 1; // Skip the operator and spaces
-        } else {
-            currentPart += char;
+    exprStr = exprStr.replace(/^\s*'/, '');
+    exprStr = exprStr.replace(/\s*'$/, '');
+    
+    return validateExprInternal(exprStr);
+}
+
+// Internal recursive validation function
+function validateExprInternal(exprStr) {
+    // Handle parentheses grouping first
+    if (exprStr.startsWith('(') && exprStr.endsWith(')')) {
+        // Check if the parentheses are balanced and represent the entire expression
+        let parenCount = 0;
+        let isOuterParen = true;
+        for (let i = 0; i < exprStr.length; i++) {
+            if (exprStr[i] === '(') parenCount++;
+            if (exprStr[i] === ')') parenCount--;
+            // If we reach 0 before the end, the outer parens don't wrap everything
+            if (parenCount === 0 && i < exprStr.length - 1) {
+                isOuterParen = false;
+                break;
+            }
         }
-        i++;
+        if (isOuterParen) {
+            return validateExprInternal(exprStr.slice(1, -1));
+        }
     }
     
-    if (currentPart) {
-        parts.push(currentPart);
+    return parseExpressionWithBraces(exprStr, true);
+}
+
+// Shared function implementing mongoFilters.js logic
+function parseExpressionWithBraces(exprStr, isValidation) {
+    let expr = {};
+    let terms = [], type = '', inBrackets = 0;
+    let curTerm = '';
+    
+    try {
+        for (let i = 0; i < exprStr.length; i++) {
+            if (exprStr[i] == '(') { inBrackets++ }
+            if (exprStr[i] == ')') { inBrackets-- }
+            if (exprStr[i] == '&' && exprStr[i+1] == '&' && inBrackets == 0) {
+                terms.push(curTerm.trim()); curTerm = ''; i++;
+                if (!type) {
+                    type = '&&'; 
+                } else if (type != '&&') {
+                    // Cannot mix && and || at same level
+                    return isValidation ? 
+                        { isValid: false, error: 'Cannot mix && and || at same level' } : 
+                        {};
+                }
+                continue;
+            }
+            if (exprStr[i] == '|' && exprStr[i+1] == '|' && inBrackets == 0) {
+                terms.push(curTerm.trim()); curTerm = ''; i++;
+                if (!type) {
+                    type = '||'; 
+                } else if (type != '||') {
+                    // Cannot mix && and || at same level
+                    return isValidation ? 
+                        { isValid: false, error: 'Cannot mix && and || at same level' } : 
+                        {};
+                }
+                continue;
+            }
+            if (!curTerm && exprStr[i] == ' ') {
+                ; // skip white-space at start of new terms.
+            } else {
+                curTerm += exprStr[i];
+            }
+            if (i == exprStr.length - 1) {
+                terms.push(curTerm.trim()); curTerm = '';
+            }
+        }
+    } catch (e) {
+        return isValidation ? 
+            { isValid: false, error: 'Invalid expression syntax' } : 
+            {};
+    }
+
+    if (terms.length == 1) {
+        // Single term - recursively parse it (might contain nested expressions)
+        let term = terms[0];
+        let regex = term, negate = false;
+        let m = regex.match(/^\s*!(.*)$/);
+        if (m && m.length >= 1) {
+            negate = true;
+            regex = m[1];
+        }
+        // trim open brackets
+        while (true) {
+            m = regex.match(/^\s*\((.*)$/);
+            if (m && m.length >= 1) {
+                regex = m[1];
+            } else {
+                break;
+            }
+        }
+        // trim close brackets
+        while (true) {
+            m = regex.match(/(.*)\)\s*$/);
+            if (m && m.length >= 1) {
+                regex = m[1];
+            } else {
+                break;
+            }
+        }
+        if (/&&/.test(regex) || /\|\|/.test(regex)) {
+            if (isValidation) {
+                return validateExprInternal(regex);
+            } else {
+                if (negate) {
+                    let nestedExpr = parseExpr(regex);
+                    if (Object.keys(nestedExpr).length === 0) {
+                        return {};
+                    }
+                    expr["$not"] = nestedExpr;
+                } else {
+                    return parseExpr(regex);
+                }
+            }
+        } else {
+            if (isValidation) {
+                // Handle basic comparison operations for validation
+                if (isValidComparison(regex)) {
+                    return { isValid: true };
+                } else {
+                    return { isValid: false, error: 'Invalid expression' };
+                }
+            } else {
+                // Handle basic comparison operations for parsing
+                let m = regex.match(/^\s*"(.*?)"\s*=\s*"(.*?)"\s*$/);
+                if (m && (m.length >= 2)) {
+                    let comparisonExpr = {};
+                    comparisonExpr["="] = {};
+                    let key = m[1], value = m[2];
+                    comparisonExpr["="].key = key;
+                    comparisonExpr["="].value = value;
+                    if (negate) {
+                        expr["$not"] = comparisonExpr;
+                    } else {
+                        expr = comparisonExpr;
+                    }
+                    return expr;
+                }
+                m = regex.match(/^\s*"(.*?)"\s*=~\s*"(.*?)"\s*$/);
+                if (m && (m.length >= 2)) {
+                    let comparisonExpr = {};
+                    comparisonExpr["=~"] = {};
+                    let key = m[1], regexValue = m[2];
+                    comparisonExpr["=~"].key = key;
+                    comparisonExpr["=~"].regex = regexValue;
+                    if (negate) {
+                        expr["$not"] = comparisonExpr;
+                    } else {
+                        expr = comparisonExpr;
+                    }
+                    return expr;
+                }
+                // If we reach here, the expression didn't match any valid pattern
+                return {};
+            }
+        }
+    } else if (type == '&&' || type == '||') {
+        if (isValidation) {
+            // Validate all child terms
+            for (let i = 0; i < terms.length; i++) {
+                let validation = validateExprInternal(terms[i]);
+                if (!validation.isValid) {
+                    return validation; // Return first invalid term
+                }
+            }
+            return { isValid: true };
+        } else {
+            // Parse all child terms
+            let childFilters = [];
+            for (let i = 0; i < terms.length; i++) {
+                let childFilter = parseExpr(terms[i]);
+                if (Object.keys(childFilter).length === 0) {
+                    return {}; // graceful rejection if any child is invalid
+                }
+                childFilters.push(childFilter);
+            }
+            expr[type] = childFilters;
+        }
+    } else {
+        // No operators found but multiple terms - shouldn't happen with proper parsing
+        return isValidation ? 
+            { isValid: false, error: 'Invalid expression' } : 
+            {};
     }
     
-    return parts;
+    return isValidation ? { isValid: true } : expr;
+}
+
+// Helper function to check if expression is a valid comparison
+function isValidComparison(exprStr) {
+    // Check for = operator
+    let m = exprStr.match(/^\s*"(.*?)"\s*=\s*"(.*?)"\s*$/);
+    if (m && (m.length >= 2)) {
+        return true;
+    }
+    // Check for =~ operator
+    m = exprStr.match(/^\s*"(.*?)"\s*=~\s*"(.*?)"\s*$/);
+    if (m && (m.length >= 2)) {
+        return true;
+    }
+    return false;
 }
 
 function evalExpr (expr, data, thisValue) {
+    if (!expr || Object.keys(expr).length === 0) {
+        return false;
+    }  
     let key;
     for (key in expr) {
         if (key === "=") {
@@ -124,6 +275,10 @@ function evalExpr (expr, data, thisValue) {
             let regex = new RegExp(equalsExpr["regex"], "i");
             return regex.test(rowValue);
         }
+        if (key === "$not") {
+            // Return the negation of the nested expression
+            return !evalExpr(expr["$not"], data, thisValue);
+        }
         if (key === "||") {
             // Return true if any sub-expression is true
             return expr["||"].some(subExpr => evalExpr(subExpr, data, thisValue));
@@ -133,9 +288,11 @@ function evalExpr (expr, data, thisValue) {
             return expr["&&"].every(subExpr => evalExpr(subExpr, data, thisValue));
         }
     }
+    return false;
 }
 
 module.exports = {
     parseExpr,
-    evalExpr
+    evalExpr,
+    validateExpr
 };
