@@ -10,6 +10,7 @@ import Select from 'react-select';
 import AccessCtrl from './DsViewEditAccessCtrl';
 import PerRowAccessCtrl from './DsViewEditPerRowAccessCtrl';
 import { authHeader } from '../../helpers';
+import * as QueryParsers from './QueryParsers';
 
 
 let MarkdownIt = new require('markdown-it')({
@@ -79,6 +80,7 @@ class DsViewEdit extends Component {
         this.editorParamsControl = this.editorParamsControl.bind(this);
         this.renderComplete = this.renderComplete.bind(this);
         this.setViewStatus = this.setViewStatus.bind(this);
+        this.validateAllConditionalExpressions = this.validateAllConditionalExpressions.bind(this);
     }
     componentDidMount () {
         const { dispatch, match, user, dsHome } = this.props;
@@ -189,6 +191,12 @@ class DsViewEdit extends Component {
                 } catch (e) {}
             }
             filteredDefs.push(currentDefs[i]);
+        }
+
+        const validationError = this.validateAllConditionalExpressions(filteredDefs);
+        if (validationError) {
+            this.setState({ setViewStatus: validationError });
+            return;
         }
         let jiraColumns = {
             "Work-id": false,
@@ -336,6 +344,49 @@ class DsViewEdit extends Component {
             }    
         }
 
+    }
+
+    validateAllConditionalExpressions(filteredDefs) {
+        for (let i = 0; i < filteredDefs.length; i++) {
+            const colDef = filteredDefs[i];
+            const fieldName = colDef.field;
+
+            // Validate conditional formatting expressions
+            if (colDef.formatterParams && colDef.formatterParams.conditionalFormatting && colDef.formatterParams.conditionalExprs) {
+                for (let j = 0; j < colDef.formatterParams.conditionalExprs.length; j++) {
+                    const exprLine = colDef.formatterParams.conditionalExprs[j];
+                    const exprStr = exprLine.split('->')[0].trim();
+                    
+                    if (exprStr && exprStr.length > 0) {
+                        const validation = QueryParsers.validateExpr(exprStr);
+                        if (!validation.isValid) {
+                            const errorMsg = `Invalid expression in ${fieldName} : ${exprStr}`;
+                            console.log('VALIDATION ERROR:', errorMsg);
+                            return errorMsg;
+                        }
+                    }
+                }
+            }
+
+            // Validate conditional values expressions (for autocomplete)
+            if (colDef.editorParams && colDef.editorParams.conditionalValues && colDef.editorParams.conditionalExprs) {
+                for (let j = 0; j < colDef.editorParams.conditionalExprs.length; j++) {
+                    const exprLine = colDef.editorParams.conditionalExprs[j];
+                    const exprStr = exprLine.split(':')[0].trim();
+                    
+                    if (exprStr && exprStr.length > 0) {
+                        const validation = QueryParsers.validateExpr(exprStr);
+                        if (!validation.isValid) {
+                            const errorMsg = `Invalid expression in ${fieldName} : ${exprStr}`;
+                            console.log('VALUES VALIDATION ERROR:', errorMsg);
+                            return errorMsg;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
     }
 
     setViewStatus () {
