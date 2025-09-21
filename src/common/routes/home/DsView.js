@@ -3040,6 +3040,7 @@ class DsView extends Component {
             }
             // Do in a function so that you can attach to all formatters.
             function doConditionalFormatting (cell, formatterParams) {
+                let conditionalCellData = null;
                 if (formatterParams && formatterParams.conditionalFormatting) {
                     let rowData = cell.getRow().getData();
                     for (let i = 0; i < formatterParams.conditionalExprs.length; i++) {
@@ -3055,16 +3056,28 @@ class DsView extends Component {
                             if (values.color) {
                                 cell.getElement().style.color = values.color;
                             }
+                            if (values.updateCellData) {
+                                conditionalCellData = values.updateCellData;
+                            }
                             break;
                         }
                     }
-                }            
+                }
+                return conditionalCellData;
             }
             if (col.editor === "input") {
                 col.formatter = (cell, formatterParams) => {
                     let value = cell.getValue();
-                    doConditionalFormatting(cell, formatterParams);
-                    if (value === undefined) return "";
+                    let conditionalCellData = doConditionalFormatting(cell, formatterParams);
+                    if (conditionalCellData !== null) {
+                        // Always append to existing value
+                        value = (value || "") + conditionalCellData;
+                    }
+                    
+                    if (value === undefined || value === null || value === "") {
+                        return conditionalCellData || "";
+                    }
+                    
                     return value;
                 }
                 /* // This loses conditional formatting!
@@ -3080,8 +3093,17 @@ class DsView extends Component {
                 col.formatter = (cell, formatterParams) => {
                     //console.log("html formatter");
                     let value = cell.getValue();
-                    doConditionalFormatting(cell, formatterParams);
-                    if (value === undefined) return "";
+                    let conditionalCellData = doConditionalFormatting(cell, formatterParams);
+                
+                    if (conditionalCellData !== null) {
+                        // Always append to existing value
+                        value = (value || "") + conditionalCellData;
+                    }
+                    
+                    if (value === undefined || value === null) {
+                        value = conditionalCellData || "";
+                    }
+                    
                     if (typeof value != "string") return value;
                     /* If this is a jira row, do some special handling */
                     let width = cell.getColumn().getWidth();
