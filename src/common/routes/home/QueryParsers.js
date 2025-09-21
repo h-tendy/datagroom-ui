@@ -8,6 +8,8 @@ function parseExpr (exprStr) {
     // "this" =~ "92%" && "94%" -> { "backgroundColor": "yellow"} (INVALID: gracefully rejected)
     // "this" =~ "92%" && "this" =~ "94%" -> { "backgroundColor": "yellow"} (CORRECTED: valid syntax)
     // (("this" =~ ">9\d%" && "sanity_G32" =~ "94%") && ("this" =~ "93%" || "this" =~ "94%")) -> { "backgroundColor": "orange"}
+    // "status" == "pending" -> {"updateCellData": " (Review Required)"}
+    // "score" < "50" -> {"backgroundColor": "red", "updateCellData": " FAILED"}
     // More examples can be added in QueryParsersTest.js file
     exprStr = exprStr.trim();
     
