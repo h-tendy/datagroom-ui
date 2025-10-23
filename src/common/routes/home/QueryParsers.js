@@ -44,11 +44,21 @@ function validateExpr(exprStr) {
     exprStr = exprStr.replace(/^\s*'/, '');
     exprStr = exprStr.replace(/\s*'$/, '');
     
-    return validateExprInternal(exprStr);
+    return validateExprInternal(exprStr, 0);
 }
 
 // Internal recursive validation function
-function validateExprInternal(exprStr) {
+function validateExprInternal(exprStr, depth) {
+    // Prevent infinite recursion
+    if (depth > 50) {
+        return { isValid: false, error: 'Expression too deeply nested' };
+    }
+    
+    // Check for empty or whitespace-only expressions
+    if (!exprStr || exprStr.trim() === '') {
+        return { isValid: false, error: 'Empty expression' };
+    }
+    
     // Handle parentheses grouping first
     if (exprStr.startsWith('(') && exprStr.endsWith(')')) {
         // Check if the parentheses are balanced and represent the entire expression
@@ -64,15 +74,27 @@ function validateExprInternal(exprStr) {
             }
         }
         if (isOuterParen) {
-            return validateExprInternal(exprStr.slice(1, -1));
+            return validateExprInternal(exprStr.slice(1, -1), depth + 1);
         }
     }
     
-    return parseExpressionWithBraces(exprStr, true);
+    return parseExpressionWithBraces(exprStr, true, depth);
 }
 
 // Shared function implementing mongoFilters.js logic
-function parseExpressionWithBraces(exprStr, isValidation) {
+function parseExpressionWithBraces(exprStr, isValidation, depth) {
+    // Set default depth if not provided (for non-validation calls)
+    if (depth === undefined) {
+        depth = 0;
+    }
+    
+    // Prevent infinite recursion
+    if (depth > 50) {
+        return isValidation ? 
+            { isValid: false, error: 'Expression too deeply nested' } : 
+            {};
+    }
+    
     let expr = {};
     let terms = [], type = '', inBrackets = 0;
     let curTerm = '';
@@ -129,30 +151,33 @@ function parseExpressionWithBraces(exprStr, isValidation) {
             negate = true;
             regex = m[1];
         }
-        // trim open brackets
-        while (true) {
-            m = regex.match(/^\s*\((.*)$/);
-            if (m && m.length >= 1) {
-                regex = m[1];
-            } else {
-                break;
+        // trim matching outer brackets only
+        while (regex.trim().startsWith('(') && regex.trim().endsWith(')')) {
+            let trimmed = regex.trim();
+            let inner = trimmed.slice(1, -1);
+            // Check if removing these parens keeps the expression balanced
+            let parenCount = 0;
+            let isBalanced = true;
+            for (let i = 0; i < inner.length; i++) {
+                if (inner[i] === '(') parenCount++;
+                if (inner[i] === ')') parenCount--;
+                if (parenCount < 0) {
+                    isBalanced = false;
+                    break;
+                }
             }
-        }
-        // trim close brackets
-        while (true) {
-            m = regex.match(/(.*)\)\s*$/);
-            if (m && m.length >= 1) {
-                regex = m[1];
+            if (isBalanced && parenCount === 0) {
+                regex = inner;
             } else {
                 break;
             }
         }
         if (/&&/.test(regex) || /\|\|/.test(regex)) {
             if (isValidation) {
-                return validateExprInternal(regex);
+                return validateExprInternal(regex, depth + 1);
             } else {
                 if (negate) {
-                    let nestedExpr = parseExpr(regex);
+                    let nestedExpr = parseExpressionWithBraces(regex, false, depth + 1);
                     if (Object.keys(nestedExpr).length === 0) {
                         return {};
                     }
@@ -207,7 +232,7 @@ function parseExpressionWithBraces(exprStr, isValidation) {
         if (isValidation) {
             // Validate all child terms
             for (let i = 0; i < terms.length; i++) {
-                let validation = validateExprInternal(terms[i]);
+                let validation = validateExprInternal(terms[i], depth + 1);
                 if (!validation.isValid) {
                     return validation; // Return first invalid term
                 }
@@ -217,7 +242,7 @@ function parseExpressionWithBraces(exprStr, isValidation) {
             // Parse all child terms
             let childFilters = [];
             for (let i = 0; i < terms.length; i++) {
-                let childFilter = parseExpr(terms[i]);
+                let childFilter = parseExpressionWithBraces(terms[i], false, depth + 1);
                 if (Object.keys(childFilter).length === 0) {
                     return {}; // graceful rejection if any child is invalid
                 }
