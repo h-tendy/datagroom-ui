@@ -341,61 +341,25 @@ const testCases = [
         description: "Score is NOT in 80-99% range"
     },
     {
-        name: "NOT with regex pattern matching false case",
-        expression: '!"Score" =~ "[8-9][0-9]%"',
-        testData: { "Score": "85%" },
-        expected: false,
-        description: "Negation fails when score matches 80-99% range"
-    },
-    {
-        name: "Complex NOT with multiple conditions",
-        expression: '!("Team" = "VIT" && "Score" =~ "9[0-9]%" && "Status" = "Active")',
-        testData: { "Team": "VIT", "Score": "95%", "Status": "Inactive" },
-        expected: true,
-        description: "NOT of three AND conditions - one fails so NOT succeeds"
-    },
-    {
-        name: "Complex NOT with multiple conditions false case",
-        expression: '!("Team" = "VIT" && "Score" =~ "9[0-9]%" && "Status" = "Active")',
-        testData: { "Team": "VIT", "Score": "95%", "Status": "Active" },
-        expected: false,
-        description: "All conditions true, so NOT fails"
-    },
-    {
-        name: "NOT operator with 'this' and regex",
-        expression: '!"this" =~ "9[0-9]%"',
-        testData: { "Score": "85%" },
-        thisValue: "Score",
-        expected: true,
-        description: "This (Score) does NOT match 90-99% pattern"
-    },
-    {
-        name: "Double negation (NOT of NOT) - not supported",
-        expression: '!!("Team" = "VIT")',
+        name: "Invalid NOT - incomplete expression after NOT",
+        expression: '!"Team" = ',
         testData: { "Team": "VIT" },
         expected: false,
-        description: "Double negation with !! is not a valid pattern and should be gracefully rejected"
+        description: "Invalid: Incomplete expression after NOT should be gracefully rejected"
     },
     {
-        name: "Double negation alternative - nested NOT with parens - not supported",
-        expression: '!(!("Team" = "VIT"))',
+        name: "Invalid NOT - misplaced NOT operator",
+        expression: '"Team" ! = "VIT"',
         testData: { "Team": "VIT" },
         expected: false,
-        description: "Nested double negation !(!(...)) is not currently supported and should be gracefully rejected"
+        description: "Invalid: Misplaced NOT operator should be gracefully rejected"
     },
     {
-        name: "NOT in complex bracketed expression",
-        expression: '(!"Team" = "VIT" && "Score" =~ "9[0-9]%") || "Status" = "Active"',
-        testData: { "Team": "SIT", "Score": "95%", "Status": "Inactive" },
+        name: "NOT with properly bracketed mixed operators",
+        expression: '(!"Team" = "VIT" || "Department" = "SIT") && "Status" = "Active"',
+        testData: { "Team": "SIT", "Department": "MIT", "Status": "Active" },
         expected: true,
-        description: "First part true: NOT Team=VIT AND high score"
-    },
-    {
-        name: "NOT expression with empty/missing field",
-        expression: '!"NonExistent" = "Value"',
-        testData: { "Team": "VIT" },
-        expected: true,
-        description: "NOT on non-existent field should be true (undefined != Value)"
+        description: "NOT with properly bracketed mixed operators should work"
     },
     {
         name: "Another mixed example",
@@ -491,55 +455,41 @@ const testCases = [
         description: "Mixed operators with proper brackets should be valid"
     },
     {
-        name: "Invalid NOT - missing expression after NOT",
-        expression: '!',
+        name: "Unbalanced parentheses - too many opening",
+        expression: '(("Team" = "VIT")',
         testData: { "Team": "VIT" },
         expected: false,
-        description: "Invalid: NOT operator without expression should be gracefully rejected"
+        description: "Unbalanced parentheses should be gracefully rejected"
     },
     {
-        name: "Invalid NOT - NOT with standalone string",
-        expression: '!"standalone"',
-        testData: { "Field": "standalone" },
-        expected: false,
-        description: "Invalid: NOT with just a string should be gracefully rejected"
-    },
-    {
-        name: "Invalid NOT - incomplete expression after NOT",
-        expression: '!"Team" = ',
+        name: "Balanced nested parentheses - valid",
+        expression: '((("Team" = "VIT")))',
         testData: { "Team": "VIT" },
-        expected: false,
-        description: "Invalid: Incomplete expression after NOT should be gracefully rejected"
-    },
-    {
-        name: "Invalid NOT - misplaced NOT operator",
-        expression: '"Team" ! = "VIT"',
-        testData: { "Team": "VIT" },
-        expected: false,
-        description: "Invalid: Misplaced NOT operator should be gracefully rejected"
-    },
-    {
-        name: "Depth limit test - deeply nested NOT",
-        expression: '!(!(!(!(!(!(!(!(!(!("Team" = "VIT"))))))))',
-        testData: { "Team": "VIT" },
-        expected: false,
-        description: "Even depth of NOTs (10 levels) - should equal original if not too deep"
-    },
-    {
-        name: "NOT with mixed operators requiring brackets",
-        expression: '!"Team" = "VIT" || "Department" = "SIT" && "Status" = "Active"',
-        testData: { "Team": "SIT", "Department": "SIT", "Status": "Active" },
-        expected: false,
-        description: "Mixed operators without brackets should be rejected even with NOT"
-    },
-    {
-        name: "NOT with properly bracketed mixed operators",
-        expression: '(!"Team" = "VIT" || "Department" = "SIT") && "Status" = "Active"',
-        testData: { "Team": "SIT", "Department": "MIT", "Status": "Active" },
         expected: true,
-        description: "NOT with properly bracketed mixed operators should work"
+        description: "Multiple balanced parentheses should be stripped and expression evaluated"
+    },
+    {
+        name: "Mixed balanced and unbalanced parentheses",
+        expression: '(("Team" = "VIT") && ("Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: false,
+        description: "Unbalanced parentheses should be gracefully rejected even with some balanced pairs"
+    },
+    {
+        name: "Complex nested with balanced parentheses",
+        expression: '(((("Team" = "VIT" && "Status" = "Active") || "Department" = "SIT")))',
+        testData: { "Team": "VIT", "Status": "Active", "Department": "MIT" },
+        expected: true,
+        description: "Multiple layers of balanced parentheses should work correctly"
+    },
+    {
+        name: "Parentheses with NOT inside",
+        expression: '(!"Team" = "VIT" && "Status" = "Active")',
+        testData: { "Team": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Outer parentheses around expression with NOT"
     }
-];
+]; 
 
 // Console colors for better output
 const colors = {

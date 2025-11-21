@@ -15,85 +15,32 @@ function parseExpr (exprStr) {
     exprStr = exprStr.replace(/^\s*'/, '');
     exprStr = exprStr.replace(/\s*'$/, '');
     
-    // Handle parentheses grouping first
-    if (exprStr.startsWith('(') && exprStr.endsWith(')')) {
-        // Check if the parentheses are balanced and represent the entire expression
-        let parenCount = 0;
-        let isOuterParen = true;
-        for (let i = 0; i < exprStr.length; i++) {
-            if (exprStr[i] === '(') parenCount++;
-            if (exprStr[i] === ')') parenCount--;
-            // If we reach 0 before the end, the outer parens don't wrap everything
-            if (parenCount === 0 && i < exprStr.length - 1) {
-                isOuterParen = false;
-                break;
-            }
-        }
-        if (isOuterParen) {
-            return parseExpr(exprStr.slice(1, -1));
-        }
-    }
-    
     return parseExpressionWithBraces(exprStr, false);
 }
 
 // New function to validate expressions more strictly and provide detailed error information
 function validateExpr(exprStr) {
-    const originalExpr = exprStr.trim();
     
     exprStr = exprStr.replace(/^\s*'/, '');
     exprStr = exprStr.replace(/\s*'$/, '');
     
-    return validateExprInternal(exprStr, 0);
-}
-
-// Internal recursive validation function
-function validateExprInternal(exprStr, depth) {
-    // Prevent infinite recursion
-    if (depth > 50) {
-        return { isValid: false, error: 'Expression too deeply nested' };
-    }
-    
-    // Check for empty or whitespace-only expressions
-    if (!exprStr || exprStr.trim() === '') {
-        return { isValid: false, error: 'Empty expression' };
-    }
-    
-    // Handle parentheses grouping first
-    if (exprStr.startsWith('(') && exprStr.endsWith(')')) {
-        // Check if the parentheses are balanced and represent the entire expression
-        let parenCount = 0;
-        let isOuterParen = true;
-        for (let i = 0; i < exprStr.length; i++) {
-            if (exprStr[i] === '(') parenCount++;
-            if (exprStr[i] === ')') parenCount--;
-            // If we reach 0 before the end, the outer parens don't wrap everything
-            if (parenCount === 0 && i < exprStr.length - 1) {
-                isOuterParen = false;
-                break;
-            }
-        }
-        if (isOuterParen) {
-            return validateExprInternal(exprStr.slice(1, -1), depth + 1);
-        }
-    }
-    
-    return parseExpressionWithBraces(exprStr, true, depth);
+    return parseExpressionWithBraces(exprStr, true);
 }
 
 // Shared function implementing mongoFilters.js logic
-function parseExpressionWithBraces(exprStr, isValidation, depth) {
-    // Set default depth if not provided (for non-validation calls)
-    if (depth === undefined) {
-        depth = 0;
+function parseExpressionWithBraces(exprStr, isValidation, visited) {
+    // Initialize visited set to track expressions and prevent infinite recursion
+    if (!visited) {
+        visited = new Set();
     }
     
-    // Prevent infinite recursion
-    if (depth > 50) {
+    // Check if we've seen this expression before (infinite loop detection)
+    if (visited.has(exprStr)) {
         return isValidation ? 
-            { isValid: false, error: 'Expression too deeply nested' } : 
+            { isValid: false, error: 'Invalid expression' } : 
             {};
     }
+    visited.add(exprStr);
     
     let expr = {};
     let terms = [], type = '', inBrackets = 0;
@@ -174,16 +121,16 @@ function parseExpressionWithBraces(exprStr, isValidation, depth) {
         }
         if (/&&/.test(regex) || /\|\|/.test(regex)) {
             if (isValidation) {
-                return validateExprInternal(regex, depth + 1);
+                return parseExpressionWithBraces(regex, true, visited);
             } else {
                 if (negate) {
-                    let nestedExpr = parseExpressionWithBraces(regex, false, depth + 1);
+                    let nestedExpr = parseExpressionWithBraces(regex, false, visited);
                     if (Object.keys(nestedExpr).length === 0) {
                         return {};
                     }
                     expr["$not"] = nestedExpr;
                 } else {
-                    return parseExpr(regex);
+                    return parseExpressionWithBraces(regex, false, visited);
                 }
             }
         } else {
@@ -232,7 +179,7 @@ function parseExpressionWithBraces(exprStr, isValidation, depth) {
         if (isValidation) {
             // Validate all child terms
             for (let i = 0; i < terms.length; i++) {
-                let validation = validateExprInternal(terms[i], depth + 1);
+                let validation = parseExpressionWithBraces(terms[i], true, visited);
                 if (!validation.isValid) {
                     return validation; // Return first invalid term
                 }
@@ -242,7 +189,7 @@ function parseExpressionWithBraces(exprStr, isValidation, depth) {
             // Parse all child terms
             let childFilters = [];
             for (let i = 0; i < terms.length; i++) {
-                let childFilter = parseExpressionWithBraces(terms[i], false, depth + 1);
+                let childFilter = parseExpressionWithBraces(terms[i], false, visited);
                 if (Object.keys(childFilter).length === 0) {
                     return {}; // graceful rejection if any child is invalid
                 }
