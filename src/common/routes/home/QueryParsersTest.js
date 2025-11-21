@@ -178,6 +178,190 @@ const testCases = [
         description: "Clear intention: OR condition OR (AND condition)"
     },
     {
+        name: "NOT operator - simple negation",
+        expression: '!"Team" = "VIT"',
+        testData: { "Team": "SIT" },
+        expected: true,
+        description: "Negation of equality: Team is NOT VIT"
+    },
+    {
+        name: "NOT operator - simple negation false case",
+        expression: '!"Team" = "VIT"',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Negation of equality fails when value matches"
+    },
+    {
+        name: "NOT operator with regex",
+        expression: '!"Score" =~ "9[0-9]%"',
+        testData: { "Score": "85%" },
+        expected: true,
+        description: "Negation of regex: Score is NOT in 90-99% range"
+    },
+    {
+        name: "NOT operator with regex false case",
+        expression: '!"Score" =~ "9[0-9]%"',
+        testData: { "Score": "95%" },
+        expected: false,
+        description: "Negation of regex fails when value matches pattern"
+    },
+    {
+        name: "NOT operator with this keyword",
+        expression: '!"this" = "Active"',
+        testData: { "Status": "Inactive" },
+        thisValue: "Status",
+        expected: true,
+        description: "Negation with 'this' keyword - status is NOT Active"
+    },
+    {
+        name: "NOT operator with this keyword false case",
+        expression: '!"this" = "Active"',
+        testData: { "Status": "Active" },
+        thisValue: "Status",
+        expected: false,
+        description: "Negation with 'this' keyword fails when value matches"
+    },
+    {
+        name: "NOT operator with parentheses",
+        expression: '!("Team" = "VIT")',
+        testData: { "Team": "SIT" },
+        expected: true,
+        description: "Negation with parentheses for clarity"
+    },
+    {
+        name: "NOT operator with complex AND expression",
+        expression: '!("Team" = "VIT" && "Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Inactive" },
+        expected: true,
+        description: "Negation of AND: NOT (Team=VIT AND Status=Active)"
+    },
+    {
+        name: "NOT operator with complex AND expression false case",
+        expression: '!("Team" = "VIT" && "Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: false,
+        description: "Negation of AND fails when both conditions are true"
+    },
+    {
+        name: "NOT operator with complex OR expression",
+        expression: '!("Team" = "VIT" || "Team" = "SIT")',
+        testData: { "Team": "MIT" },
+        expected: true,
+        description: "Negation of OR: Team is neither VIT nor SIT"
+    },
+    {
+        name: "NOT operator with complex OR expression false case",
+        expression: '!("Team" = "VIT" || "Team" = "SIT")',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Negation of OR fails when one condition is true"
+    },
+    {
+        name: "NOT operator in AND combination",
+        expression: '!"Team" = "VIT" && "Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Active" },
+        expected: true,
+        description: "NOT Team=VIT AND Status=Active"
+    },
+    {
+        name: "NOT operator in AND combination false case 1",
+        expression: '!"Team" = "VIT" && "Status" = "Active"',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: false,
+        description: "Fails when Team is VIT (first condition false)"
+    },
+    {
+        name: "NOT operator in AND combination false case 2",
+        expression: '!"Team" = "VIT" && "Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Inactive" },
+        expected: false,
+        description: "Fails when Status is not Active (second condition false)"
+    },
+    {
+        name: "NOT operator in OR combination",
+        expression: '!"Team" = "VIT" || "Status" = "Active"',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: true,
+        description: "NOT Team=VIT OR Status=Active (second condition saves it)"
+    },
+    {
+        name: "NOT operator in OR combination true case 2",
+        expression: '!"Team" = "VIT" || "Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Inactive" },
+        expected: true,
+        description: "NOT Team=VIT OR Status=Active (first condition saves it)"
+    },
+    {
+        name: "NOT operator in OR combination false case",
+        expression: '!"Team" = "SIT" || "Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Inactive" },
+        expected: false,
+        description: "Both conditions fail: Team IS SIT (NOT fails) and Status is not Active"
+    },
+    {
+        name: "Multiple NOT operators with AND",
+        expression: '!"Team" = "VIT" && !"Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Inactive" },
+        expected: true,
+        description: "Team is NOT VIT AND Status is NOT Active"
+    },
+    {
+        name: "Multiple NOT operators with AND false case",
+        expression: '!"Team" = "VIT" && !"Status" = "Active"',
+        testData: { "Team": "SIT", "Status": "Active" },
+        expected: false,
+        description: "Second NOT condition fails when Status is Active"
+    },
+    {
+        name: "Multiple NOT operators with OR",
+        expression: '!"Team" = "VIT" || !"Status" = "Active"',
+        testData: { "Team": "VIT", "Status": "Inactive" },
+        expected: true,
+        description: "Team is VIT (first fails) OR Status is NOT Active (second succeeds)"
+    },
+    {
+        name: "NOT with nested parentheses",
+        expression: '!(("Team" = "VIT" || "Team" = "SIT") && "Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Inactive" },
+        expected: true,
+        description: "Negation of complex nested expression"
+    },
+    {
+        name: "NOT with nested parentheses false case",
+        expression: '!(("Team" = "VIT" || "Team" = "SIT") && "Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: false,
+        description: "Negation fails when nested expression is true"
+    },
+    {
+        name: "NOT with regex pattern matching",
+        expression: '!"Score" =~ "[8-9][0-9]%"',
+        testData: { "Score": "75%" },
+        expected: true,
+        description: "Score is NOT in 80-99% range"
+    },
+    {
+        name: "Invalid NOT - incomplete expression after NOT",
+        expression: '!"Team" = ',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Invalid: Incomplete expression after NOT should be gracefully rejected"
+    },
+    {
+        name: "Invalid NOT - misplaced NOT operator",
+        expression: '"Team" ! = "VIT"',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Invalid: Misplaced NOT operator should be gracefully rejected"
+    },
+    {
+        name: "NOT with properly bracketed mixed operators",
+        expression: '(!"Team" = "VIT" || "Department" = "SIT") && "Status" = "Active"',
+        testData: { "Team": "SIT", "Department": "MIT", "Status": "Active" },
+        expected: true,
+        description: "NOT with properly bracketed mixed operators should work"
+    },
+    {
         name: "Another mixed example",
         expression: '"Score" =~ "9[0-9]%" && "Grade" = "A" || "Bonus" = "Yes"',
         testData: { "Score": "95%", "Grade": "A", "Bonus": "No" },
@@ -269,8 +453,43 @@ const testCases = [
         testData: { "Team": "VIT", "Department": "SIT", "Status": "Active" },
         expected: true,
         description: "Mixed operators with proper brackets should be valid"
+    },
+    {
+        name: "Unbalanced parentheses - too many opening",
+        expression: '(("Team" = "VIT")',
+        testData: { "Team": "VIT" },
+        expected: false,
+        description: "Unbalanced parentheses should be gracefully rejected"
+    },
+    {
+        name: "Balanced nested parentheses - valid",
+        expression: '((("Team" = "VIT")))',
+        testData: { "Team": "VIT" },
+        expected: true,
+        description: "Multiple balanced parentheses should be stripped and expression evaluated"
+    },
+    {
+        name: "Mixed balanced and unbalanced parentheses",
+        expression: '(("Team" = "VIT") && ("Status" = "Active")',
+        testData: { "Team": "VIT", "Status": "Active" },
+        expected: false,
+        description: "Unbalanced parentheses should be gracefully rejected even with some balanced pairs"
+    },
+    {
+        name: "Complex nested with balanced parentheses",
+        expression: '(((("Team" = "VIT" && "Status" = "Active") || "Department" = "SIT")))',
+        testData: { "Team": "VIT", "Status": "Active", "Department": "MIT" },
+        expected: true,
+        description: "Multiple layers of balanced parentheses should work correctly"
+    },
+    {
+        name: "Parentheses with NOT inside",
+        expression: '(!"Team" = "VIT" && "Status" = "Active")',
+        testData: { "Team": "SIT", "Status": "Active" },
+        expected: true,
+        description: "Outer parentheses around expression with NOT"
     }
-];
+]; 
 
 // Console colors for better output
 const colors = {
