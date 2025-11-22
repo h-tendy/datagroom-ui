@@ -321,124 +321,17 @@ class DsView extends Component {
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
         let me = this;
-        // Delegate socket setup to helper if available
+        // Delegate socket setup to helper if available. The full inline
+        // initialization and handlers were migrated to
+        // `src/common/routes/home/ds/socketHandlers.js` to keep `DsView` small.
+        // Keep a guarded delegation here so older behavior remains if helper
+        // is unavailable at runtime.
         if (this._socket && this._socket.init) {
             try {
                 this._socket.init();
             } catch (e) {
                 console.error('Socket helper init failed', e);
             }
-        } else {
-            // fallback to inline socket initialization (previous behavior)
-            socket = io(config.apiUrl, {
-                extraHeaders: {
-                    Cookie: document.cookie
-                }
-            });
-
-            socket.on('connect', (data) => {
-                socket.emit('Hello', { user: user.user});
-                socket.emit('getActiveLocks', dsName);
-                me.setState({connectedState: true});
-            })
-            socket.on('disconnect', (data) => {
-                me.setState({connectedState: false});
-            })
-            socket.on('dbConnectivityState', (isDbConnected) => {
-                me.setState({dbconnectivitystate: isDbConnected.dbState});
-            });
-            socket.on('Hello', (helloObj) => {});
-            socket.on('activeLocks', (activeLocks) => {
-                me.setState({connectedState: true});
-                if (!me.ref || !me.ref.table) return;
-                activeLocks = JSON.parse(activeLocks);
-                console.log("Active locks: ", activeLocks);
-                let keys = Object.keys(activeLocks);
-                for (let i = 0; i < keys.length; i++) {
-                    let _id = keys[i];
-                    let rows = me.ref.table.searchRows("_id", "=", _id);
-                    if (!rows.length) continue;
-                    console.log("Found row!");
-                    let fields = Object.keys(activeLocks[_id]);
-                    for (let j = 0; j < fields.length; j++) {
-                        let field = fields[j];
-                        console.log("Field is: ",field);
-                        let cell = rows[0].getCell(field);
-                        console.log("Cell is: ", cell);
-                        activeLocks[_id][field] = cell;
-                        if (!cell) continue;
-                        if (me.cellImEditing === cell) {
-                            console.log("Whoops, someone else got there first..");
-                            cell.cancelEdit();
-                        }
-                        cell.getElement().style.backgroundColor = 'lightGray';
-                    }
-                }
-                this.lockedByOthersCells = activeLocks;
-            })
-            socket.on('locked', (lockedObj) => {
-                console.log('Received locked: ', lockedObj);
-                if (!me.ref || !me.ref.table) return;
-                if (dsName === lockedObj.dsName) {
-                    let rows = me.ref.table.searchRows("_id", "=", lockedObj._id);
-                    if (!rows.length) return;
-                    let cell = rows[0].getCell(lockedObj.field);
-                    if (!me.lockedByOthersCells[lockedObj._id]) {
-                        me.lockedByOthersCells[lockedObj._id] = {}
-                    }
-                    me.lockedByOthersCells[lockedObj._id][lockedObj.field] = cell;
-                    if (me.cellImEditing === cell) {
-                        console.log("Whoops, someone else got there first..");
-                        cell.cancelEdit();
-                    }
-                    cell.getElement().style.backgroundColor = 'lightGray';
-                }
-            })
-            socket.on('unlocked', (unlockedObj) => {
-                let adjustTableHeight = false;
-                try {
-                    if (!me.ref || !me.ref.table) return;
-                    if (dsName === unlockedObj.dsName && me.lockedByOthersCells[unlockedObj._id][unlockedObj.field]) {
-                        let cell = me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
-                        delete me.lockedByOthersCells[unlockedObj._id][unlockedObj.field];
-                        if (unlockedObj.newVal !== undefined && unlockedObj.newVal !== null) {
-                            let update = { _id: unlockedObj._id };
-                            update[unlockedObj.field] = unlockedObj.newVal;
-                            me.ref.table.updateData([ update ]);
-                            adjustTableHeight = true;
-                        }
-                        cell.getElement().style.backgroundColor = '';
-                        let colDef = cell.getColumn().getDefinition();
-                        colDef.formatter(cell, colDef.formatterParams);
-                    } else if (dsName === unlockedObj.dsName && unlockedObj.newVal) {
-                        let rows = me.ref.table.searchRows("_id", "=", unlockedObj._id);
-                        if (!rows.length) return;
-                        let update = { _id: unlockedObj._id };
-                        update[unlockedObj.field] = unlockedObj.newVal;
-                        me.ref.table.updateData([ update ]);
-                        adjustTableHeight = true;
-                    }
-                } catch (e) {}
-                if (adjustTableHeight && !me.cellImEditing) {
-                    if (me.timers["post-cell-edited"]) {
-                        clearTimeout(me.timers["post-cell-edited"]);
-                        me.timers["post-cell-edited"] = null;
-                    }
-                    me.timers["post-cell-edited"] = setTimeout(() => {
-                        if (!me.cellImEditing) {
-                            console.log("Doing adjusttablesize (unlockReq)... ");
-                            me.ref.table.rowManager.adjustTableSize(false);
-                            me.normalizeAllImgRows();
-                            me.applyHighlightJsBadge();
-                            me.renderPlotlyInCells();
-                        } else {
-                            console.log("Skipping adjusttablesie (unlockReq)... ");
-                        }
-                    }, 500);
-                }
-                console.log('Received unlocked: ', unlockedObj);
-            })
-            socket.on('exception', (msg) => { console.log('GOT exception:', msg); });
         }
     }
     componentWillUnmount () {
