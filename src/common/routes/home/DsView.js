@@ -1994,110 +1994,21 @@ class DsView extends Component {
 
     /**Start convert to JIRA row */
     handleJiraFormChange(obj) {
-        let key = Object.keys(obj)[0]
-        if (key && key === "Project" || key == "JIRA_AGILE_LABEL" || key == "Type" || key === "summary" || key === "description") {
-            this.jiraFormData = {
-                ...this.jiraFormData,
-                [key]: obj[key]
-            }
-        } else {
-            this.jiraFormData = {
-                ...this.jiraFormData,
-                [this.jiraFormData.Type]: {
-                    ...this.jiraFormData[this.jiraFormData.Type],
-                    ...obj
-                }
-            }
+        if (this._jira && this._jira.handleJiraFormChange) {
+            try { return this._jira.handleJiraFormChange(obj); } catch (e) { console.error('JIRA helper failed', e); }
         }
     }
 
     formFinalJiraFormData() {
-        let jiraFormData = JSON.parse(JSON.stringify(this.jiraFormData));
-        for (let field of Object.keys(jiraFormData)) {
-            if (!jiraFormData[field]) continue;
-            if (typeof jiraFormData[field] !== 'object') continue;
-            jiraFormData[field].summary = jiraFormData.summary;
-            jiraFormData[field].description = jiraFormData.description;
+        if (this._jira && this._jira.formFinalJiraFormData) {
+            try { return this._jira.formFinalJiraFormData(); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        delete jiraFormData.summary;
-        delete jiraFormData.description;
-        return jiraFormData;
+        return {};
     }
 
     async submitJiraFormChange(confirmed, _id, selectorObj) {
-        if (confirmed) {
-            const { dispatch, match, user, dsHome } = this.props;
-            let dsName = match.params.dsName;
-            let dsView = match.params.dsView;
-            let username = user.user;
-            let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
-            let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-            let jiraFormData = this.formFinalJiraFormData()
-            this.updateLocalStorage(jiraFormData)
-            if (jiraFormData.Type == "Bug") {
-                //Just before sending change the value of key customfield_25578 to array
-                jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
-            }
-            // dispatch(dsActions.convertToJira(dsName, dsView, user.user, _id, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig));
-            //reset the jiraFormData value
-            let response = await dsService.convertToJira({ dsName, dsView, username, selectorObj, jiraFormData, jiraConfig, jiraAgileConfig })
-            let secondaryModalStatus = this.state.modalStatus;
-            let modalStatus = this.state.modalStatus;
-            let showSecondaryModal = false
-            if (response) {
-                if (response.status == 'success') {
-                    let fullUpdatedRec = response.record
-                    let update = {
-                        _id: _id,
-                        ...fullUpdatedRec
-                    }
-                    this.ref.table.updateData([update]);
-                    modalStatus += `Update <b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
-                    let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
-                    this.setState({
-                        modalTitle: "Convert Status",
-                        modalQuestion: modalQuestion,
-                        modalStatus: modalStatus,
-                        modalOk: "Dismiss",
-                        modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '', grayOutModalButtons: false }) },
-                        showModal: true,
-                        toggleModalOnClose: true,
-                        grayOutModalButtons: false
-                    });
-                    let obj = {
-                        Project: "",
-                        JIRA_AGILE_LABEL: "None",
-                        Type: "Epic",
-                        summary: "",
-                        description: ""
-                    }
-                    this.jiraFormData = obj
-                    this.jiraFormData = {
-                        ...this.jiraFormData,
-                        ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
-                    }
-                } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error}</b><br/><br/>`
-                    showSecondaryModal = true;
-                }
-            } else {
-                secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`
-                showSecondaryModal = true;
-            }
-            if (showSecondaryModal /* && !this.state.showModal*/) {
-                let self = this;
-                let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
-                this.setState({
-                    secondaryModalTitle: "Convert Status",
-                    secondaryModalQuestion: secondaryModalQuestion,
-                    secondaryModalStatus: secondaryModalStatus,
-                    secondaryModalOk: "Dismiss",
-                    secondaryModalCallback: (confirmed) => { self.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '', grayOutModalButtons: false }) },
-                    showSecondaryModal: true,
-                });
-            }
-        } else {
-            this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
+        if (this._jira && this._jira.submitJiraFormChange) {
+            try { return await this._jira.submitJiraFormChange(confirmed, _id, selectorObj); } catch (e) { console.error('JIRA helper failed', e); }
         }
     }
 
@@ -2235,171 +2146,19 @@ class DsView extends Component {
         if (this._jira && this._jira.fillLocalStorageItemData) {
             try { return this._jira.fillLocalStorageItemData(issueTypes); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        try {
-            for (let key of Object.keys(this.jiraFormData)) {
-                if (typeof this.jiraFormData[key] == "object") {
-                    let localStorageItem = localStorage.getItem(key)
-                    if (localStorageItem && localStorageItem != "undefined") {
-                        let parsedLocalItem = JSON.parse(localStorageItem)
-                        for (let parsedKey of Object.keys(parsedLocalItem)) {
-                            if (this.jiraFormData[key].hasOwnProperty(parsedKey)) {
-                                let { isValidated, defaultValue } = this.validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey])
-                                if (isValidated && defaultValue != null) {
-                                    this.jiraFormData[key][parsedKey] = defaultValue
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (localStorage.getItem('JIRA_AGILE_LABEL') && localStorage.getItem('JIRA_AGILE_LABEL') != "undefined") {
-                this.jiraFormData.JIRA_AGILE_LABEL = localStorage.getItem('JIRA_AGILE_LABEL')
-            }
-        } catch (e) { }
     }
 
     validateAndGetDefaultValue(issueTypes, issueType, field, value) {
         if (this._jira && this._jira.validateAndGetDefaultValue) {
             try { return this._jira.validateAndGetDefaultValue(issueTypes, issueType, field, value); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        let isValidated = false;
-        let defaultValue = null;
-        if (field === "customfield_25578") {
-            isValidated = true;
-            defaultValue = value;
-            return { isValidated, defaultValue }
-        }
-        for (let i = 0; i < issueTypes.length; i++) {
-            if (issueTypes[i].name != issueType) { continue }
-            let currIssueObj = issueTypes[i];
-            let fieldObj = currIssueObj.fields[field];
-            if (fieldObj) {
-                if (fieldObj.type == "array" && fieldObj.allowedValues) {
-                    for (let k = 0; k < value.length; k++) {
-                        if (!fieldObj.allowedValues.includes(value[k])) {
-                            isValidated = false;
-                            return { isValidated, defaultValue }
-                        }
-                    }
-                    isValidated = true
-                    defaultValue = value
-                    return { isValidated, defaultValue }
-                } else if (fieldObj.type == "option" && fieldObj.allowedValues) {
-                    if (fieldObj.allowedValues.includes(value)) {
-                        isValidated = true;
-                        defaultValue = value;
-                        return { isValidated, defaultValue }
-                    } else {
-                        isValidated = false;
-                        return { isValidated, defaultValue }
-                    }
-                } else if (fieldObj.type == "creatableArray" && fieldObj.allowedValues) {
-                    if (fieldObj.allowedValues.includes(value)) {
-                        isValidated = true;
-                        defaultValue = value;
-                        return { isValidated, defaultValue }
-                    } else {
-                        isValidated = false;
-                        return { isValidated, defaultValue }
-                    }
-                } else if (fieldObj.type == "searchableOption" && fieldObj.allowedValues) {
-                    let allowedValues = fieldObj.allowedValues.map((e) => e.key)
-                    if (allowedValues.includes(value)) {
-                        isValidated = true;
-                        defaultValue = value;
-                        return { isValidated, defaultValue }
-                    } else {
-                        isValidated = false;
-                        return { isValidated, defaultValue }
-                    }
-                } else {
-                    isValidated = true
-                    defaultValue = value
-                    return { isValidated, defaultValue }
-                }
-            } else {
-                return { isValidated, defaultValue }
-            }
-        }
-        return { isValidated, defaultValue }
+        return { isValidated: false, defaultValue: null };
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
         if (this._jira && this._jira.formInitialJiraForm) {
             try { return this._jira.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        try {
-            let fieldMapping = null
-            if (jiraConfig && jiraConfig.jira) {
-                fieldMapping = jiraConfig.jiraFieldMapping
-            }
-            if (jiraAgileConfig && jiraAgileConfig.jira) {
-                fieldMapping = {
-                    ...fieldMapping,
-                    ...jiraAgileConfig.jiraFieldMapping
-                }
-            }
-            if (!fieldMapping) return
-            let summary = ""
-            let description = ""
-            let descriptionDone = false
-            let type = ""
-            let storyPoints = 0
-            if (fieldMapping["summary"]) {
-                let value = rowData[fieldMapping["summary"]]
-                let arr = value.split("\n")
-                if (arr.length >= 2) {
-                    let summaryLine = arr[0]
-                    let matchArr = summaryLine.match((/#+(.*)/))
-                    if (matchArr && matchArr.length >= 2) {
-                        summary = matchArr[1].trim()
-                    } else {
-                        summary = summaryLine
-                    }
-                    description = arr.join("\n").trim()
-                    descriptionDone = true
-                } else if (arr.length == 1) {
-                    let summaryLine = arr[0]
-                    let matchArr = summaryLine.match((/#+(.*)/))
-                    if (matchArr && matchArr.length >= 2) {
-                        summary = matchArr[1].trim()
-                    } else {
-                        summary = summaryLine
-                    }
-                }
-            }
-            if (fieldMapping["type"]) {
-                if (rowData[fieldMapping["type"]].match(/(t|T)ask/))
-                    type = "Story Task"
-                else if (rowData[fieldMapping["type"]].match(/(b|B)ug/))
-                    type = "Bug"
-                else if (rowData[fieldMapping["type"]].match(/(e|E)pic/))
-                    type = "Epic"
-                else if (rowData[fieldMapping["type"]].match(/(s|S)tory/))
-                    type = "Story"
-            }
-            if (!descriptionDone && fieldMapping["description"]) {
-                description = rowData[fieldMapping["description"]].trim()
-            }
-            if (fieldMapping["Story Points"]) {
-                if (typeof rowData[fieldMapping["Story Points"]] == 'number')
-                    storyPoints = rowData[fieldMapping["Story Points"]]
-                else if (typeof rowData[fieldMapping["Story Points"]] == 'string')
-                    storyPoints = parseInt(rowData[fieldMapping["Story Points"]])
-            }
-
-            if (type == "Epic" || type == "Story" || type == "Bug" || type == "Story Task") {
-                this.jiraFormData["Type"] = type
-            }
-            this.jiraFormData['summary'] = summary
-            this.jiraFormData['description'] = description
-            for (let key of Object.keys(this.jiraFormData)) {
-                if (typeof this.jiraFormData[key] != 'object') continue
-                if (storyPoints != 0 && jiraCustomFieldMapping['Story Points']) {
-                    if (this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] == 0 || this.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) this.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints
-                }
-            }
-        } catch (e) { }
     }
 
     isJiraRow(data, jiraConfig, jiraAgileConfig) {
@@ -2594,110 +2353,12 @@ class DsView extends Component {
         if (this._jira && this._jira.getJiraId) {
             try { return this._jira.getJiraId(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        let fieldMapping = null
-        if (jiraConfig && jiraConfig.jira) {
-            fieldMapping = jiraConfig.jiraFieldMapping
-        }
-        if (jiraAgileConfig && jiraAgileConfig.jira) {
-            fieldMapping = {
-                ...fieldMapping,
-                ...jiraAgileConfig.jiraFieldMapping
-            }
-        }
-        try {
-            let key = rowData[fieldMapping['key']]
-            let regex = new RegExp(`/browse/(.*)\\)`)
-            let jiraIssueIdMatchArr = key.match(regex)
-            if (jiraIssueIdMatchArr && jiraIssueIdMatchArr.length >= 2) {
-                key = jiraIssueIdMatchArr[1]
-            }
-            return key
-        } catch (e) { }
-        return ""
+        return "";
     }
 
     async submitAddJira(confirmed, parentKey, parentSelectorObj) {
         if (this._jira && this._jira.submitAddJira) {
             try { return await this._jira.submitAddJira(confirmed, parentKey, parentSelectorObj); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        if (confirmed) {
-            const { dispatch, match, user, dsHome } = this.props;
-            let dsName = match.params.dsName;
-            let dsView = match.params.dsView;
-            let username = user.user;
-            let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
-            let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-            let jiraFormData = this.formFinalJiraFormData();
-            this.updateLocalStorage(jiraFormData)
-            if (jiraFormData.Type == "Bug") {
-                //Just before sending change the value of key customfield_25578 to array
-                jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",")
-            }
-            //reset the jiraFormData value
-            let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig, parentKey, parentSelectorObj })
-            let secondaryModalStatus = this.state.modalStatus;
-            let modalStatus = this.state.modalStatus;
-            let showSecondaryModal = false
-            if (response) {
-                if (response.status == 'success') {
-                    let fullUpdatedRec = response.record
-                    let update = {
-                        _id: response._id,
-                        ...fullUpdatedRec
-                    }
-                    this.ref.table.addRow(update, true, null)
-                    if (response.parentRecord) {
-                        let fullParentUpdatedRec = response.parentRecord
-                        let update = {
-                            _id: parentSelectorObj._id,
-                            ...fullParentUpdatedRec
-                        }
-                        this.ref.table.updateData([update]);
-                    }
-                    modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`
-                    let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
-                    this.setState({
-                        modalTitle: "Convert Status",
-                        modalQuestion: modalQuestion,
-                        modalStatus: modalStatus,
-                        modalOk: "Dismiss",
-                        modalCallback: (confirmed) => { this.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                        showModal: true,
-                        toggleModalOnClose: true,
-                        grayOutModalButtons: false
-                    });
-                    let obj = {
-                        Project: "",
-                        JIRA_AGILE_LABEL: "None",
-                        Type: "Epic",
-                    }
-                    this.jiraFormData = obj
-                    this.jiraFormData = {
-                        ...this.jiraFormData,
-                        ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
-                    }
-                } else {
-                    secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error})</b><br/><br/>`
-                    showSecondaryModal = true;
-                }
-            } else {
-                secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`
-                showSecondaryModal = true;
-            }
-            if (showSecondaryModal /* && !this.state.showModal*/) {
-                let self = this;
-                let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
-                this.setState({
-                    secondaryModalTitle: "Convert Status",
-                    secondaryModalQuestion: secondaryModalQuestion,
-                    secondaryModalStatus: secondaryModalStatus,
-                    secondaryModalOk: "Dismiss",
-                    secondaryModalCallback: (confirmed) => { self.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '', grayOutModalButtons: false }) },
-                    showSecondaryModal: true
-                });
-            }
-        } else {
-            this.setState({ showModal: !this.state.showModal, toggleModalOnClose: true });
         }
     }
 
@@ -2705,22 +2366,6 @@ class DsView extends Component {
         if (this._jira && this._jira.updateLocalStorage) {
             try { return this._jira.updateLocalStorage(jiraFormData); } catch (e) { console.error('JIRA helper failed', e); }
         }
-        try {
-            localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL)
-            for (let key of Object.keys(jiraFormData)) {
-                if (typeof jiraFormData[key] == "object") {
-                    let objStringified;
-                    let obj = {
-                        ...jiraFormData[key]
-                    }
-                    if (obj["summary"]) obj["summary"] = ""
-                    if (obj["description"]) obj["description"] = ""
-                    if (obj["customfield_12791"]) obj["customfield_12791"] = ""
-                    objStringified = JSON.stringify(obj)
-                    localStorage.setItem(key, objStringified)
-                }
-            }
-        } catch (e) { }
     }
 
     /**End add a jira issue */

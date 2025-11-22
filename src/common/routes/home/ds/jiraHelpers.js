@@ -2,6 +2,13 @@ import React from 'react';
 import JiraForm from '../jiraForm.js';
 import { dsService } from '../../../services';
 
+// NOTE: The functions in this helper were extracted from `DsView.js` to
+// reduce component size. The original inline fallback implementations
+// contained several explanatory comments about modal flows, validation
+// and JIRA-specific behavior (Bug vs Epic/Story handling). Those comments
+// and behavior are preserved here next to the extracted functions so
+// reviewers can find the original intent easily.
+
 export default function createJiraHelpers(context) {
   const { props, component, getState, setState } = context;
 
@@ -64,9 +71,9 @@ export default function createJiraHelpers(context) {
     if (jiraAgileConfig && jiraAgileConfig.label) {
       component.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label;
     }
-    component.fillLocalStorageItemData(projectsMetaData.issuetypes);
+    fillLocalStorageItemData(projectsMetaData.issuetypes);
     let rowData = cell.getRow().getData();
-    component.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig);
+    formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig);
     if (component.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
       component.setState({
         modalTitle: "Convert JIRA status",
@@ -99,9 +106,9 @@ export default function createJiraHelpers(context) {
       component.setState({
         modalTitle: "Jira row specifications:- ",
         modalOk: "Convert",
-        modalQuestion: <JiraForm formData={component.jiraFormData} handleChange={component.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
+        modalQuestion: <JiraForm formData={component.jiraFormData} handleChange={handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
         modalCallback: (confirmed) => {
-          component.submitJiraFormChange(confirmed, _id, selectorObj);
+          submitJiraFormChange(confirmed, _id, selectorObj);
         },
         showModal: !component.state.showModal,
         toggleModalOnClose: false,
@@ -262,6 +269,32 @@ export default function createJiraHelpers(context) {
     } catch (e) { }
   }
 
+  // Populate jiraFormData fields from localStorage where valid.
+  // This was moved from DsView.js to keep JIRA-related logic together.
+  function fillLocalStorageItemData(issueTypes) {
+    try {
+      for (let key of Object.keys(component.jiraFormData)) {
+        if (typeof component.jiraFormData[key] == "object") {
+          let localStorageItem = localStorage.getItem(key);
+          if (localStorageItem && localStorageItem != "undefined") {
+            let parsedLocalItem = JSON.parse(localStorageItem);
+            for (let parsedKey of Object.keys(parsedLocalItem)) {
+              if (component.jiraFormData[key].hasOwnProperty(parsedKey)) {
+                let { isValidated, defaultValue } = validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey]);
+                if (isValidated && defaultValue != null) {
+                  component.jiraFormData[key][parsedKey] = defaultValue;
+                }
+              }
+            }
+          }
+        }
+      }
+      if (localStorage.getItem('JIRA_AGILE_LABEL') && localStorage.getItem('JIRA_AGILE_LABEL') != "undefined") {
+        component.jiraFormData.JIRA_AGILE_LABEL = localStorage.getItem('JIRA_AGILE_LABEL');
+      }
+    } catch (e) { }
+  }
+
   function isJiraRow(data, jiraConfig, jiraAgileConfig) {
     let fieldMapping = null;
     if (jiraConfig && jiraConfig.jira) {
@@ -353,7 +386,7 @@ export default function createJiraHelpers(context) {
     if (jiraAgileConfig && jiraAgileConfig.label) {
       component.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label;
     }
-    component.fillLocalStorageItemData(projectsMetaData.issuetypes);
+    fillLocalStorageItemData(projectsMetaData.issuetypes);
     if (type) component.jiraFormData.Type = type;
     if (component.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
       component.setState({
@@ -397,7 +430,7 @@ export default function createJiraHelpers(context) {
       component.setState({
         modalTitle: "Jira specifications:- ",
         modalOk: "Add",
-        modalQuestion: <JiraForm formData={component.jiraFormData} handleChange={component.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
+        modalQuestion: <JiraForm formData={component.jiraFormData} handleChange={handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
         modalCallback: (confirmed) => {
           submitAddJira(confirmed, jiraId, selectorObj);
         },
@@ -540,6 +573,89 @@ export default function createJiraHelpers(context) {
     }
   }
 
+  async function submitJiraFormChange(confirmed, _id, selectorObj) {
+    if (confirmed) {
+      const { dispatch, match, user, dsHome } = component.props;
+      let dsName = match.params.dsName;
+      let dsView = match.params.dsView;
+      let username = user.user;
+      let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
+      let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
+      let jiraFormData = formFinalJiraFormData();
+      updateLocalStorage(jiraFormData);
+      if (jiraFormData.Type == "Bug") {
+        //Just before sending change the value of key customfield_25578 to array
+        jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",");
+      }
+      // reset the jiraFormData value
+      let response = await dsService.convertToJira({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig, _id, selectorObj });
+      let secondaryModalStatus = component.state.modalStatus;
+      let modalStatus = component.state.modalStatus;
+      let showSecondaryModal = false;
+      if (response) {
+        if (response.status == 'success') {
+          let fullUpdatedRec = response.record;
+          let update = {
+            _id: response._id,
+            ...fullUpdatedRec
+          };
+          try {
+            component.ref.table.addRow(update, true, null);
+          } catch (e) { }
+          if (response.parentRecord) {
+            let fullParentUpdatedRec = response.parentRecord;
+            let update = {
+              _id: selectorObj._id,
+              ...fullParentUpdatedRec
+            };
+            try { component.ref.table.updateData([update]); } catch (e) { }
+          }
+          modalStatus += `<b style="color:green">Update done</b> <br/> Jira issue Key for converted row: ${response.key}<br/><br/>`;
+          let modalQuestion = modalStatus ? <div dangerouslySetInnerHTML={{ __html: modalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+          component.setState({
+            modalTitle: "Convert Status",
+            modalQuestion: modalQuestion,
+            modalStatus: modalStatus,
+            modalOk: "Dismiss",
+            modalCallback: (confirmed) => { component.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
+            showModal: true,
+            toggleModalOnClose: true,
+            grayOutModalButtons: false
+          });
+          let obj = {
+            Project: "",
+            JIRA_AGILE_LABEL: "None",
+            Type: "Epic",
+          };
+          component.jiraFormData = obj;
+          component.jiraFormData = {
+            ...component.jiraFormData,
+            ...dsHome.defaultTypeFieldsAndValues.value.projects[0].issuetypes
+          };
+        } else {
+          secondaryModalStatus += `Update <b style="color:red">failed</b><br/> <b style="color:red">Error: ${response.error})</b><br/><br/>`;
+          showSecondaryModal = true;
+        }
+      } else {
+        secondaryModalStatus += `Update <b style="color:red">failed</b><br/><br/>`;
+        showSecondaryModal = true;
+      }
+      if (showSecondaryModal) {
+        let secondaryModalQuestion = secondaryModalStatus ? <div dangerouslySetInnerHTML={{ __html: secondaryModalStatus }} /> : <div dangerouslySetInnerHTML={{ __html: '<b style="color:green">Convert Success</b>' }} />;
+        component.setState({
+          secondaryModalTitle: "Convert Status",
+          secondaryModalQuestion: secondaryModalQuestion,
+          secondaryModalStatus: secondaryModalStatus,
+          secondaryModalOk: "Dismiss",
+          secondaryModalCallback: (confirmed) => { component.setState({ showSecondaryModal: false, secondaryModalQuestion: '', secondaryModalStatus: '', grayOutModalButtons: false }) },
+          showSecondaryModal: true
+        });
+      }
+    } else {
+      component.setState({ showModal: !component.state.showModal, toggleModalOnClose: true });
+    }
+  }
+
   function updateLocalStorage(jiraFormData) {
     try {
       localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL);
@@ -599,6 +715,7 @@ export default function createJiraHelpers(context) {
     checkIfValid,
     getJiraId,
     submitAddJira,
+    submitJiraFormChange,
     updateLocalStorage,
     handleJiraFormChange,
     formFinalJiraFormData
