@@ -43,6 +43,7 @@ import createClipboardHelpers from './ds/clipboardHelpers';
 import createSocketHandlers from './ds/socketHandlers';
 import createDomHelpers from './ds/domHelpers';
 import createTabulatorConfig from './ds/tabulatorConfig';
+import createJiraHelpers from './ds/jiraHelpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -277,6 +278,7 @@ class DsView extends Component {
             this._socket = createSocketHandlers(context);
             this._dom = createDomHelpers(context);
             this._tabulator = createTabulatorConfig(context);
+            this._jira = createJiraHelpers(context);
         } catch (e) {
             this._clipboard = null;
             this._socket = null;
@@ -2289,6 +2291,9 @@ class DsView extends Component {
     }
 
     async convertToJiraRow(e, cell) {
+        if (this._jira && this._jira.convertToJiraRow) {
+            try { return await this._jira.convertToJiraRow(e, cell); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let self = this
         const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
@@ -2401,6 +2406,9 @@ class DsView extends Component {
     }
 
     fillLocalStorageItemData(issueTypes) {
+        if (this._jira && this._jira.fillLocalStorageItemData) {
+            try { return this._jira.fillLocalStorageItemData(issueTypes); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         try {
             for (let key of Object.keys(this.jiraFormData)) {
                 if (typeof this.jiraFormData[key] == "object") {
@@ -2425,6 +2433,9 @@ class DsView extends Component {
     }
 
     validateAndGetDefaultValue(issueTypes, issueType, field, value) {
+        if (this._jira && this._jira.validateAndGetDefaultValue) {
+            try { return this._jira.validateAndGetDefaultValue(issueTypes, issueType, field, value); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let isValidated = false;
         let defaultValue = null;
         if (field === "customfield_25578") {
@@ -2488,6 +2499,9 @@ class DsView extends Component {
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
+        if (this._jira && this._jira.formInitialJiraForm) {
+            try { return this._jira.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         try {
             let fieldMapping = null
             if (jiraConfig && jiraConfig.jira) {
@@ -2563,6 +2577,9 @@ class DsView extends Component {
     }
 
     isJiraRow(data, jiraConfig, jiraAgileConfig) {
+        if (this._jira && this._jira.isJiraRow) {
+            try { return this._jira.isJiraRow(data, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let fieldMapping = null
         if (jiraConfig && jiraConfig.jira) {
             fieldMapping = jiraConfig.jiraFieldMapping
@@ -2583,6 +2600,9 @@ class DsView extends Component {
 
     /**Start add a jira issue */
     async addJiraRow(e, cell, type) {
+        if (this._jira && this._jira.addJiraRow) {
+            try { return await this._jira.addJiraRow(e, cell, type); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let self = this
         const { match, dsHome, user } = this.props;
         let dsView = match.params.dsView;
@@ -2719,6 +2739,9 @@ class DsView extends Component {
     }
 
     checkIfValid(rowData, type, jiraConfig, jiraAgileConfig) {
+        if (this._jira && this._jira.checkIfValid) {
+            try { return this._jira.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let fieldMapping = null
         if (jiraConfig && jiraConfig.jira) {
             fieldMapping = jiraConfig.jiraFieldMapping
@@ -2742,6 +2765,9 @@ class DsView extends Component {
     }
 
     getJiraId(rowData, jiraConfig, jiraAgileConfig) {
+        if (this._jira && this._jira.getJiraId) {
+            try { return this._jira.getJiraId(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         let fieldMapping = null
         if (jiraConfig && jiraConfig.jira) {
             fieldMapping = jiraConfig.jiraFieldMapping
@@ -2765,6 +2791,9 @@ class DsView extends Component {
     }
 
     async submitAddJira(confirmed, parentKey, parentSelectorObj) {
+        if (this._jira && this._jira.submitAddJira) {
+            try { return await this._jira.submitAddJira(confirmed, parentKey, parentSelectorObj); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         if (confirmed) {
             const { dispatch, match, user, dsHome } = this.props;
             let dsName = match.params.dsName;
@@ -2847,6 +2876,9 @@ class DsView extends Component {
     }
 
     updateLocalStorage(jiraFormData) {
+        if (this._jira && this._jira.updateLocalStorage) {
+            try { return this._jira.updateLocalStorage(jiraFormData); } catch (e) { console.error('JIRA helper failed', e); }
+        }
         try {
             localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL)
             for (let key of Object.keys(jiraFormData)) {
