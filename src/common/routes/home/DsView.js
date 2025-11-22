@@ -665,31 +665,9 @@ class DsView extends Component {
     }
 
     fixImgSizeForClipboard(output) {
-
         if (this._clipboard && this._clipboard.fixImgSizeForClipboard) {
             return this._clipboard.fixImgSizeForClipboard(output);
         }
-
-        let imgList = document.querySelectorAll("img");
-        let imgSizes = {};
-        for (let i = 0; i < imgList.length; i++) {
-            //console.log(`imgList[${i}]: `, imgList[i], imgList[i].width, imgList[i].height, imgList[i].naturalWidth, imgList[i].naturalHeight, imgList[i].getAttribute("src"));
-            let img = {};
-            img.src = imgList[i].getAttribute("src");
-            img.width = imgList[i].width;
-            img.height = imgList[i].height;
-            imgSizes[img.src] = img;
-        }
-        let e = [...output.matchAll(/<img src="(.*?)"/gi)];
-        for (let i = 0; i < e.length; i++) {
-            let key = e[i][1];
-            if (!imgSizes[key]) continue;
-            if (/data:image/.test(key)) continue;
-            let str = `<img src="${key}" alt="${key}" width=".*" height=".*"`;
-            let rep = `<img src="${key}" alt="${key}" width=${imgSizes[key].width} height=${imgSizes[key].height}`;
-            output = output.replace(new RegExp(str), rep);
-        }
-        output = output.replaceAll('<img src="/attachments/', `<img src="${window.location.origin}/attachments/`);
         return output;
     }
 
@@ -1134,26 +1112,7 @@ class DsView extends Component {
         if (this._clipboard && this._clipboard.copyTextToClipboard) {
             return this._clipboard.copyTextToClipboard(text);
         }
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-
-        try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text);
-            } else {
-                // Fallback for older browsers (not recommended)
-                const successful = document.execCommand('copy');
-                const msg = successful ? 'successful' : 'failed';
-            }
-            this.showCopiedNotification(true);
-        } catch (err) {
-            console.error('Failed to copy text:', err);
-            this.showClipboardActionMessageModal(false, text);
-        } finally {
-            document.body.removeChild(textarea);
-        }
+        return false;
     }
 
     showCopiedNotification(isSuccess) {
@@ -1273,10 +1232,7 @@ class DsView extends Component {
         if (this._clipboard && this._clipboard.myCopyToClipboard) {
             return this._clipboard.myCopyToClipboard(this.ref);
         }
-        let visible = true, style = true, colVisProp = "clipboard", 
-            config = null;
-        let html = this.ref.table.modules.export.getHtml(visible, style, config, colVisProp);
-        this.copyFormatted(null, html);
+        return false;
     }
 
     copyToClipboard () {
@@ -1285,7 +1241,7 @@ class DsView extends Component {
         if (this._clipboard && this._clipboard.copyToClipboard) {
             return this._clipboard.copyToClipboard(this.ref);
         }
-        this.myCopyToClipboard();
+        return false;
     }
 
     // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
@@ -1293,75 +1249,14 @@ class DsView extends Component {
         if (this._clipboard && this._clipboard.copyFormatted) {
             return this._clipboard.copyFormatted(element, html);
         }
-        // Create container for the HTML
-        var container = document.createElement('div')
-        // XXX: Try to see if you can get the html from the element. But this
-        // didn't do the job. Also messed up the styling it seems. Background color is lost etc. 
-        if (element) html = element.innerHTML;
-        html = this.fixImgSizeForClipboard(html);
-        // To replace the markup due to the highlightjs badges. 
-        // The regex arrived by looking at the generated markup 
-        // and some clever regex as usual. 
-        // This mostly is needed when html comes from innerHTML!
-        html = html.replace(/<pre class="code-badge-pre"[\s\S]*?(<code [\s\S]*?<\/code>)<\/pre>/gi, '<pre>$1</pre>');
-
-        html = html.replace(/<code class="hljs">/gi, '<code class="hljs" style="background-color:white; font-size:12px">');
-        container.innerHTML = html
-
-        // Hide element
-        container.style.position = 'fixed'
-        container.style.pointerEvents = 'none'
-        container.style.opacity = 0
-    
-        // Detect all style sheets of the page
-        var activeSheets = Array.prototype.slice.call(document.styleSheets)
-        .filter(function (sheet) {
-            return !sheet.disabled
-        })
-        //console.log(`ActiveSheets: `, activeSheets);
-    
-        // Mount the container to the DOM to make `contentWindow` available
-        document.body.appendChild(container)
-    
-        // Copy to clipboard
-        window.getSelection().removeAllRanges()    
-        var range = document.createRange()
-        range.selectNode(container)
-        window.getSelection().addRange(range)
-        document.execCommand('copy')
-    
-        
-        for (var i = 0; i < activeSheets.length; i++) {
-            //if (activeSheets[i].title === "highlightJsBadge" || /bootstrap|datagroom/.test(activeSheets[i].href))
-            if (!/static\/css/.test(activeSheets[i].href))
-                activeSheets[i].disabled = true
-        }
-        
-        document.execCommand('copy')
-    
-        
-        for (var i = 0; i < activeSheets.length; i++) {
-            //if (activeSheets[i].title === "highlightJsBadge" || /bootstrap|datagroom/.test(activeSheets[i].href))
-            if (!/static\/css/.test(activeSheets[i].href))
-                activeSheets[i].disabled = false
-
-        }
-        
-        // Remove the container
-        document.body.removeChild(container)
+        return false;
     }
 
     copyFormattedBetter (container) {
         if (this._clipboard && this._clipboard.copyFormattedBetter) {
             return this._clipboard.copyFormattedBetter(container);
         }
-        // Copy to clipboard
-        window.getSelection().removeAllRanges()    
-        var range = document.createRange()
-        range.selectNode(container)
-        window.getSelection().addRange(range)
-        document.execCommand('copy')    
-        window.getSelection().removeAllRanges();    
+        return false;
     }
 
 
@@ -1369,14 +1264,7 @@ class DsView extends Component {
         if (this._clipboard && this._clipboard.copyCellToClipboard) {
             return this._clipboard.copyCellToClipboard(e, cell);
         }
-        let colDef = cell.getColumn().getDefinition();
-        let html = colDef.formatter(cell, colDef.formatterParams);
-        //this.copyFormatted(html);
-
-        // Now use the innerHTML! 
-        this.copyFormatted(/*cell.getElement()*/ null, `<div style="font-family:verdana; font-size:12px; background-color: white">${cell.getElement().innerHTML}</div>`);
-
-        //this.copyFormattedBetter(cell.getElement());
+        return false;
     }
 
     step1 () {
