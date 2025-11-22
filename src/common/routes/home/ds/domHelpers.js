@@ -1,0 +1,126 @@
+// DOM helpers extracted from DsView to keep component smaller
+export default function createDomHelpers(context) {
+  const { component, ref, timers } = context;
+
+  function applyHtmlLinkAndBadgeClickHandlers() {
+    const me = component;
+    let splElements = [];
+    if (document.getElementById("tabulator")) {
+      splElements = document.getElementById("tabulator").getElementsByTagName('a');
+    }
+    for (var i = 0, len = splElements.length; i < len; i++) {
+      splElements[i].onclick = function (e) {
+        me.mouseDownOnHtmlLink = true;
+        e.stopPropagation();
+        setTimeout(() => me.mouseDownOnHtmlLink = false, 1000);
+        return true;
+      }
+    }
+
+    if (document.getElementById("tabulator")) {
+      splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
+    }
+    for (i = 0, len = splElements.length; i < len; i++) {
+      splElements[i].setAttribute("tabindex", 0);
+      splElements[i].addEventListener("focus",
+        function(e) {
+          let clickedEl = e.srcElement;
+          if (clickedEl.classList.contains("code-badge-copy-icon")) {
+            me.mouseDownOnBadgeCopyIcon = true;
+            setTimeout(() => me.mouseDownOnBadgeCopyIcon = false, 1000);
+            return true;
+          }
+        });
+    }
+  }
+
+  function applyHighlightJsBadge() {
+    const me = component;
+    if (timers && timers["applyHighlightJsBadge"]) {
+      clearTimeout(timers["applyHighlightJsBadge"]);
+      timers["applyHighlightJsBadge"] = null;
+    }
+    if (timers) {
+      timers["applyHighlightJsBadge"] = setTimeout(() => {
+        if (window.highlightJsBadge) window.highlightJsBadge();
+        applyHtmlLinkAndBadgeClickHandlers();
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        if (window.highlightJsBadge) window.highlightJsBadge();
+        applyHtmlLinkAndBadgeClickHandlers();
+      }, 1000);
+    }
+  }
+
+  function normalizeAllImgRows() {
+    const me = component;
+    if (timers && timers["normalizeAllImgRows"]) {
+      clearInterval(timers["normalizeAllImgRows"]);
+      timers["normalizeAllImgRows"] = null;
+    }
+    let extraIters = 0;
+    if (timers) {
+      timers["normalizeAllImgRows"] = setInterval(function () {
+        if (document.readyState === 'complete') {
+          let imgList = document.querySelectorAll("img");
+          let allImgsRead = true;
+          for (let i = 0; i < imgList.length; i++) {
+            if (!(imgList[i].complete)) {
+              allImgsRead = false;
+              extraIters = 0;
+              break;
+            }
+          }
+          if (allImgsRead) {
+            if (extraIters === 2) {
+              if (imgList.length && !me.cellImEditing && ref && ref() && ref().table) {
+                let rows = ref().table.getRows();
+                for (let i = 0; i < rows.length; i++) {
+                  rows[i].normalizeHeight();
+                }
+                ref().table.rowManager.adjustTableSize(false);
+              }
+            }
+            if (extraIters >= 10) {
+              extraIters = 0;
+              clearInterval(timers["normalizeAllImgRows"]);
+              timers["normalizeAllImgRows"] = null;
+            }
+            extraIters++;
+          }
+        }
+      }, 300);
+    }
+  }
+
+  function renderPlotlyInCells() {
+    const plots = document.querySelectorAll('.plotly-graph');
+    plots.forEach((div) => {
+      const data = div.getAttribute('data-plot');
+      try {
+        const json = JSON.parse(decodeURIComponent(data));
+        if (window.Plotly) {
+          window.Plotly.newPlot(div, json.data, json.layout, json.config || {});
+          if (ref && ref() && ref().table) {
+            let rows = ref().table.getRows();
+            for (let i = 0; i < rows.length; i++) {
+              rows[i].normalizeHeight();
+            }
+          }
+        } else {
+          div.innerHTML = `<div style="color:red;">Plotly CDN not loaded</div>`;
+        }
+      } catch (e) {
+        div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
+      }
+    })
+  }
+
+  return {
+    applyHtmlLinkAndBadgeClickHandlers,
+    applyHighlightJsBadge,
+    normalizeAllImgRows,
+    renderPlotlyInCells
+  };
+}

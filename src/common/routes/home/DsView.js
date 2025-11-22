@@ -41,6 +41,7 @@ import AddColumnForm from './addColumnForm.js';
 import { authHeader } from '../../helpers';
 import createClipboardHelpers from './ds/clipboardHelpers';
 import createSocketHandlers from './ds/socketHandlers';
+import createDomHelpers from './ds/domHelpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -265,9 +266,11 @@ class DsView extends Component {
             };
             this._clipboard = createClipboardHelpers(context);
             this._socket = createSocketHandlers(context);
+            this._dom = createDomHelpers(context);
         } catch (e) {
             this._clipboard = null;
             this._socket = null;
+            this._dom = null;
         }
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
@@ -571,6 +574,9 @@ class DsView extends Component {
     // Since we generate html after editing, we need to attach
     // the handlers again. 
     applyHtmlLinkAndBadgeClickHandlers() {
+        if (this._dom && this._dom.applyHtmlLinkAndBadgeClickHandlers) {
+            try { return this._dom.applyHtmlLinkAndBadgeClickHandlers(); } catch (e) { console.error('DOM helper failed', e); }
+        }
         let me = this;
         let splElements = [];
         if (document.getElementById("tabulator")) {
@@ -608,6 +614,9 @@ class DsView extends Component {
         }
     }
     applyHighlightJsBadge() {
+        if (this._dom && this._dom.applyHighlightJsBadge) {
+            try { return this._dom.applyHighlightJsBadge(); } catch (e) { console.error('DOM helper failed', e); }
+        }
         //let me = this;
         if (this.timers["applyHighlightJsBadge"]) {
             clearTimeout(this.timers["applyHighlightJsBadge"]);
@@ -620,6 +629,9 @@ class DsView extends Component {
     }
 
     renderPlotlyInCells() {
+        if (this._dom && this._dom.renderPlotlyInCells) {
+            try { return this._dom.renderPlotlyInCells(); } catch (e) { console.error('DOM helper failed', e); }
+        }
         const plots = document.querySelectorAll('.plotly-graph');
         plots.forEach((div) => {
             const data = div.getAttribute('data-plot');
@@ -670,6 +682,9 @@ class DsView extends Component {
     }
 
     normalizeAllImgRows() {
+        if (this._dom && this._dom.normalizeAllImgRows) {
+            try { return this._dom.normalizeAllImgRows(); } catch (e) { console.error('DOM helper failed', e); }
+        }
         let me = this;
         if (this.timers["normalizeAllImgRows"]) {
             clearInterval(this.timers["normalizeAllImgRows"]);
