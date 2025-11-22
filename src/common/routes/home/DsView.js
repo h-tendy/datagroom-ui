@@ -39,6 +39,7 @@ import markdownItMermaid from "@datatraccorporation/markdown-it-mermaid";
 import { dsService } from '../../services';
 import AddColumnForm from './addColumnForm.js';
 import { authHeader } from '../../helpers';
+import createClipboardHelpers from './ds/clipboardHelpers';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -244,6 +245,20 @@ class DsView extends Component {
         this.copyTextToClipboard = this.copyTextToClipboard.bind(this);
 
         this.showCopiedNotification = this.showCopiedNotification.bind(this);
+
+        // Initialize helper placeholders (will be replaced by full modules)
+        try {
+            const context = {
+                props: this.props,
+                getState: () => this.state,
+                setState: (s) => this.setState(s),
+                timers: this.timers,
+                socket: () => socket
+            };
+            this._clipboard = createClipboardHelpers(context);
+        } catch (e) {
+            this._clipboard = null;
+        }
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         if (chronologyDescendingFrmLocal === "false") {
@@ -616,6 +631,10 @@ class DsView extends Component {
     }
 
     fixImgSizeForClipboard(output) {
+
+        if (this._clipboard && this._clipboard.fixImgSizeForClipboard) {
+            return this._clipboard.fixImgSizeForClipboard(output);
+        }
 
         let imgList = document.querySelectorAll("img");
         let imgSizes = {};
@@ -1075,6 +1094,9 @@ class DsView extends Component {
      * Finally, it shows the modal of success or failure based on the copy to clipboard status.
      */
     copyTextToClipboard = (text) => {
+        if (this._clipboard && this._clipboard.copyTextToClipboard) {
+            return this._clipboard.copyTextToClipboard(text);
+        }
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
@@ -1098,6 +1120,9 @@ class DsView extends Component {
     }
 
     showCopiedNotification(isSuccess) {
+        if (this._clipboard && this._clipboard.showCopiedNotification) {
+            return this._clipboard.showCopiedNotification(isSuccess);
+        }
         if (isSuccess) {
             this.setState({
                 ...this.state,
@@ -1208,6 +1233,9 @@ class DsView extends Component {
     // formatter in which we clone and use the resolved images! See 
     // col.formatterClipboard function below!
     myCopyToClipboard () {
+        if (this._clipboard && this._clipboard.myCopyToClipboard) {
+            return this._clipboard.myCopyToClipboard(this.ref);
+        }
         let visible = true, style = true, colVisProp = "clipboard", 
             config = null;
         let html = this.ref.table.modules.export.getHtml(visible, style, config, colVisProp);
@@ -1217,11 +1245,17 @@ class DsView extends Component {
     copyToClipboard () {
         // You have to also set 'clipboard' to true in table options.
         //this.ref.table.copyToClipboard();
+        if (this._clipboard && this._clipboard.copyToClipboard) {
+            return this._clipboard.copyToClipboard(this.ref);
+        }
         this.myCopyToClipboard();
     }
 
     // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
     copyFormatted (element, html) {
+        if (this._clipboard && this._clipboard.copyFormatted) {
+            return this._clipboard.copyFormatted(element, html);
+        }
         // Create container for the HTML
         var container = document.createElement('div')
         // XXX: Try to see if you can get the html from the element. But this
@@ -1281,6 +1315,9 @@ class DsView extends Component {
     }
 
     copyFormattedBetter (container) {
+        if (this._clipboard && this._clipboard.copyFormattedBetter) {
+            return this._clipboard.copyFormattedBetter(container);
+        }
         // Copy to clipboard
         window.getSelection().removeAllRanges()    
         var range = document.createRange()
@@ -1292,6 +1329,9 @@ class DsView extends Component {
 
 
     copyCellToClipboard (e, cell) {
+        if (this._clipboard && this._clipboard.copyCellToClipboard) {
+            return this._clipboard.copyCellToClipboard(e, cell);
+        }
         let colDef = cell.getColumn().getDefinition();
         let html = colDef.formatter(cell, colDef.formatterParams);
         //this.copyFormatted(html);
