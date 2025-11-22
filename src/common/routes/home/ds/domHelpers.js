@@ -1,7 +1,13 @@
 // DOM helpers extracted from DsView to keep component smaller
 export default function createDomHelpers(context) {
   const { component, ref, timers } = context;
-
+  // Since we generate html after editing, we need to attach
+  // the handlers again. Preserved from `DsView.js` fallback implementation.
+  // The original implementation attached click/focus handlers to links and
+  // highlight-badge icons inside the Tabulator container. It also flipped
+  // component flags `mouseDownOnHtmlLink` and `mouseDownOnBadgeCopyIcon` and
+  // used short timeouts to reset them. Keeping these comments here so the
+  // behavior is documented even though the component delegates to the helper.
   function applyHtmlLinkAndBadgeClickHandlers() {
     const me = component;
     let splElements = [];
@@ -11,22 +17,28 @@ export default function createDomHelpers(context) {
     for (var i = 0, len = splElements.length; i < len; i++) {
       splElements[i].onclick = function (e) {
         me.mouseDownOnHtmlLink = true;
+        // Caution: This is a must, otherwise you are getting the click after returning to the tab!
         e.stopPropagation();
+        // Caution: To clear this out after a second to ensure that the next click is honored properly.
         setTimeout(() => me.mouseDownOnHtmlLink = false, 1000);
         return true;
       }
     }
 
+    // This querySelectorAll is borrowed from highlightjs-badge.js code
     if (document.getElementById("tabulator")) {
       splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
     }
     for (i = 0, len = splElements.length; i < len; i++) {
+      // Have to setup for 'focus' event because that fires first! And
+      // tabulator already has this setup on the cell.
       splElements[i].setAttribute("tabindex", 0);
       splElements[i].addEventListener("focus",
         function(e) {
           let clickedEl = e.srcElement;
           if (clickedEl.classList.contains("code-badge-copy-icon")) {
             me.mouseDownOnBadgeCopyIcon = true;
+            // Caution: To clear this out after a second to ensure that the next click is honored properly.
             setTimeout(() => me.mouseDownOnBadgeCopyIcon = false, 1000);
             return true;
           }
@@ -74,6 +86,9 @@ export default function createDomHelpers(context) {
           }
           if (allImgsRead) {
             if (extraIters === 2) {
+              // The original behavior: after a couple of successful image loads
+              // normalize each Tabulator row height and then adjust the table size
+              // so the UI lays out correctly. Preserve the logic here.
               if (imgList.length && !me.cellImEditing && ref && ref() && ref().table) {
                 let rows = ref().table.getRows();
                 for (let i = 0; i < rows.length; i++) {

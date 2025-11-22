@@ -589,79 +589,17 @@ class DsView extends Component {
         if (this._dom && this._dom.applyHtmlLinkAndBadgeClickHandlers) {
             try { return this._dom.applyHtmlLinkAndBadgeClickHandlers(); } catch (e) { console.error('DOM helper failed', e); }
         }
-        let me = this;
-        let splElements = [];
-        if (document.getElementById("tabulator")) {
-            splElements = document.getElementById("tabulator").getElementsByTagName('a');
-        }
-        for(var i = 0, len = splElements.length; i < len; i++) {
-            splElements[i].onclick = function (e) {
-                me.mouseDownOnHtmlLink = true;
-                // Caution: This is a must, otherwise you are getting the click after returning to the tab!
-                e.stopPropagation();
-                // Caution: To clear this out after a second to ensure that the next click is honored properly. 
-                setTimeout(() => me.mouseDownOnHtmlLink = false, 1000);
-                return true;
-            }
-        }
-        // This querySelectorAll is borrowed from highlightjs-badge.js code
-        if (document.getElementById("tabulator")) {
-            splElements = document.getElementById("tabulator").querySelectorAll(".code-badge-copy-icon");
-        }
-        for(i = 0, len = splElements.length; i < len; i++) {
-            // Have to setup for 'focus' event because that fires first! And
-            // tabulator already has this setup on the cell.
-            splElements[i].setAttribute("tabindex", 0);
-            splElements[i].addEventListener("focus", 
-                function(e) {
-                    let clickedEl = e.srcElement;
-                    console.log(`Classlist is: ${clickedEl.classList}`);
-                    if (clickedEl.classList.contains("code-badge-copy-icon")) {    
-                        me.mouseDownOnBadgeCopyIcon = true;
-                        // Caution: To clear this out after a second to ensure that the next click is honored properly. 
-                        setTimeout(() => me.mouseDownOnBadgeCopyIcon = false, 1000);
-                        return true;
-                    }
-                });
-        }
     }
     applyHighlightJsBadge() {
         if (this._dom && this._dom.applyHighlightJsBadge) {
             try { return this._dom.applyHighlightJsBadge(); } catch (e) { console.error('DOM helper failed', e); }
         }
-        //let me = this;
-        if (this.timers["applyHighlightJsBadge"]) {
-            clearTimeout(this.timers["applyHighlightJsBadge"]);
-            this.timers["applyHighlightJsBadge"] = null;
-        }
-        this.timers["applyHighlightJsBadge"] = setTimeout(() => {
-            window.highlightJsBadge();
-            this.applyHtmlLinkAndBadgeClickHandlers();
-        }, 1000);
     }
 
     renderPlotlyInCells() {
         if (this._dom && this._dom.renderPlotlyInCells) {
             try { return this._dom.renderPlotlyInCells(); } catch (e) { console.error('DOM helper failed', e); }
         }
-        const plots = document.querySelectorAll('.plotly-graph');
-        plots.forEach((div) => {
-            const data = div.getAttribute('data-plot');
-            try {
-                const json = JSON.parse(decodeURIComponent(data));
-                if (window.Plotly) {
-                    window.Plotly.newPlot(div, json.data, json.layout, json.config || {});
-                    let rows = this.ref.table.getRows();
-                    for (let i = 0; i < rows.length; i++) {
-                        rows[i].normalizeHeight();
-                    }
-                } else {
-                    div.innerHTML = `<div style="color:red;">Plotly CDN not loaded</div>`;
-                }
-            } catch (e) {
-                div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
-            }
-        })
     }
 
     fixImgSizeForClipboard(output) {
