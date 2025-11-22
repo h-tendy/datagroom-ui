@@ -42,6 +42,7 @@ import { authHeader } from '../../helpers';
 import createClipboardHelpers from './ds/clipboardHelpers';
 import createSocketHandlers from './ds/socketHandlers';
 import createDomHelpers from './ds/domHelpers';
+import createTabulatorConfig from './ds/tabulatorConfig';
 let MarkdownIt = new require('markdown-it')({
     linkify: true,
     html: true
@@ -262,11 +263,20 @@ class DsView extends Component {
                 component: this,
                 ref: () => this.ref,
                 dispatch: this.props.dispatch,
-                apiUrl: config.apiUrl
+                apiUrl: config.apiUrl,
+                // Common UI components and utilities for helpers
+                MyTextArea: MyTextArea,
+                MyCodeMirror: MyCodeMirror,
+                DateEditor: DateEditor,
+                MyAutoCompleter: MyAutoCompleter,
+                MySingleAutoCompleter: MySingleAutoCompleter,
+                QueryParsers: QueryParsers,
+                MarkdownIt: MarkdownIt
             };
             this._clipboard = createClipboardHelpers(context);
             this._socket = createSocketHandlers(context);
             this._dom = createDomHelpers(context);
+            this._tabulator = createTabulatorConfig(context);
         } catch (e) {
             this._clipboard = null;
             this._socket = null;
@@ -2876,6 +2886,9 @@ class DsView extends Component {
 
     
     setColumnDefinitions () {
+        if (this._tabulator && this._tabulator.setColumnDefinitions) {
+            try { return this._tabulator.setColumnDefinitions(); } catch (e) { console.error('Tabulator helper failed', e); }
+        }
         const { match, dsHome } = this.props;
         let dsName = match.params.dsName; 
         let dsView = match.params.dsView;
