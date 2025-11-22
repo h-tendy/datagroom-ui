@@ -3,9 +3,18 @@ export default function createTabulatorConfig(context) {
   const { props, getState, setState, component, ref, MyTextArea, MyCodeMirror, DateEditor, MyAutoCompleter, MySingleAutoCompleter, QueryParsers, MarkdownIt } = context;
 
   function setColumnDefinitions() {
-    const { match, dsHome } = props;
+    // Use the current component props at call time to avoid stale snapshot
+    // values captured at helper construction. This ensures `dsHome` and
+    // other props are available after async loads.
+    const { match, dsHome } = component.props;
     let dsName = match.params.dsName;
     let dsView = match.params.dsView;
+    // If dsHome or the view metadata isn't ready yet, return empty columns
+    // so the table renders once the data is loaded. This prevents
+    // exceptions during initial render when props are still being fetched.
+    if (!dsHome || !dsHome.dsViews || !dsHome.dsViews[dsView] || !dsHome.dsViews[dsView].columnAttrs) {
+      return [];
+    }
     let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
     let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
     let me = component;
