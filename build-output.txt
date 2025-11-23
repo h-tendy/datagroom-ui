@@ -1,0 +1,345 @@
+﻿
+> analytics@0.1.0 build
+> react-scripts build
+
+node.exe : (node:40736) [DEP0176] DeprecationWarning: fs.F_OK is 
+deprecated, use fs.constants.F_OK instead
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo          : NotSpecified: ((node:40736) [D...ts 
+   .F_OK instead:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-deprecation ...` to show where the warning was 
+created)
+Creating an optimized production build...
+Browserslist: caniuse-lite is outdated. Please run next command 
+`npm update`
+Compiled with warnings.
+
+./src/common/routes/home/ds/jiraHelpers.js
+  Line 13:    'props' is assigned a value but never used     no-unused-vars
+  Line 13:    'getState' is assigned a value but never used  no-unused-vars
+  Line 13:    'setState' is assigned a value but never used  no-unused-vars
+  Line 56:    Expected '===' and instead saw '=='            eqeqeq
+  Line 77:    Expected '===' and instead saw '=='            eqeqeq
+  Line 87:    Expected '===' and instead saw '=='            eqeqeq
+  Line 87:    Expected '===' and instead saw '=='            eqeqeq
+  Line 87:   Expected '===' and instead saw '=='            eqeqeq
+  Line 137:   Expected '!==' and instead saw '!='            eqeqeq
+  Line 141:   Expected '===' and instead saw '=='            eqeqeq
+  Line 151:   Expected '===' and instead saw '=='            eqeqeq
+  Line 160:   Expected '===' and instead saw '=='            eqeqeq
+  Line 169:   Expected '===' and instead saw '=='            eqeqeq
+  Line 223:   Expected '===' and instead saw '=='            eqeqeq
+  Line 258:   Expected '===' and instead saw '=='            eqeqeq
+  Line 258:   Expected '===' and instead saw '=='            eqeqeq
+  Line 258:   Expected '===' and instead saw '=='            eqeqeq
+  Line 258:   Expected '===' and instead saw '=='            eqeqeq
+  Line 263:   'key' is defined but never used                no-unused-vars
+  Line 265:   Expected '!==' and instead saw '!='            eqeqeq
+  Line 266:   Expected '===' and instead saw '=='            eqeqeq
+  Line 276:   'key' is defined but never used                no-unused-vars
+  Line 279:   Expected '!==' and instead saw '!='            eqeqeq
+  Line 281:   'parsedKey' is defined but never used          no-unused-vars
+  Line 292:   Expected '!==' and instead saw '!='            eqeqeq
+  Line 371:   Expected '===' and instead saw '=='            eqeqeq
+  Line 391:   Expected '===' and instead saw '=='            eqeqeq
+  Line 401:   Expected '===' and instead saw '=='            eqeqeq
+  Line 401:   Expected '===' and instead saw '=='            eqeqeq
+  Line 401:  Expected '===' and instead saw '=='            eqeqeq
+  Line 421:   Expected '===' and instead saw '=='            eqeqeq
+  Line 423:   Expected '===' and instead saw '=='            eqeqeq
+  Line 464:   Expected '===' and instead saw '=='            eqeqeq
+  Line 464:   Expected '===' and instead saw '=='            eqeqeq
+  Line 466:   Expected '===' and instead saw '=='            eqeqeq
+  Line 466:   Expected '===' and instead saw '=='            eqeqeq
+  Line 499:   'dispatch' is assigned a value but never used  no-unused-vars
+  Line 507:   Expected '===' and instead saw '=='            eqeqeq
+  Line 515:   Expected '===' and instead saw '=='            eqeqeq
+  Line 578:   'dispatch' is assigned a value but never used  no-unused-vars
+  Line 586:   Expected '===' and instead saw '=='            eqeqeq
+  Line 596:   Expected '===' and instead saw '=='            eqeqeq
+  Line 662:   'key' is defined but never used                no-unused-vars
+  Line 680:   Unexpected mix of '&&' and '||'                no-mixed-operators
+  Line 680:   Unexpected mix of '&&' and '||'                no-mixed-operators
+  Line 680:   Expected '===' and instead saw '=='            eqeqeq
+  Line 680:   Expected '===' and instead saw '=='            eqeqeq
+  Line 698:   'field' is defined but never used              no-unused-vars
+
+./src/common/routes/home/AllDs.js
+  Line 192:  Expected '===' and instead saw '=='          eqeqeq
+  Line 268:  'sortBy' is assigned a value but never used  no-unused-vars
+
+./src/common/routes/home/DsViewEdit.js
+  Line 2:      'Checkbox' is defined but never used              no-unused-vars
+  Line 8:      'dsHome' is defined but never used                no-unused-vars
+  Line 127:    'dispatch' is assigned a value but never used     no-unused-vars
+  Line 208:    'key' is defined but never used                   no-unused-vars
+  Line 215:    'key' is defined but never used                   no-unused-vars
+  Line 225:    'key' is defined but never used                   no-unused-vars
+  Line 339:    Expected '===' and instead saw '=='               eqeqeq
+  Line 393:    'match' is assigned a value but never used        no-unused-vars
+  Line 413:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 429:    'dsHome' is assigned a value but never used       no-unused-vars
+  Line 430:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 431:    'dsView' is assigned a value but never used       no-unused-vars
+  Line 438:    'dsHome' is assigned a value but never used       no-unused-vars
+  Line 439:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 440:    'dsView' is assigned a value but never used       no-unused-vars
+  Line 548:    'dsHome' is assigned a value but never used       no-unused-vars
+  Line 549:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 550:    'dsView' is assigned a value but never used       no-unused-vars
+  Line 556:    'cols' is assigned a value but never used         no-unused-vars
+  Line 574:    'initialDesc' is assigned a value but never used  no-unused-vars
+  Line 607:    'dsHome' is assigned a value but never used       no-unused-vars
+  Line 608:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 609:    'dsView' is assigned a value but never used       no-unused-vars
+  Line 708:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 712:    Expected to return a value in arrow function      array-callback-return
+  Line 719:    Expected to return a value in arrow function      array-callback-return
+  Line 726:    Expected to return a value in arrow function      array-callback-return
+  Line 733:    Expected to return a value in arrow function      array-callback-return
+  Line 898:    'dsName' is assigned a value but never used       no-unused-vars
+  Line 1069:   'key' is defined but never used                   no-unused-vars
+  Line 1070:  Unexpected string concatenation of literals       no-useless-concat
+  Line 1081:   'key' is defined but never used                   no-unused-vars
+  Line 1082:  Unexpected string concatenation of literals       no-useless-concat
+
+./src/common/routes/home/QueryParsers.js
+  Line 2:     'expr' is assigned a value but never used  no-unused-vars
+  Line 51:   Expected '===' and instead saw '=='        eqeqeq
+  Line 52:   Expected '===' and instead saw '=='        eqeqeq
+  Line 53:   Expected '===' and instead saw '=='        eqeqeq
+  Line 53:   Expected '===' and instead saw '=='        eqeqeq
+  Line 53:   Expected '===' and instead saw '=='        eqeqeq
+  Line 57:   Expected '!==' and instead saw '!='        eqeqeq
+  Line 65:   Expected '===' and instead saw '=='        eqeqeq
+  Line 65:   Expected '===' and instead saw '=='        eqeqeq
+  Line 65:   Expected '===' and instead saw '=='        eqeqeq
+  Line 69:   Expected '!==' and instead saw '!='        eqeqeq
+  Line 77:   Expected '===' and instead saw '=='        eqeqeq
+  Line 82:   Expected '===' and instead saw '=='        eqeqeq
+  Line 92:   Expected '===' and instead saw '=='        eqeqeq
+  Line 178:  Expected '===' and instead saw '=='        eqeqeq
+  Line 178:  Expected '===' and instead saw '=='        eqeqeq
+
+./src/common/routes/home/DsView.js
+  Line 30:     'JiraForm' is defined but never used                         no-unused-vars
+  Line 34:     'io' is defined but never used                               no-unused-vars
+  Line 39:    'dsService' is defined but never used                        no-unused-vars
+  Line 91:     'jiraCustomFieldMapping' is assigned a value but never used  no-unused-vars
+  Line 363:   'key' is defined but never used                              no-unused-vars
+  Line 363:   'value' is defined but never used                            no-unused-vars
+  Line 473:   'dsHome' is assigned a value but never used                  no-unused-vars
+  Line 474:   'dsName' is assigned a value but never used                  no-unused-vars
+  Line 475:   'dsView' is assigned a value but never used                  no-unused-vars
+  Line 501:    Unreachable code                                             no-unreachable
+  Line 524:   'dsName' is assigned a value but never used                  no-unused-vars
+  Line 541:   Expected '!==' and instead saw '!='                          eqeqeq
+  Line 774:   Unexpected string concatenation of literals                  no-useless-concat
+  Line 795:   'headerFilter' is defined but never used                     no-unused-vars
+  Line 867:   'dispatch' is assigned a value but never used                no-unused-vars
+  Line 998:   'user' is assigned a value but never used                    no-unused-vars
+  Line 1005:  Expected to return a value in arrow function                 array-callback-return
+  Line 1146:  'oldVal' is assigned a value but never used                  no-unused-vars
+  Line 1146:  'newVal' is assigned a value but never used                  no-unused-vars
+  Line 1199:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1206:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1207:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1216:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1218:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1259:  Expected to return a value in arrow function                 array-callback-return
+  Line 1280:  'dsHome' is assigned a value but never used                  no-unused-vars
+  Line 1315:  Expected to return a value in arrow function                 array-callback-return
+  Line 1338:  'dsHome' is assigned a value but never used                  no-unused-vars
+  Line 1611:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1645:  'dsHome' is assigned a value but never used                  no-unused-vars
+  Line 1646:  'dsName' is assigned a value but never used                  no-unused-vars
+  Line 1647:  'dsView' is assigned a value but never used                  no-unused-vars
+  Line 1683:  'dsName' is assigned a value but never used                  no-unused-vars
+  Line 1733:  'projectObj' is defined but never used                       no-unused-vars
+  Line 1734:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1793:  'dispatch' is assigned a value but never used                no-unused-vars
+  Line 1793:  'user' is assigned a value but never used                    no-unused-vars
+  Line 1793:  'dsHome' is assigned a value but never used                  no-unused-vars
+  Line 1794:  'dsName' is assigned a value but never used                  no-unused-vars
+  Line 1795:  'dsView' is assigned a value but never used                  no-unused-vars
+  Line 1798:  '_id' is assigned a value but never used                     no-unused-vars
+  Line 1809:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1809:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1857:  Expected '===' and instead saw '=='                          eqeqeq
+  Line 1869:  'dsName' is assigned a value but never used                  no-unused-vars
+  Line 2052:  'field' is defined but never used                            no-unused-vars
+  Line 2077:  'field' is defined but never used                            no-unused-vars
+
+./src/common/routes/home/upload.js
+  Line 34:  Unnecessarily computed property [''] found  no-useless-computed-key
+
+./src/common/routes/home/DsHome.js
+  Line 39:  Expected to return a value in arrow function  array-callback-return
+
+./src/common/routes/home/ds/clipboardHelpers.js
+  Line 3:    'getState' is assigned a value but never used  no-unused-vars
+  Line 121:  'i' is already defined                         no-redeclare
+  Line 140:   'colDef' is assigned a value but never used    no-unused-vars
+
+./src/common/routes/home/ds/tabulatorConfig.js
+  Line 3:  'props' is assigned a value but never used     no-unused-vars
+  Line 3:  'setState' is assigned a value but never used  no-unused-vars
+  Line 3:  'ref' is assigned a value but never used       no-unused-vars
+
+./src/common/routes/home/NewDsFromDs.js
+  Line 44:  Expected to return a value in arrow function  array-callback-return
+
+./src/common/routes/home/MySingleAutoCompleter.js
+  Line 47:   'key' is defined but never used       no-unused-vars
+  Line 48:   Expected '===' and instead saw '=='   eqeqeq
+  Line 98:   Expected '===' and instead saw '=='   eqeqeq
+  Line 116:  'searchEl' is defined but never used  no-unused-vars
+  Line 258:  Expected '===' and instead saw '=='   eqeqeq
+  Line 280:  'searchEl' is defined but never used  no-unused-vars
+  Line 418:   Expected a default case               default-case
+  Line 422:  Expected '===' and instead saw '=='   eqeqeq
+  Line 422:  Expected '===' and instead saw '=='   eqeqeq
+  Line 439:  Expected '===' and instead saw '=='   eqeqeq
+  Line 439:  Expected '===' and instead saw '=='   eqeqeq
+  Line 446:  Expected '===' and instead saw '=='   eqeqeq
+
+./src/common/routes/home/ds/socketHandlers.js
+  Line 4:   'getState' is assigned a value but never used  no-unused-vars
+  Line 4:   'setState' is assigned a value but never used  no-unused-vars
+  Line 4:   'dispatch' is assigned a value but never used  no-unused-vars
+  Line 65:  'dsView' is assigned a value but never used    no-unused-vars
+
+./src/common/routes/home/DsViewEditAccessCtrl.js
+  Line 4:   'Button' is defined but never used             no-unused-vars
+  Line 18:  'dispatch' is assigned a value but never used  no-unused-vars
+  Line 18:  'dsName' is assigned a value but never used    no-unused-vars
+
+./src/common/routes/home/DsViewEditPerRowAccessCtrl.js
+  Line 4:  'Button' is defined but never used  no-unused-vars
+
+./src/common/routes/home/ds/domHelpers.js
+  Line 50:  'me' is assigned a value but never used  no-unused-vars
+
+./src/common/routes/home/MyAutoCompleter.js
+  Line 55:   'key' is defined but never used       no-unused-vars
+  Line 56:   Expected '===' and instead saw '=='   eqeqeq
+  Line 106:  Expected '===' and instead saw '=='   eqeqeq
+  Line 139:  'searchEl' is defined but never used  no-unused-vars
+  Line 336:  Expected '===' and instead saw '=='   eqeqeq
+  Line 358:  'searchEl' is defined but never used  no-unused-vars
+  Line 524:  Expected '===' and instead saw '=='   eqeqeq
+  Line 524:  Expected '===' and instead saw '=='   eqeqeq
+  Line 541:  Expected '===' and instead saw '=='   eqeqeq
+  Line 541:  Expected '===' and instead saw '=='   eqeqeq
+  Line 548:  Expected '===' and instead saw '=='   eqeqeq
+
+./src/common/routes/home/jiraForm.js
+  Line 66:    Expected '===' and instead saw '=='  eqeqeq
+  Line 68:    Expected '===' and instead saw '=='  eqeqeq
+  Line 101:   Expected '===' and instead saw '=='  eqeqeq
+  Line 101:   Expected '===' and instead saw '=='  eqeqeq
+  Line 101:  Expected '===' and instead saw '=='  eqeqeq
+  Line 101:  Expected '===' and instead saw '=='  eqeqeq
+  Line 101:  Expected '===' and instead saw '=='  eqeqeq
+  Line 165:   Expected '===' and instead saw '=='  eqeqeq
+  Line 167:   Expected '===' and instead saw '=='  eqeqeq
+  Line 170:   Expected '===' and instead saw '=='  eqeqeq
+  Line 245:   Expected '!==' and instead saw '!='  eqeqeq
+  Line 343:  Expected '!==' and instead saw '!='  eqeqeq
+  Line 356:  Expected '!==' and instead saw '!='  eqeqeq
+
+./src/common/routes/home/MyCodeMirror.js
+  Line 6:     'self' is assigned a value but never used          no-unused-vars
+  Line 10:    'count' is assigned a value but never used         no-unused-vars
+  Line 12:    'scrollHeight' is assigned a value but never used  no-unused-vars
+  Line 25:   'key' is defined but never used                    no-unused-vars
+  Line 26:   Expected '===' and instead saw '=='                eqeqeq
+  Line 55:   Expected '!==' and instead saw '!='                eqeqeq
+  Line 161:  Expected '===' and instead saw '=='                eqeqeq
+  Line 161:  Expected '===' and instead saw '=='                eqeqeq
+  Line 167:  Expected '===' and instead saw '=='                eqeqeq
+  Line 167:  Expected '===' and instead saw '=='                eqeqeq
+
+./src/common/routes/home/MyTextArea.js
+  Line 6:     'self' is assigned a value but never used   no-unused-vars
+  Line 10:    'count' is assigned a value but never used  no-unused-vars
+  Line 24:   'key' is defined but never used             no-unused-vars
+  Line 25:   Expected '===' and instead saw '=='         eqeqeq
+  Line 53:   Expected '!==' and instead saw '!='         eqeqeq
+  Line 109:  Expected '!==' and instead saw '!='         eqeqeq
+  Line 141:  Expected a 'break' statement before 'case'  no-fallthrough
+  Line 148:  Expected '===' and instead saw '=='         eqeqeq
+  Line 148:  Expected '===' and instead saw '=='         eqeqeq
+  Line 156:  Expected '===' and instead saw '=='         eqeqeq
+  Line 156:  Expected '===' and instead saw '=='         eqeqeq
+
+./src/common/routes/home/NewDsFromCsv.js
+  Line 74:  Expected to return a value in arrow function  array-callback-return
+  Line 98:  Expected to return a value in arrow function  array-callback-return
+
+./src/common/routes/home/DsAttachments.js
+  Line 79:    'dispatch' is assigned a value but never used  no-unused-vars
+  Line 79:    'user' is assigned a value but never used      no-unused-vars
+  Line 79:    'dsHome' is assigned a value but never used    no-unused-vars
+  Line 80:    'dsName' is assigned a value but never used    no-unused-vars
+  Line 81:    'dsView' is assigned a value but never used    no-unused-vars
+  Line 84:    'dispatch' is assigned a value but never used  no-unused-vars
+  Line 89:    'dsName' is assigned a value but never used    no-unused-vars
+  Line 179:   'dispatch' is assigned a value but never used  no-unused-vars
+  Line 179:   'dsHome' is assigned a value but never used    no-unused-vars
+  Line 206:   'dsName' is assigned a value but never used    no-unused-vars
+  Line 232:   'dsHome' is assigned a value but never used    no-unused-vars
+  Line 233:   'dsName' is assigned a value but never used    no-unused-vars
+  Line 234:   'dsView' is assigned a value but never used    no-unused-vars
+  Line 273:   Unexpected string concatenation of literals    no-useless-concat
+  Line 273:  Unexpected string concatenation of literals    no-useless-concat
+  Line 273:  Unexpected string concatenation of literals    no-useless-concat
+  Line 276:   Unexpected string concatenation of literals    no-useless-concat
+  Line 276:   Unexpected string concatenation of literals    no-useless-concat
+  Line 276:   Unexpected string concatenation of literals    no-useless-concat
+  Line 294:   'dsHome' is assigned a value but never used    no-unused-vars
+  Line 295:   'dsName' is assigned a value but never used    no-unused-vars
+
+./src/common/routes/home/NewDsFromXls.js
+  Line 91:   Expected to return a value in arrow function  array-callback-return
+  Line 177:  Expected to return a value in arrow function  array-callback-return
+  Line 195:  Expected to return a value in arrow function  array-callback-return
+
+./src/common/routes/home/DsBulkEdit.js
+  Line 99:   Expected to return a value in arrow function  array-callback-return
+  Line 204:  'url' is assigned a value but never used      no-unused-vars
+  Line 291:  'dsHome' is assigned a value but never used   no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  822.57 KB  build\static\js\2.deb216dd.chunk.js
+  65.61 KB   build\static\js\main.3fc30a68.chunk.js
+  13.5 KB    build\static\css\2.84dd17c5.chunk.css
+  6.71 KB    build\static\css\main.4ceb7eb9.chunk.css
+  777 B      build\static\js\runtime~main.ce518ed5.js
+
+The project was built assuming it is hosted at the server root.
+You can control this with the homepage field in your package.json.
+For example, add this to build it for GitHub Pages:
+
+  "homepage" : "http://myname.github.io/myapp",
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://bit.ly/CRA-deploy
+
