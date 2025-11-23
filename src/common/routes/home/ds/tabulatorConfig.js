@@ -31,7 +31,7 @@ export default function createTabulatorConfig(context) {
       { label: "<i class='fas fa-eye'></i> Unhide all Columns", action: me.showAllCols }
     ];
     let cellContextMenu = [
-      { label: "Copy cell to clipboard...", action: me.copyCellToClipboard },
+      { label: "Copy cell to clipboard...", action: me._clipboard.copyCellToClipboard },
       { label: "Generate slides...", action: me.startPreso },
       { label: "Generate URL.....", menu: [
         { label: "Copy URL for this row to clipboard...", action: function (e, cell) { me.urlGeneratorFunction(e, cell, false) } },

@@ -100,7 +100,7 @@ class DsEditLog extends Component {
 
     copyToClipboard () {
         // You have to also set 'clipboard' to true in table options.
-        this.ref.table.copyToClipboard();
+        this.ref._clipboard.copyToClipboard();
     }
 
     recordRef (ref) {

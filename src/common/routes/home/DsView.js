@@ -188,11 +188,7 @@ class DsView extends Component {
         this.cellEditCancelled = this.cellEditCancelled.bind(this);
         this.cellEditCheck = this.cellEditCheck.bind(this);
         this.cellForceEditTrigger = this.cellForceEditTrigger.bind(this);
-        this.fixImgSizeForClipboard = this.fixImgSizeForClipboard.bind(this);
-        this.copyFormatted = this.copyFormatted.bind(this);
-
-        this.startPreso = this.startPreso.bind(this);
-        this.myCopyToClipboard = this.myCopyToClipboard.bind(this);
+        this.startPreso = this.startPreso.bind(this);        
         this.recordRef = this.recordRef.bind(this);
         this.downloadXlsx = this.downloadXlsx.bind(this);
         this.toggleFilters = this.toggleFilters.bind(this);
@@ -212,14 +208,12 @@ class DsView extends Component {
         this.ajaxResponse = this.ajaxResponse.bind(this);
         this.ajaxURLGenerator = this.ajaxURLGenerator.bind(this);
         this.cellClickEvents = this.cellClickEvents.bind(this);
-        this.copyToClipboard = this.copyToClipboard.bind(this);
         this.deleteColumnHandler = this.deleteColumnHandler.bind(this);
         this.deleteColumnStatus = this.deleteColumnStatus.bind(this);
         this.deleteColumnQuestion = this.deleteColumnQuestion.bind(this);
         this.addColumnHandler = this.addColumnHandler.bind(this);
         this.addColumnStatus = this.addColumnStatus.bind(this);
         this.addColumnQuestion = this.addColumnQuestion.bind(this);
-        this.copyCellToClipboard = this.copyCellToClipboard.bind(this);
         this.pickFillColorHandler = this.pickFillColorHandler.bind(this);
         this.handleColorPickerClose = this.handleColorPickerClose.bind(this);
         this.handleColorPickerOnChangeComplete = this.handleColorPickerOnChangeComplete.bind(this);
@@ -245,10 +239,7 @@ class DsView extends Component {
         this.processFilterViaUrl = this.processFilterViaUrl.bind(this);
         this.urlGeneratorFunction = this.urlGeneratorFunction.bind(this);
         this.urlGeneratorFunctionForRow = this.urlGeneratorFunctionForRow.bind(this);
-        this.urlGeneratorFunctionForView = this.urlGeneratorFunctionForView.bind(this);
-        this.copyTextToClipboard = this.copyTextToClipboard.bind(this);
-
-        this.showCopiedNotification = this.showCopiedNotification.bind(this);
+        this.urlGeneratorFunctionForView = this.urlGeneratorFunctionForView.bind(this);     
 
         const context = {
             props: this.props,
@@ -464,10 +455,6 @@ class DsView extends Component {
 
     renderPlotlyInCells() {
         return this._dom.renderPlotlyInCells();
-    }
-
-    fixImgSizeForClipboard(output) {
-        return this._clipboard.fixImgSizeForClipboard(output);
     }
 
     normalizeAllImgRows() {
@@ -788,7 +775,7 @@ class DsView extends Component {
         }
         // Call the copy to clipboard function with the url.
         console.log("Url copied for row:", finalUrlWithQueryString);
-        this.copyTextToClipboard(finalUrlWithQueryString);
+        this._clipboard.copyTextToClipboard(finalUrlWithQueryString);
     }
 
     urlGeneratorFunctionForView = (e, cell) => {
@@ -851,21 +838,7 @@ class DsView extends Component {
             finalUrlWithQueryString += '?' + queryParams.toString();
         }
         console.log("Url copied for view:", finalUrlWithQueryString);
-        this.copyTextToClipboard(finalUrlWithQueryString);
-    }
-
-    /**
-     * Given a text, this function copies the text to the clipboard.
-     * It uses navigator.clipboard for the latest browsers. 
-     * In case of older browser, it falls back to document.execCommand.
-     * Finally, it shows the modal of success or failure based on the copy to clipboard status.
-     */
-    copyTextToClipboard = (text) => {
-        return this._clipboard.copyTextToClipboard(text);
-    }
-
-    showCopiedNotification(isSuccess) {
-        return this._clipboard.showCopiedNotification(isSuccess);
+        this._clipboard.copyTextToClipboard(finalUrlWithQueryString);
     }
 
     showClipboardActionMessageModal(isSuccess, url) {
@@ -948,29 +921,7 @@ class DsView extends Component {
     // Now fixed. Setting colVisProp to "clipboard" will call the correct 
     // formatter in which we clone and use the resolved images! See 
     // col.formatterClipboard function below!
-    myCopyToClipboard () {
-        return this._clipboard.myCopyToClipboard(this.ref);
-    }
-
-    copyToClipboard () {
-        // You have to also set 'clipboard' to true in table options.
-        //this.ref.table.copyToClipboard();
-        return this._clipboard.copyToClipboard(this.ref);
-    }
-
-    // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
-    copyFormatted (element, html) {
-        return this._clipboard.copyFormatted(element, html);
-    }
-
-    copyFormattedBetter (container) {
-        return this._clipboard.copyFormattedBetter(container);
-    }
-
-
-    copyCellToClipboard (e, cell) {
-        return this._clipboard.copyCellToClipboard(e, cell);
-    }
+    
 
     step1 () {
         const { match, dsHome } = this.props;
@@ -2302,7 +2253,7 @@ class DsView extends Component {
                                     clipboard: "fullTableCopyOnly",
                                     clipboardCopyFormatter: (type, output) => {
                                         if (type === 'html') {
-                                            output = me.fixImgSizeForClipboard(output);
+                                            output = me._clipboard.fixImgSizeForClipboard(output);
                                             
                                             output=output.replaceAll('<th>', '<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: darkgreen;color: white;">');
                                             
@@ -2543,13 +2494,13 @@ class DsView extends Component {
                 {this.step1()}
                 <br/>
                 <Row>
-                    <button className="btn btn-link" onClick={this.copyToClipboard}> <i class='fas fa-clipboard'></i> Copy-to-clipboard </button> | 
+                    <button className="btn btn-link" onClick={() => this._clipboard.copyToClipboard(this.ref)}> <i class='fas fa-clipboard'></i> Copy-to-clipboard </button> | 
                     <button className="btn btn-link" onClick={this.addRow}> <i class='fas fa-plus'></i> Add Row </button>
                     {/* 
                     <Button size="sm" onClick={this.downloadXlsx}> Get xlsx </Button>
                     <Button size="sm" onClick={this.toggleFilters}> {this.state.filterButtonText} </Button>
                     <Button size="sm" onClick={this.toggleEditing}> {this.state.editingButtonText} </Button>
-                    <Button size="sm" onClick={this.copyToClipboard}> Copy-to-clipbard </Button>
+                    <Button size="sm" onClick={this._clipboard.copyToClipboard}> Copy-to-clipbard </Button>
                     <Button size="sm" onClick={this.addRow}> Add Row </Button>
                     */}
                     {jiraRefreshButton}
