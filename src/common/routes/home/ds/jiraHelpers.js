@@ -53,7 +53,7 @@ export default function createJiraHelpers(context) {
       return;
     }
     let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName });
-    if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
+    if (!projectsMetaData || Object.keys(projectsMetaData).length === 0) {
       component.setState({
         modalTitle: "Convert JIRA status",
         modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
@@ -74,7 +74,7 @@ export default function createJiraHelpers(context) {
     fillLocalStorageItemData(projectsMetaData.issuetypes);
     let rowData = cell.getRow().getData();
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig);
-    if (component.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
+    if (component.jiraFormData.Type === "Bug" && (!jiraConfig || !jiraConfig.jira)) {
       component.setState({
         modalTitle: "Convert JIRA status",
         modalQuestion: `Trying to convert Bug type without enabling the Jira. Please enable it first in edit-view`,
@@ -84,7 +84,7 @@ export default function createJiraHelpers(context) {
       });
       return;
     }
-    if ((component.jiraFormData.Type == "Epic" || component.jiraFormData.Type == "Story" || component.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+    if ((component.jiraFormData.Type === "Epic" || component.jiraFormData.Type === "Story" || component.jiraFormData.Type === "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
       component.setState({
         modalTitle: "Convert JIRA status",
         modalQuestion: `Trying to convert ${component.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -134,11 +134,11 @@ export default function createJiraHelpers(context) {
       return { isValidated, defaultValue };
     }
     for (let i = 0; i < issueTypes.length; i++) {
-      if (issueTypes[i].name != issueType) { continue }
+      if (issueTypes[i].name !== issueType) { continue }
       let currIssueObj = issueTypes[i];
       let fieldObj = currIssueObj.fields[field];
       if (fieldObj) {
-        if (fieldObj.type == "array" && fieldObj.allowedValues) {
+        if (fieldObj.type === "array" && fieldObj.allowedValues) {
           for (let k = 0; k < value.length; k++) {
             if (!fieldObj.allowedValues.includes(value[k])) {
               isValidated = false;
@@ -148,7 +148,7 @@ export default function createJiraHelpers(context) {
           isValidated = true;
           defaultValue = value;
           return { isValidated, defaultValue };
-        } else if (fieldObj.type == "option" && fieldObj.allowedValues) {
+        } else if (fieldObj.type === "option" && fieldObj.allowedValues) {
           if (fieldObj.allowedValues.includes(value)) {
             isValidated = true;
             defaultValue = value;
@@ -157,7 +157,7 @@ export default function createJiraHelpers(context) {
             isValidated = false;
             return { isValidated, defaultValue };
           }
-        } else if (fieldObj.type == "creatableArray" && fieldObj.allowedValues) {
+        } else if (fieldObj.type === "creatableArray" && fieldObj.allowedValues) {
           if (fieldObj.allowedValues.includes(value)) {
             isValidated = true;
             defaultValue = value;
@@ -166,7 +166,7 @@ export default function createJiraHelpers(context) {
             isValidated = false;
             return { isValidated, defaultValue };
           }
-        } else if (fieldObj.type == "searchableOption" && fieldObj.allowedValues) {
+        } else if (fieldObj.type === "searchableOption" && fieldObj.allowedValues) {
           let allowedValues = fieldObj.allowedValues.map((e) => e.key);
           if (allowedValues.includes(value)) {
             isValidated = true;
@@ -220,7 +220,7 @@ export default function createJiraHelpers(context) {
           }
           description = arr.join("\n").trim();
           descriptionDone = true;
-        } else if (arr.length == 1) {
+        } else if (arr.length === 1) {
           let summaryLine = arr[0];
           let matchArr = summaryLine.match((/#+(.*)/));
           if (matchArr && matchArr.length >= 2) {
@@ -248,22 +248,22 @@ export default function createJiraHelpers(context) {
       }
       if (fieldMapping["Story Points"]) {
         try {
-          if (typeof rowData[fieldMapping["Story Points"]] == 'number')
+          if (typeof rowData[fieldMapping["Story Points"]] === 'number')
             storyPoints = rowData[fieldMapping["Story Points"]];
-          else if (typeof rowData[fieldMapping["Story Points"]] == 'string')
+          else if (typeof rowData[fieldMapping["Story Points"]] === 'string')
             storyPoints = parseInt(rowData[fieldMapping["Story Points"]]);
         } catch (e) { }
       }
 
-      if (type == "Epic" || type == "Story" || type == "Bug" || type == "Story Task") {
+      if (type === "Epic" || type === "Story" || type === "Bug" || type === "Story Task") {
         component.jiraFormData["Type"] = type;
       }
       component.jiraFormData['summary'] = summary;
       component.jiraFormData['description'] = description;
       for (let key of Object.keys(component.jiraFormData)) {
-        if (typeof component.jiraFormData[key] != 'object') continue;
-        if (storyPoints != 0 && jiraCustomFieldMapping['Story Points']) {
-          if (component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] == 0 || component.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints;
+        if (typeof component.jiraFormData[key] !== 'object') continue;
+        if (storyPoints !== 0 && jiraCustomFieldMapping['Story Points']) {
+            if (component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] === 0 || component.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints;
         }
       }
     } catch (e) { }
@@ -274,14 +274,14 @@ export default function createJiraHelpers(context) {
   function fillLocalStorageItemData(issueTypes) {
     try {
       for (let key of Object.keys(component.jiraFormData)) {
-        if (typeof component.jiraFormData[key] == "object") {
+        if (typeof component.jiraFormData[key] === "object") {
           let localStorageItem = localStorage.getItem(key);
-          if (localStorageItem && localStorageItem != "undefined") {
+          if (localStorageItem && localStorageItem !== "undefined") {
             let parsedLocalItem = JSON.parse(localStorageItem);
             for (let parsedKey of Object.keys(parsedLocalItem)) {
               if (component.jiraFormData[key].hasOwnProperty(parsedKey)) {
                 let { isValidated, defaultValue } = validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey]);
-                if (isValidated && defaultValue != null) {
+                if (isValidated && defaultValue !== null) {
                   component.jiraFormData[key][parsedKey] = defaultValue;
                 }
               }
@@ -289,7 +289,7 @@ export default function createJiraHelpers(context) {
           }
         }
       }
-      if (localStorage.getItem('JIRA_AGILE_LABEL') && localStorage.getItem('JIRA_AGILE_LABEL') != "undefined") {
+      if (localStorage.getItem('JIRA_AGILE_LABEL') && localStorage.getItem('JIRA_AGILE_LABEL') !== "undefined") {
         component.jiraFormData.JIRA_AGILE_LABEL = localStorage.getItem('JIRA_AGILE_LABEL');
       }
     } catch (e) { }
@@ -388,7 +388,7 @@ export default function createJiraHelpers(context) {
     }
     fillLocalStorageItemData(projectsMetaData.issuetypes);
     if (type) component.jiraFormData.Type = type;
-    if (component.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
+    if (component.jiraFormData.Type === "Bug" && (!jiraConfig || !jiraConfig.jira)) {
       component.setState({
         modalTitle: "Convert JIRA status",
         modalQuestion: `Trying to add Bug type without enabling the Jira. Please enable it first in edit-view`,
@@ -398,7 +398,7 @@ export default function createJiraHelpers(context) {
       });
       return;
     }
-    if ((component.jiraFormData.Type == "Epic" || component.jiraFormData.Type == "Story" || component.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
+    if ((component.jiraFormData.Type === "Epic" || component.jiraFormData.Type === "Story" || component.jiraFormData.Type === "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
       component.setState({
         modalTitle: "Convert JIRA status",
         modalQuestion: `Trying to add ${component.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
@@ -461,13 +461,12 @@ export default function createJiraHelpers(context) {
     }
     if (!fieldMapping) return false;
     try {
-      if (type == 'Story' && rowData[fieldMapping['type']] == 'Epic') {
-        return true;
-      } else if (type == 'Story Task' && rowData[fieldMapping['type']] == 'Story') {
-        return true;
-      } else {
+        if (type === 'Story' && rowData[fieldMapping['type']] === 'Epic') {
+          return true;
+        } else if (type === 'Story Task' && rowData[fieldMapping['type']] === 'Story') {
+          return true;
+        }
         return false;
-      }
     } catch (e) { return false }
   }
 
@@ -504,7 +503,7 @@ export default function createJiraHelpers(context) {
       let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
       let jiraFormData = formFinalJiraFormData();
       updateLocalStorage(jiraFormData);
-      if (jiraFormData.Type == "Bug") {
+      if (jiraFormData.Type === "Bug") {
         jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",");
       }
       let response = await dsService.addJiraRow({ dsName, dsView, username, jiraFormData, jiraConfig, jiraAgileConfig, parentKey, parentSelectorObj });
@@ -512,7 +511,7 @@ export default function createJiraHelpers(context) {
       let modalStatus = component.state.modalStatus;
       let showSecondaryModal = false;
       if (response) {
-        if (response.status == 'success') {
+        if (response.status === 'success') {
           let fullUpdatedRec = response.record;
           let update = {
             _id: response._id,
@@ -583,7 +582,7 @@ export default function createJiraHelpers(context) {
       let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
       let jiraFormData = formFinalJiraFormData();
       updateLocalStorage(jiraFormData);
-      if (jiraFormData.Type == "Bug") {
+      if (jiraFormData.Type === "Bug") {
         //Just before sending change the value of key customfield_25578 to array
         jiraFormData[jiraFormData.Type].customfield_25578 = jiraFormData[jiraFormData.Type].customfield_25578.split(",");
       }
@@ -593,7 +592,7 @@ export default function createJiraHelpers(context) {
       let modalStatus = component.state.modalStatus;
       let showSecondaryModal = false;
       if (response) {
-        if (response.status == 'success') {
+        if (response.status === 'success') {
           let fullUpdatedRec = response.record;
           let update = {
             _id: response._id,
@@ -660,7 +659,7 @@ export default function createJiraHelpers(context) {
     try {
       localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL);
       for (let key of Object.keys(jiraFormData)) {
-        if (typeof jiraFormData[key] == "object") {
+        if (typeof jiraFormData[key] === "object") {
           let objStringified;
           let obj = {
             ...jiraFormData[key]
@@ -677,7 +676,7 @@ export default function createJiraHelpers(context) {
 
   function handleJiraFormChange(e) {
     let key = Object.keys(e)[0];
-    if (key && key === "Project" || key == "JIRA_AGILE_LABEL" || key == "Type" || key === "summary" || key === "description") {
+    if (key && (key === "Project" || key === "JIRA_AGILE_LABEL" || key === "Type" || key === "summary" || key === "description")) {
       component.jiraFormData = {
         ...component.jiraFormData,
         [key]: e[key]
