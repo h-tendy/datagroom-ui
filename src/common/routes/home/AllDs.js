@@ -189,7 +189,7 @@ class AllDs extends Component {
                 } else if (sortBy === 'SIZE_DESC') {
                     filteredList = filteredList.slice().sort((a, b) => (b.sizeOnDisk || 0) - (a.sizeOnDisk || 0));
                 }
-                if (filteredList.length == 0) {
+                if (filteredList.length === 0) {
                     return (
                         <div className="no-datasets-container">
                             <span role="img" aria-label="sad" className="no-datasets-emoji">😢</span>
@@ -265,7 +265,6 @@ class AllDs extends Component {
 
     render () {
         document.title = "Datagroom - browse data-sets";
-        const { sortBy } = this.state;
         return (
             <div>
                 <div className="all-ds-container" />

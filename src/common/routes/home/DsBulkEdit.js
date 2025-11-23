@@ -174,8 +174,8 @@ class DsBulkEdit extends Component {
     }
 
     step3Status () {
-        const { dsHome, match } = this.props;
-        let dsName = match.params.dsName;
+        const { dsHome /*, match */ } = this.props;
+        // let dsName = match.params.dsName;
         let s3Status = '';
         let errorJsx, success = false;
         try {
@@ -201,8 +201,8 @@ class DsBulkEdit extends Component {
                             </Col>                        
                        </Row>
         } else if (success) {
-            let url = `/ds/${dsName}/default`;
             /*
+            let url = `/ds/${dsName}/default`;
             s3Status = <Row>
                             <br/><br/>
                             <Col md={6} sm={6} xs={6}> 
@@ -288,7 +288,7 @@ class DsBulkEdit extends Component {
 
 
     render () {
-        const { match, dsHome } = this.props;
+        const { match } = this.props;
         let dsName = match.params.dsName;
         document.title = `Bulk-edit: ${dsName}`;
 
