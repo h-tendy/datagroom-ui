@@ -313,27 +313,11 @@ class DsView extends Component {
             dispatch(dsActions.loadColumnsForUserView(dsName, dsView, user.user));
             dispatch(dsActions.getDefaultTypeFieldsAndValues(dsName, dsView, user.user)); 
         }
-        let me = this;
-        // Delegate socket setup to helper if available. The full inline
-        // initialization and handlers were migrated to
-        // `src/common/routes/home/ds/socketHandlers.js` to keep `DsView` small.
-        // Keep a guarded delegation here so older behavior remains if helper
-        // is unavailable at runtime.
-        if (this._socket && this._socket.init) {
-            try {
-                this._socket.init();
-            } catch (e) {
-                console.error('Socket helper init failed', e);
-            }
-        }
+        this._socket.init();
     }
     componentWillUnmount () {
         const { dispatch } = this.props;
-        if (this._socket && this._socket.disconnect) {
-            try { this._socket.disconnect(); } catch (e) {}
-        } else if (socket && socket.disconnect) {
-            try { socket.disconnect(); } catch (e) {}
-        }
+        this._socket.disconnect();
         dispatch( { type: dsConstants.CLEAR_COLUMNS } );
     }
 
@@ -472,20 +456,14 @@ class DsView extends Component {
     // Since we generate html after editing, we need to attach
     // the handlers again. 
     applyHtmlLinkAndBadgeClickHandlers() {
-        if (this._dom && this._dom.applyHtmlLinkAndBadgeClickHandlers) {
-            try { return this._dom.applyHtmlLinkAndBadgeClickHandlers(); } catch (e) { console.error('DOM helper failed', e); }
-        }
+        return this._dom.applyHtmlLinkAndBadgeClickHandlers();
     }
     applyHighlightJsBadge() {
-        if (this._dom && this._dom.applyHighlightJsBadge) {
-            try { return this._dom.applyHighlightJsBadge(); } catch (e) { console.error('DOM helper failed', e); }
-        }
+        return this._dom.applyHighlightJsBadge();
     }
 
     renderPlotlyInCells() {
-        if (this._dom && this._dom.renderPlotlyInCells) {
-            try { return this._dom.renderPlotlyInCells(); } catch (e) { console.error('DOM helper failed', e); }
-        }
+        return this._dom.renderPlotlyInCells();
     }
 
     fixImgSizeForClipboard(output) {
@@ -493,54 +471,7 @@ class DsView extends Component {
     }
 
     normalizeAllImgRows() {
-        if (this._dom && this._dom.normalizeAllImgRows) {
-            try { return this._dom.normalizeAllImgRows(); } catch (e) { console.error('DOM helper failed', e); }
-        }
-        let me = this;
-        if (this.timers["normalizeAllImgRows"]) {
-            clearInterval(this.timers["normalizeAllImgRows"]);
-            this.timers["normalizeAllImgRows"] = null;
-        }
-        let extraIters = 0;
-        this.timers["normalizeAllImgRows"] = setInterval(function () {
-            //console.log("normalizeAllImgRows periodic fn...:", extraIters);
-            if (document.readyState === 'complete') {
-                let imgList = document.querySelectorAll("img");
-                let graphList = document.querySelectorAll(".plotly-graph");
-                let allImgsRead = true;
-                for (let i = 0; i < imgList.length; i++) {
-                    //console.log(`imgList[${i}]: `, imgList[i].complete, imgList[i].naturalHeight);
-                    if (!(imgList[i].complete /*&& imgList[i].naturalHeight !== 0*/)) {
-                        allImgsRead = false;
-                        extraIters = 0;
-                        break;
-                    }
-                }
-                if (allImgsRead) {
-                    // Basically, give it 600 ms before the new image is fetching and
-                    // allImgsRead is false...
-                    if (extraIters === 2) {
-                        if (imgList.length && !me.cellImEditing) {
-                            let rows = me.ref.table.getRows();
-                            for (let i = 0; i < rows.length; i++) {
-                                rows[i].normalizeHeight();
-                            }
-                            //console.log("Adjusting table size now.");
-                            me.ref.table.rowManager.adjustTableSize(false);
-                        } else {
-                            console.log("Skipping normalize as there are no images or some editing in progress...");
-                        }
-                    }
-                    if (extraIters >= 10) {
-                        //console.log("Cancelling timer after extraIters!");
-                        extraIters = 0;
-                        clearInterval(me.timers["normalizeAllImgRows"]);
-                        me.timers["normalizeAllImgRows"] = null;
-                    }
-                    extraIters++;
-                }
-            }
-        }, 300);
+        return this._dom.normalizeAllImgRows();
     }
 
     showAllCols () {
