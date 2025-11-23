@@ -10,7 +10,7 @@ import { dsService } from '../../../services';
 // reviewers can find the original intent easily.
 
 export default function createJiraHelpers(context) {
-  const { props, component, getState, setState } = context;
+  const { component } = context;
 
   async function convertToJiraRow(e, cell) {
     let self = component;
@@ -260,10 +260,10 @@ export default function createJiraHelpers(context) {
       }
       component.jiraFormData['summary'] = summary;
       component.jiraFormData['description'] = description;
-      for (let key of Object.keys(component.jiraFormData)) {
+      let key; for (key of Object.keys(component.jiraFormData)) {
         if (typeof component.jiraFormData[key] !== 'object') continue;
         if (storyPoints !== 0 && jiraCustomFieldMapping['Story Points']) {
-            if (component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] === 0 || component.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints;
+          if (component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] === 0 || component.jiraFormData[key][jiraCustomFieldMapping['Story Points']]) component.jiraFormData[key][jiraCustomFieldMapping['Story Points']] = storyPoints;
         }
       }
     } catch (e) { }
@@ -273,12 +273,12 @@ export default function createJiraHelpers(context) {
   // This was moved from DsView.js to keep JIRA-related logic together.
   function fillLocalStorageItemData(issueTypes) {
     try {
-      for (let key of Object.keys(component.jiraFormData)) {
+      let key; for (key of Object.keys(component.jiraFormData)) {
         if (typeof component.jiraFormData[key] === "object") {
           let localStorageItem = localStorage.getItem(key);
           if (localStorageItem && localStorageItem !== "undefined") {
             let parsedLocalItem = JSON.parse(localStorageItem);
-            for (let parsedKey of Object.keys(parsedLocalItem)) {
+            let parsedKey; for (parsedKey of Object.keys(parsedLocalItem)) {
               if (component.jiraFormData[key].hasOwnProperty(parsedKey)) {
                 let { isValidated, defaultValue } = validateAndGetDefaultValue(issueTypes, key, parsedKey, parsedLocalItem[parsedKey]);
                 if (isValidated && defaultValue !== null) {
@@ -368,7 +368,7 @@ export default function createJiraHelpers(context) {
       }
     }
     let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName });
-    if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
+    if (!projectsMetaData || Object.keys(projectsMetaData).length === 0) {
       component.setState({
         modalTitle: "Add JIRA status",
         modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
@@ -418,9 +418,9 @@ export default function createJiraHelpers(context) {
       let selectorObj = null;
       if (type) {
         jiraId = getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig);
-        if (component.jiraFormData.Type == 'Story') {
+        if (component.jiraFormData.Type === 'Story') {
           component.jiraFormData[component.jiraFormData.Type].customfield_12790 = jiraId;
-        } else if (component.jiraFormData.Type == "Story Task") {
+        } else if (component.jiraFormData.Type === "Story Task") {
           component.jiraFormData[component.jiraFormData.Type].parent = jiraId;
         }
         let _id = cell.getRow().getData()['_id'];
@@ -495,7 +495,7 @@ export default function createJiraHelpers(context) {
 
   async function submitAddJira(confirmed, parentKey, parentSelectorObj) {
     if (confirmed) {
-      const { dispatch, match, user, dsHome } = component.props;
+      const { match, user, dsHome } = component.props;
       let dsName = match.params.dsName;
       let dsView = match.params.dsView;
       let username = user.user;
@@ -574,7 +574,7 @@ export default function createJiraHelpers(context) {
 
   async function submitJiraFormChange(confirmed, _id, selectorObj) {
     if (confirmed) {
-      const { dispatch, match, user, dsHome } = component.props;
+      const { match, user, dsHome } = component.props;
       let dsName = match.params.dsName;
       let dsView = match.params.dsView;
       let username = user.user;
@@ -658,7 +658,7 @@ export default function createJiraHelpers(context) {
   function updateLocalStorage(jiraFormData) {
     try {
       localStorage.setItem("JIRA_AGILE_LABEL", jiraFormData.JIRA_AGILE_LABEL);
-      for (let key of Object.keys(jiraFormData)) {
+      let key; for (key of Object.keys(jiraFormData)) {
         if (typeof jiraFormData[key] === "object") {
           let objStringified;
           let obj = {
@@ -694,7 +694,7 @@ export default function createJiraHelpers(context) {
 
   function formFinalJiraFormData() {
     let jiraFormData = JSON.parse(JSON.stringify(component.jiraFormData));
-    for (let field of Object.keys(jiraFormData)) {
+    let field; for (field of Object.keys(jiraFormData)) {
       if (!jiraFormData[field]) continue;
       if (typeof jiraFormData[field] !== 'object') continue;
       jiraFormData[field].summary = jiraFormData.summary;
