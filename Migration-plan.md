@@ -10,7 +10,10 @@
 1. Simply do `async` io calls within a component and manage the info directly into the component's `state`. 
 1. The `MyTabulator` should be able to render without too many other controls that we currently have. This should enable other use-cases. 
 1. Use RTL (React Testing Library), MSW (Mock Service Worker), latest React. 
+1. Unit-testing is a must. That's the main reason for upgrading everything. Without unit-testing, it is hard to leverage AI! 
+1. Use `react-router-dom` v6+ and use the latest hooks-based approach for routing. Have to learn what this is, first. 
+
 
 ## References
 1. https://medium.com/naukri-engineering/migrating-a-react-16-application-to-react-18-with-webpack-5-435d044b846 - Use Approach 1. 
-1. 
+1. https://github.com/ngduc/react-tabulator/blob/0.13.8/src/ReactTabulator.tsx - Reference for `react-tabulator` to be replaced.
