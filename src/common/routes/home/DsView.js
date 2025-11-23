@@ -1712,22 +1712,15 @@ class DsView extends Component {
 
     /**Start convert to JIRA row */
     handleJiraFormChange(obj) {
-        if (this._jira && this._jira.handleJiraFormChange) {
-            try { return this._jira.handleJiraFormChange(obj); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return this._jira.handleJiraFormChange(obj);
     }
 
     formFinalJiraFormData() {
-        if (this._jira && this._jira.formFinalJiraFormData) {
-            try { return this._jira.formFinalJiraFormData(); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        return {};
+        return this._jira.formFinalJiraFormData();
     }
 
     async submitJiraFormChange(confirmed, _id, selectorObj) {
-        if (this._jira && this._jira.submitJiraFormChange) {
-            try { return await this._jira.submitJiraFormChange(confirmed, _id, selectorObj); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return await this._jira.submitJiraFormChange(confirmed, _id, selectorObj);
     }
 
     /**
@@ -1746,344 +1739,45 @@ class DsView extends Component {
     }
 
     async convertToJiraRow(e, cell) {
-        if (this._jira && this._jira.convertToJiraRow) {
-            try { return await this._jira.convertToJiraRow(e, cell); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        let self = this
-        const { match, dsHome, user } = this.props;
-        let dsView = match.params.dsView;
-        let dsName = match.params.dsName;
-        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
-        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let jiraProjectName = dsHome.dsViews[dsView].jiraProjectName;
-        let dsUser = user.user;
-        if (!jiraProjectName) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Jira Project Name not configured. Please go to "Edit-view" of the dataset and add Jira Project Name same as that in JIRA. Reload this page.`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        let data = cell.getRow().getData()
-        if (this.isJiraRow(data, jiraConfig, jiraAgileConfig)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Already a JIRA row. Cannot convert it further.!!`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName })
-        if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        let copyOfDefaults = JSON.parse(JSON.stringify(this.getDefaultTypeFieldsAndValuesForProject(dsHome.defaultTypeFieldsAndValues.value.projects, jiraProjectName).issuetypes));
-        this.jiraFormData = {
-            ...this.jiraFormData,
-            ...copyOfDefaults
-        }
-        if (jiraAgileConfig && jiraAgileConfig.label) {
-            this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
-        }
-        this.fillLocalStorageItemData(projectsMetaData.issuetypes)
-        let rowData = cell.getRow().getData()
-        this.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig)
-        if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Trying to convert Bug type without enabling the Jira. Please enable it first in edit-view`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Trying to convert ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
-            let _id = cell.getRow().getData()['_id'];
-            let selectorObj = {};
-            selectorObj["_id"] = _id;
-            for (let i = 0; i < dsHome.dsViews[dsView].keys.length; i++) {
-                let key = dsHome.dsViews[dsView].keys[i];
-                selectorObj[key] = cell.getRow().getData()[key];
-            }
-            let jiraAgileBoard = jiraAgileConfig.label
-            this.setState({
-                modalTitle: "Jira row specifications:- ",
-                modalOk: "Convert",
-                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
-                modalCallback: (confirmed) => {
-                    self.submitJiraFormChange(confirmed, _id, selectorObj)
-                },
-                showModal: !this.state.showModal,
-                toggleModalOnClose: false,
-            })
-        } else {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `<b>Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row</b>`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-        }
+        return await this._jira.convertToJiraRow(e, cell);
     }
 
     fillLocalStorageItemData(issueTypes) {
-        if (this._jira && this._jira.fillLocalStorageItemData) {
-            try { return this._jira.fillLocalStorageItemData(issueTypes); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return this._jira.fillLocalStorageItemData(issueTypes);
     }
 
     validateAndGetDefaultValue(issueTypes, issueType, field, value) {
-        if (this._jira && this._jira.validateAndGetDefaultValue) {
-            try { return this._jira.validateAndGetDefaultValue(issueTypes, issueType, field, value); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        return { isValidated: false, defaultValue: null };
+        return this._jira.validateAndGetDefaultValue(issueTypes, issueType, field, value);
     }
 
     formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig) {
-        if (this._jira && this._jira.formInitialJiraForm) {
-            try { return this._jira.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return this._jira.formInitialJiraForm(rowData, jiraConfig, jiraAgileConfig);
     }
 
     isJiraRow(data, jiraConfig, jiraAgileConfig) {
-        if (this._jira && this._jira.isJiraRow) {
-            try { return this._jira.isJiraRow(data, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        let fieldMapping = null
-        if (jiraConfig && jiraConfig.jira) {
-            fieldMapping = jiraConfig.jiraFieldMapping
-        }
-        if (jiraAgileConfig && jiraAgileConfig.jira) {
-            fieldMapping = {
-                ...fieldMapping,
-                ...jiraAgileConfig.jiraFieldMapping
-            }
-        }
-        if (!fieldMapping) return false
-        let key = data[fieldMapping['key']]
-        if (!key) return false
-        if (key.match(/https:(.*)\/browse\//)) return true
-        return false
+        return this._jira.isJiraRow(data, jiraConfig, jiraAgileConfig);
     }
     /**End convert to JIRA row */
 
     /**Start add a jira issue */
     async addJiraRow(e, cell, type) {
-        if (this._jira && this._jira.addJiraRow) {
-            try { return await this._jira.addJiraRow(e, cell, type); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        let self = this
-        const { match, dsHome, user } = this.props;
-        let dsView = match.params.dsView;
-        let dsName = match.params.dsName;
-        let dsUser = user.user;
-        let jiraConfig = dsHome.dsViews[dsView].jiraConfig;
-        let jiraAgileConfig = dsHome.dsViews[dsView].jiraAgileConfig;
-        let jiraProjectName = dsHome.dsViews[dsView].jiraProjectName;
-        if (!jiraProjectName) {
-            this.setState({
-                modalTitle: "Add JIRA status",
-                modalQuestion: `Jira Project Name not configured. Please go to "Edit-view" of the dataset and add Jira Project Name same as that in JIRA. Reload this page.`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((!jiraConfig || !jiraConfig.jira) && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
-            this.setState({
-                modalTitle: "Add JIRA status",
-                modalQuestion: `Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to add a JIRA row`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if (cell && type) {
-            let rowData = cell.getRow().getData()
-            if (!this.isJiraRow(rowData, jiraConfig, jiraAgileConfig)) {
-                this.setState({
-                    modalTitle: "Add JIRA status",
-                    modalQuestion: `Cannot add JIRA as child of non-Jira row`,
-                    modalOk: "Dismiss",
-                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                    showModal: true
-                })
-                return
-            }
-            let isValid = this.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig)
-            if (!isValid) {
-                this.setState({
-                    modalTitle: "Add JIRA status",
-                    modalQuestion: `Can't add ${type} to current row.`,
-                    modalOk: "Dismiss",
-                    modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                    showModal: true
-                })
-                return
-            }
-
-        }
-        let projectsMetaData = await dsService.getProjectsMetaData({ dsName, dsView, dsUser, jiraAgileConfig, jiraConfig, jiraProjectName })
-        if (!projectsMetaData || Object.keys(projectsMetaData).length == 0) {
-            this.setState({
-                modalTitle: "Add JIRA status",
-                modalQuestion: `Unable to fetch projects metaData. Update JiraSettings correctly to fetch metadata.`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        let copyOfDefaults = JSON.parse(JSON.stringify(this.getDefaultTypeFieldsAndValuesForProject(dsHome.defaultTypeFieldsAndValues.value.projects, jiraProjectName).issuetypes))
-        this.jiraFormData = {
-            ...this.jiraFormData,
-            ...copyOfDefaults
-        }
-        if (jiraAgileConfig && jiraAgileConfig.label) {
-            this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileConfig.label
-        }
-        this.fillLocalStorageItemData(projectsMetaData.issuetypes)
-        if (type)
-            this.jiraFormData.Type = type
-        if (this.jiraFormData.Type == "Bug" && (!jiraConfig || !jiraConfig.jira)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Trying to add Bug type without enabling the Jira. Please enable it first in edit-view`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((this.jiraFormData.Type == "Epic" || this.jiraFormData.Type == "Story" || this.jiraFormData.Type == "Story Task") && (!jiraAgileConfig || !jiraAgileConfig.jira)) {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `Trying to add ${this.jiraFormData.Type} type without enabling the Jira_Agile. Please enable it first in edit-view`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-            return
-        }
-        if ((jiraConfig && jiraConfig.jira) || (jiraAgileConfig && jiraAgileConfig.jira)) {
-            let jiraAgileBoard = null
-            try {
-                jiraAgileBoard = jiraAgileConfig.label
-                this.jiraFormData.JIRA_AGILE_LABEL = jiraAgileBoard
-            } catch (e) { }
-            let jiraId = null
-            let selectorObj = null
-            if (type) {
-                jiraId = this.getJiraId(cell.getRow().getData(), jiraConfig, jiraAgileConfig)
-                if (this.jiraFormData.Type == 'Story') {
-                    this.jiraFormData[this.jiraFormData.Type].customfield_12790 = jiraId
-                } else if (this.jiraFormData.Type == "Story Task") {
-                    this.jiraFormData[this.jiraFormData.Type].parent = jiraId
-                }
-                let _id = cell.getRow().getData()['_id'];
-                selectorObj = {};
-                selectorObj["_id"] = _id;
-            }
-            this.setState({
-                modalTitle: "Jira specifications:- ",
-                modalOk: "Add",
-                modalQuestion: <JiraForm formData={this.jiraFormData} handleChange={this.handleJiraFormChange} jiraEnabled={dsHome.dsViews[dsView].jiraConfig && dsHome.dsViews[dsView].jiraConfig.jira} jiraAgileEnabled={dsHome.dsViews[dsView].jiraAgileConfig && dsHome.dsViews[dsView].jiraAgileConfig.jira} jiraAgileBoard={jiraAgileBoard} projectsMetaData={projectsMetaData} />,
-                modalCallback: (confirmed) => {
-                    self.submitAddJira(confirmed, jiraId, selectorObj)
-                },
-                showModal: !this.state.showModal,
-                toggleModalOnClose: false
-            })
-        } else {
-            this.setState({
-                modalTitle: "Convert JIRA status",
-                modalQuestion: `<b>Both JIRA/JIRA_AGILE config is disabled. Enable anyone or both to convert to JIRA row</b>`,
-                modalOk: "Dismiss",
-                modalCallback: (confirmed) => { self.setState({ showModal: false, modalQuestion: '', modalStatus: '' }) },
-                showModal: true
-            })
-        }
+        return await this._jira.addJiraRow(e, cell, type);
     }
 
     checkIfValid(rowData, type, jiraConfig, jiraAgileConfig) {
-        if (this._jira && this._jira.checkIfValid) {
-            try { return this._jira.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        let fieldMapping = null
-        if (jiraConfig && jiraConfig.jira) {
-            fieldMapping = jiraConfig.jiraFieldMapping
-        }
-        if (jiraAgileConfig && jiraAgileConfig.jira) {
-            fieldMapping = {
-                ...fieldMapping,
-                ...jiraAgileConfig.jiraFieldMapping
-            }
-        }
-        if (!fieldMapping) return false
-        try {
-            if (type == 'Story' && rowData[fieldMapping['type']] == 'Epic') {
-                return true
-            } else if (type == 'Story Task' && rowData[fieldMapping['type']] == 'Story') {
-                return true
-            } else {
-                return false
-            }
-        } catch (e) { return false }
+        return this._jira.checkIfValid(rowData, type, jiraConfig, jiraAgileConfig);
     }
 
     getJiraId(rowData, jiraConfig, jiraAgileConfig) {
-        if (this._jira && this._jira.getJiraId) {
-            try { return this._jira.getJiraId(rowData, jiraConfig, jiraAgileConfig); } catch (e) { console.error('JIRA helper failed', e); }
-        }
-        return "";
+        return this._jira.getJiraId(rowData, jiraConfig, jiraAgileConfig);
     }
 
     async submitAddJira(confirmed, parentKey, parentSelectorObj) {
-        if (this._jira && this._jira.submitAddJira) {
-            try { return await this._jira.submitAddJira(confirmed, parentKey, parentSelectorObj); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return await this._jira.submitAddJira(confirmed, parentKey, parentSelectorObj);
     }
 
     updateLocalStorage(jiraFormData) {
-        if (this._jira && this._jira.updateLocalStorage) {
-            try { return this._jira.updateLocalStorage(jiraFormData); } catch (e) { console.error('JIRA helper failed', e); }
-        }
+        return this._jira.updateLocalStorage(jiraFormData);
     }
 
     /**End add a jira issue */
