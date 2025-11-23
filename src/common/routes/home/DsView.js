@@ -250,40 +250,33 @@ class DsView extends Component {
 
         this.showCopiedNotification = this.showCopiedNotification.bind(this);
 
-        // Initialize helper placeholders (will be replaced by full modules)
-        try {
-            const context = {
-                props: this.props,
-                getState: () => this.state,
-                setState: (s) => this.setState(s),
-                timers: this.timers,
-                socket: () => socket,
-                // allow helpers to set the module-scoped socket variable
-                setSocket: (s) => { socket = s },
-                // expose component and ref for handlers to call imperative APIs
-                component: this,
-                ref: () => this.ref,
-                dispatch: this.props.dispatch,
-                apiUrl: config.apiUrl,
-                // Common UI components and utilities for helpers
-                MyTextArea: MyTextArea,
-                MyCodeMirror: MyCodeMirror,
-                DateEditor: DateEditor,
-                MyAutoCompleter: MyAutoCompleter,
-                MySingleAutoCompleter: MySingleAutoCompleter,
-                QueryParsers: QueryParsers,
-                MarkdownIt: MarkdownIt
-            };
-            this._clipboard = createClipboardHelpers(context);
-            this._socket = createSocketHandlers(context);
-            this._dom = createDomHelpers(context);
-            this._tabulator = createTabulatorConfig(context);
-            this._jira = createJiraHelpers(context);
-        } catch (e) {
-            this._clipboard = null;
-            this._socket = null;
-            this._dom = null;
-        }
+        const context = {
+            props: this.props,
+            getState: () => this.state,
+            setState: (s) => this.setState(s),
+            timers: this.timers,
+            socket: () => socket,
+            // allow helpers to set the module-scoped socket variable
+            setSocket: (s) => { socket = s },
+            // expose component and ref for handlers to call imperative APIs
+            component: this,
+            ref: () => this.ref,
+            dispatch: this.props.dispatch,
+            apiUrl: config.apiUrl,
+            // Common UI components and utilities for helpers
+            MyTextArea: MyTextArea,
+            MyCodeMirror: MyCodeMirror,
+            DateEditor: DateEditor,
+            MyAutoCompleter: MyAutoCompleter,
+            MySingleAutoCompleter: MySingleAutoCompleter,
+            QueryParsers: QueryParsers,
+            MarkdownIt: MarkdownIt
+        };
+        this._clipboard = createClipboardHelpers(context);
+        this._socket = createSocketHandlers(context);
+        this._dom = createDomHelpers(context);
+        this._tabulator = createTabulatorConfig(context);
+        this._jira = createJiraHelpers(context);
 
         let chronologyDescendingFrmLocal = localStorage.getItem("chronologyDescending");
         if (chronologyDescendingFrmLocal === "false") {
@@ -496,10 +489,7 @@ class DsView extends Component {
     }
 
     fixImgSizeForClipboard(output) {
-        if (this._clipboard && this._clipboard.fixImgSizeForClipboard) {
-            return this._clipboard.fixImgSizeForClipboard(output);
-        }
-        return output;
+        return this._clipboard.fixImgSizeForClipboard(output);
     }
 
     normalizeAllImgRows() {
@@ -940,43 +930,11 @@ class DsView extends Component {
      * Finally, it shows the modal of success or failure based on the copy to clipboard status.
      */
     copyTextToClipboard = (text) => {
-        if (this._clipboard && this._clipboard.copyTextToClipboard) {
-            return this._clipboard.copyTextToClipboard(text);
-        }
-        return false;
+        return this._clipboard.copyTextToClipboard(text);
     }
 
     showCopiedNotification(isSuccess) {
-        if (this._clipboard && this._clipboard.showCopiedNotification) {
-            return this._clipboard.showCopiedNotification(isSuccess);
-        }
-        if (isSuccess) {
-            this.setState({
-                ...this.state,
-                showNotification: true,
-                notificationMessage: "Copied successfully..!!",
-                notificationType: "success",
-                showIconsInNotification: true,
-            });
-        } else {
-            this.setState({
-                ...this.state,
-                showNotification: true,
-                notificationMessage: "Copy failed..!!",
-                notificationType: "failure",
-                showIconsInNotification: true,
-            });
-        }
-        //After a period of 2 seconds, reset the notification related states.
-        setTimeout(() => {
-            this.setState({
-                ...this.state,
-                showNotification: false,
-                notificationMessage: "",
-                notificationType: "success",
-                showIconsInNotification: false,
-            })
-        }, this.showNotificationTimeInMs);
+        return this._clipboard.showCopiedNotification(isSuccess);
     }
 
     showClipboardActionMessageModal(isSuccess, url) {
@@ -1060,42 +1018,27 @@ class DsView extends Component {
     // formatter in which we clone and use the resolved images! See 
     // col.formatterClipboard function below!
     myCopyToClipboard () {
-        if (this._clipboard && this._clipboard.myCopyToClipboard) {
-            return this._clipboard.myCopyToClipboard(this.ref);
-        }
-        return false;
+        return this._clipboard.myCopyToClipboard(this.ref);
     }
 
     copyToClipboard () {
         // You have to also set 'clipboard' to true in table options.
         //this.ref.table.copyToClipboard();
-        if (this._clipboard && this._clipboard.copyToClipboard) {
-            return this._clipboard.copyToClipboard(this.ref);
-        }
-        return false;
+        return this._clipboard.copyToClipboard(this.ref);
     }
 
     // https://stackoverflow.com/questions/34191780/javascript-copy-string-to-clipboard-as-text-html
     copyFormatted (element, html) {
-        if (this._clipboard && this._clipboard.copyFormatted) {
-            return this._clipboard.copyFormatted(element, html);
-        }
-        return false;
+        return this._clipboard.copyFormatted(element, html);
     }
 
     copyFormattedBetter (container) {
-        if (this._clipboard && this._clipboard.copyFormattedBetter) {
-            return this._clipboard.copyFormattedBetter(container);
-        }
-        return false;
+        return this._clipboard.copyFormattedBetter(container);
     }
 
 
     copyCellToClipboard (e, cell) {
-        if (this._clipboard && this._clipboard.copyCellToClipboard) {
-            return this._clipboard.copyCellToClipboard(e, cell);
-        }
-        return false;
+        return this._clipboard.copyCellToClipboard(e, cell);
     }
 
     step1 () {
