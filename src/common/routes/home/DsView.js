@@ -2156,10 +2156,7 @@ class DsView extends Component {
 
     
     setColumnDefinitions () {
-        if (this._tabulator && this._tabulator.setColumnDefinitions) {
-            try { return this._tabulator.setColumnDefinitions(); } catch (e) { console.error('Tabulator helper failed', e); }
-        }
-        return [];
+        return this._tabulator.setColumnDefinitions();
     }
 
     ajaxResponse (url, params, response) {
