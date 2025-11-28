@@ -12,12 +12,16 @@ class NewDsFromCsv extends Component {
             file: null,
             formData: null,
             range: "",
-            dsName: ""
+            dsName: "",
+            csvInfoValidated: false
         };
         this.onFileSelect = this.onFileSelect.bind(this);
         this.keySelectorOnChange = this.keySelectorOnChange.bind(this);
         this.dsNameOnChange = this.dsNameOnChange.bind(this);
         this.createDs = this.createDs.bind(this);
+        this.autoDetectRange = this.autoDetectRange.bind(this);
+        this.rangeSelectionDone = this.rangeSelectionDone.bind(this);
+        this.rangeOnChange = this.rangeOnChange.bind(this);
     }
     onFileSelect(event) {
         const { dispatch, user } = this.props;
@@ -33,7 +37,7 @@ class NewDsFromCsv extends Component {
                 file,
                 remoteFileName
             );     
-            this.setState({ file, formData });
+            this.setState({ file, formData, range: "", csvInfoValidated: false });
             dispatch(newDsActions.uploadCsvFile(remoteFileName, formData));
         }
     }
@@ -41,6 +45,36 @@ class NewDsFromCsv extends Component {
     componentDidMount () {
         const { dispatch } = this.props;
         dispatch(newDsActions.clearReduxStore());
+    }
+
+    componentDidUpdate (prevProps) {
+        const { newDs } = this.props;
+        // If auto-detected range info is available, update the range display
+        if (newDs && newDs.autoDetectedRangeInfo && newDs.autoDetectedRangeInfo.status) {
+            let infoText = `${newDs.autoDetectedRangeInfo.rowCount} rows, ${newDs.autoDetectedRangeInfo.columnCount} columns`;
+            if (this.state.range !== infoText) {
+                this.setState({ range: infoText });
+            }
+        }
+    }
+
+    autoDetectRange () {
+        const { newDs, dispatch } = this.props;
+        if (newDs && newDs.fileName) {
+            dispatch(newDsActions.autoDetectRangeInfo(newDs.fileName));
+        }
+    }
+
+    rangeOnChange (event) {
+        this.setState({ range: event.target.value });
+    }
+
+    rangeSelectionDone () {
+        // For CSV, validation just confirms the info is loaded
+        const { newDs } = this.props;
+        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs && newDs.hdrs.length) {
+            this.setState({ csvInfoValidated: true });
+        }
     }
 
     componentWillUnmount () {
@@ -66,10 +100,54 @@ class NewDsFromCsv extends Component {
         }
         return s1Status;
     }
-    step2 () {
+    step3 () {
         const { newDs } = this.props;
-        let s2 = '';
-        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs.length) {
+        let s3 = '';
+        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs && newDs.hdrs.length) {
+            s3 = <Row>
+                    <Col md={2} sm={2} xs={2}> 
+                    <b>Step 3.</b> Specify range (must include hdrs):
+                    </Col>
+                    <Col md={3} sm={3} xs={3}> 
+                    <Form.Control type="text" value={this.state.range} onChange={this.rangeOnChange} placeholder="File info will appear here" />
+                    </Col>
+                    <Col md={4} sm={4} xs={4}> 
+                    <Button onClick={this.autoDetectRange} variant="secondary" style={{marginRight: '5px'}}> Auto Detect Range </Button> 
+                    <Button onClick={this.rangeSelectionDone}> Validate </Button> 
+                    </Col>
+                 </Row>
+        }
+        return s3;
+    }
+
+    step3Status () {
+        const { newDs } = this.props;
+        let s3Status = '';
+        let statusJsx;
+        // Check for auto-detect errors
+        try {
+            if (newDs.autoDetectError) {
+                statusJsx = <b style={{color: 'red'}}> Auto-detect error: {newDs.autoDetectError.error || newDs.autoDetectError} </b>;
+            }
+        } catch (e) {}
+        // Show success message if validated
+        if (this.state.csvInfoValidated && newDs && newDs.uploadStatus === 'success' && newDs.hdrs && newDs.hdrs.length) {
+            statusJsx = <b style={{color: 'green'}}> File info validated successfully </b>;
+        }
+        if (statusJsx) {
+            s3Status = <Row>
+                            <Col md={12} sm={12} xs={12}> 
+                            {statusJsx}
+                            </Col>                        
+                       </Row>
+        }
+        return s3Status;
+    }
+
+    step4 () {
+        const { newDs } = this.props;
+        let s4 = '';
+        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs && newDs.hdrs.length && this.state.csvInfoValidated) {
             let hdrOptions = [];
             newDs.hdrs.map((v) => {
                 let row = {};
@@ -77,16 +155,16 @@ class NewDsFromCsv extends Component {
                 row.label = v;
                 hdrOptions.push(row);
             });
-            s2 = <Row>
+            s4 = <Row>
                     <Col md={2} sm={2} xs={2}> 
-                    <b>Step 2.</b> Select keys:
+                    <b>Step 4.</b> Select key(s):
                     </Col>
                     <Col md={4} sm={4} xs={4}> 
                     <Select className="basic-multi-select" classNamePrefix="select" isClearable={true} name="keys" options={hdrOptions} onChange={this.keySelectorOnChange} isMulti/>
                     </Col>
                  </Row>
         }
-        return s2;
+        return s4;
     }
 
 
@@ -121,7 +199,7 @@ class NewDsFromCsv extends Component {
     step5 () {
         const { newDs } = this.props;
         let s5 = '';
-        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs.length) {
+        if (newDs && newDs.uploadStatus === 'success' && newDs.hdrs && newDs.hdrs.length && this.state.csvInfoValidated) {
             s5 = <Row>
                     <Col md={2} sm={2} xs={2}> 
                     <b>Step 5.</b> Specify dataset name:
@@ -162,6 +240,7 @@ class NewDsFromCsv extends Component {
     }
 
     render () {
+        const { newDs } = this.props;
         return (
             <div>
                 <Row>
@@ -179,7 +258,10 @@ class NewDsFromCsv extends Component {
                 </Row>
                 {this.step1Status()}
                 <br/>
-                {this.step2()}
+                {this.step3()}
+                {this.step3Status()}
+                <br/>
+                {this.step4()}
                 <br/>
                 {this.step5()}
                 <br/>
