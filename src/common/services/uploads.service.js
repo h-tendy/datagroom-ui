@@ -13,8 +13,7 @@ export const uploadService = {
     uploadAttachment, 
     deleteOneAttachment,
 
-    autoDetectRange,
-    autoDetectRangeInfo
+    autoDetectRange
 };
 
 const config = {};
@@ -286,36 +285,3 @@ async function autoDetectRange (body) {
     }
 }
 
-async function autoDetectRangeInfo (body) {
-    try {
-        console.log("Starting API call: ", body);
-        let dataLen = JSON.stringify(body).length.toString();
-        let response = await fetch(`${config.apiUrl}/uploadCsv/autoDetectRangeInfo`, {
-            method: "post",
-            body: JSON.stringify(body),
-            headers: {
-                "Content-Type": "application/json",
-                "Content-Length": dataLen,
-                ...authHeader()
-            },
-            credentials: "include"     
-        });
-        let responseJson = null;
-        console.log("Finished fetch")
-        if (response.ok) {
-            responseJson = await response.json();
-            console.log('autoDetectRangeInfo: ', responseJson);
-        } else {
-            // Try to parse error response
-            try {
-                responseJson = await response.json();
-            } catch (e) {
-                responseJson = { status: false, error: 'Failed to detect CSV info' };
-            }
-        }
-        return responseJson;
-    } catch(e) {
-        console.log(e);
-        return { status: false, error: e.message || 'Exception in autoDetectRangeInfo' };
-    }
-}

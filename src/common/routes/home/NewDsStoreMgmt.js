@@ -27,10 +27,6 @@ export const newDsConstants = {
     AUTO_DETECT_RANGE_SUCCESS: 'AUTO_DETECT_RANGE_SUCCESS',
     AUTO_DETECT_RANGE_FAILURE: 'AUTO_DETECT_RANGE_FAILURE',
 
-    AUTO_DETECT_RANGE_INFO_REQUEST: 'AUTO_DETECT_RANGE_INFO_REQUEST',
-    AUTO_DETECT_RANGE_INFO_SUCCESS: 'AUTO_DETECT_RANGE_INFO_SUCCESS',
-    AUTO_DETECT_RANGE_INFO_FAILURE: 'AUTO_DETECT_RANGE_INFO_FAILURE',
-
     CREATE_DS_REQUEST: 'CREATE_DS_REQUEST',
     CREATE_DS_SUCCESS: 'CREATE_DS_SUCCESS',
     CREATE_DS_FAILURE: 'CREATE_DS_FAILURE'
@@ -101,17 +97,6 @@ export function newDs(state = initialState, action) {
             autoDetectedRange: null,
             autoDetectError: action.error
         }
-    case newDsConstants.AUTO_DETECT_RANGE_INFO_SUCCESS:
-        return {
-            ...state,
-            autoDetectedRangeInfo: action.result
-        }
-    case newDsConstants.AUTO_DETECT_RANGE_INFO_FAILURE:
-        return {
-            ...state,
-            autoDetectedRangeInfo: null,
-            autoDetectError: action.error
-        }
     case newDsConstants.SET_SELECTED_KEYS:
         return {
             ...state,
@@ -157,8 +142,7 @@ export const newDsActions = {
     uploadCsvFile,
     createDsViaCsv,
     createDsFromDs,
-    autoDetectRange,
-    autoDetectRangeInfo
+    autoDetectRange
 }
 
 function clearReduxStore () {
@@ -335,21 +319,3 @@ function autoDetectRange (fileName, sheetName) {
     function failure(error) { return { type: newDsConstants.AUTO_DETECT_RANGE_FAILURE, error } }
 }
 
-function autoDetectRangeInfo (fileName) {
-    return async dispatch => {
-        try {
-            dispatch(request());
-            let responseJson = await uploadService.autoDetectRangeInfo({fileName});
-            if (responseJson && responseJson.status) {
-                dispatch(success(responseJson));
-            } else {
-                dispatch(failure(responseJson || { error: 'Failed to detect CSV info' }));
-            }
-        } catch (error) {
-            dispatch(failure({ error: 'Auto-detect CSV info failed' }));
-        }
-    }
-    function request() { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_REQUEST } }
-    function success(result) { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_SUCCESS, result } }
-    function failure(error) { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_FAILURE, error } }
-}

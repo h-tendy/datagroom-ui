@@ -49,8 +49,12 @@ class NewDsFromXls extends Component {
 
     componentDidUpdate (prevProps) {
         const { newDs } = this.props;
-        // If auto-detected range is available and different from current state, update it
-        if (newDs && newDs.autoDetectedRange && newDs.autoDetectedRange !== this.state.range) {
+        const prevNewDs = prevProps.newDs;
+        // Only update range if autoDetectedRange is NEW (wasn't there before) and different from current state
+        // This prevents overwriting user's manual edits
+        if (newDs && newDs.autoDetectedRange && 
+            (!prevNewDs || !prevNewDs.autoDetectedRange || prevNewDs.autoDetectedRange !== newDs.autoDetectedRange) &&
+            newDs.autoDetectedRange !== this.state.range) {
             this.setState({ range: newDs.autoDetectedRange });
         }
     }
