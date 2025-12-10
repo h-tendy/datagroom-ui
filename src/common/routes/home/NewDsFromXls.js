@@ -47,6 +47,18 @@ class NewDsFromXls extends Component {
         dispatch(newDsActions.clearReduxStore());
     }
 
+    componentDidUpdate (prevProps) {
+        const { newDs } = this.props;
+        const prevNewDs = prevProps.newDs;
+        // Only update range if autoDetectedRange is NEW (wasn't there before) and different from current state
+        // This prevents overwriting user's manual edits
+        if (newDs && newDs.autoDetectedRange && 
+            (!prevNewDs || !prevNewDs.autoDetectedRange || prevNewDs.autoDetectedRange !== newDs.autoDetectedRange) &&
+            newDs.autoDetectedRange !== this.state.range) {
+            this.setState({ range: newDs.autoDetectedRange });
+        }
+    }
+
     componentWillUnmount () {
     }
 
@@ -119,6 +131,12 @@ class NewDsFromXls extends Component {
         const { newDs, dispatch } = this.props;
         dispatch(newDsActions.loadHdrsFromRange(newDs.fileName, newDs.selectedSheet, this.state.range));
     }
+    autoDetectRange () {
+        const { newDs, dispatch } = this.props;
+        if (newDs && newDs.fileName && newDs.selectedSheet) {
+            dispatch(newDsActions.autoDetectRange(newDs.fileName, newDs.selectedSheet));
+        }
+    }
 
     step3 () {
         const { newDs } = this.props;
@@ -128,10 +146,11 @@ class NewDsFromXls extends Component {
                     <Col md={2} sm={2} xs={2}> 
                     <b>Step 3.</b> Specify range (must include hdrs):
                     </Col>
-                    <Col md={4} sm={4} xs={4}> 
+                    <Col md={3} sm={3} xs={3}> 
                     <Form.Control type="text" value={this.state.range} onChange={this.rangeOnChange} />
                     </Col>
                     <Col md={4} sm={4} xs={4}> 
+                    <Button onClick={this.autoDetectRange.bind(this)} variant="secondary" style={{marginRight: '5px'}}> Auto Detect Range </Button> 
                     <Button onClick={this.rangeSelectionDone}> Validate </Button> 
                     </Col>
                  </Row>
@@ -143,6 +162,13 @@ class NewDsFromXls extends Component {
         const { newDs } = this.props;
         let s3Status = '';
         let statusJsx;
+        // Check for auto-detect errors
+        try {
+            if (newDs.autoDetectError) {
+                statusJsx = <b style={{color: 'red'}}> Auto-detect error: {newDs.autoDetectError.error || newDs.autoDetectError} </b>;
+            }
+        } catch (e) {}
+        // Check for range validation errors
         try {
             if (!newDs.loadStatus.loadStatus) {
                 statusJsx = <b style={{color: 'red'}}> {newDs.loadStatus.error} </b>;
