@@ -1964,7 +1964,43 @@ class DsView extends Component {
                                             row.getElement().style.backgroundColor = "lightGray";
                                         } else {
                                             row.getElement().style.backgroundColor = "white";
-                                        }  
+                                        }
+                                        // Render Plotly graphs when row comes into view (for virtual scrolling)
+                                        setTimeout(() => {
+                                            const rowElement = row.getElement();
+                                            const plots = rowElement.querySelectorAll('.plotly-graph');
+                                            const plotPromises = [];
+
+                                            plots.forEach((div) => {
+                                                // Check if already rendered
+                                                if (div.querySelector('svg')) return;
+                                                
+                                                const data = div.getAttribute('data-plot');
+                                                try {
+                                                    const json = JSON.parse(decodeURIComponent(data));
+                                                    if (window.Plotly) {
+                                                        // Wait for Plotly to finish rendering using promise
+                                                        const promise = window.Plotly.newPlot(div, json.data, json.layout, json.config || {})
+                                                            .then(() => {
+                                                                return new Promise((resolve) => {
+                                                                    div.on('plotly_afterplot', () => resolve());
+                                                                    setTimeout(resolve, 100);
+                                                                });
+                                                            });
+                                                        plotPromises.push(promise);
+                                                    }
+                                                } catch (e) {
+                                                    div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
+                                                }
+                                            });
+
+                                            // Normalize height after all plots in this row are rendered
+                                            if (plotPromises.length > 0) {
+                                                Promise.all(plotPromises)
+                                                    .then(() => row.normalizeHeight())
+                                                    .catch(() => row.normalizeHeight());
+                                            }
+                                        }, 50);
                                     },
                                     cellMouseEnter: (e, cell) => {
                                         if (cell.getElement().style.backgroundColor !== "#fcfcfc") 
