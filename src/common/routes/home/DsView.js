@@ -440,8 +440,9 @@ class DsView extends Component {
         this.normalizeAllImgRows();
         // add HighlightJS-badge
         this.applyHighlightJsBadge();
-        //Render plotly graphs
-        this.renderPlotlyInCells();
+        // Render plotly graphs after DOM layout & paint is ready 
+        // (Double requestAnimationFrame ensures cells are fully laid out before measuring)
+        requestAnimationFrame(() => requestAnimationFrame(() => this.renderPlotlyInCells()) );
     }
 
     // Since we generate html after editing, we need to attach
@@ -1964,7 +1965,7 @@ class DsView extends Component {
                                             row.getElement().style.backgroundColor = "lightGray";
                                         } else {
                                             row.getElement().style.backgroundColor = "white";
-                                        }  
+                                        }
                                     },
                                     cellMouseEnter: (e, cell) => {
                                         if (cell.getElement().style.backgroundColor !== "#fcfcfc") 
