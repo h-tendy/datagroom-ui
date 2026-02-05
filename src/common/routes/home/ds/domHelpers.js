@@ -111,26 +111,23 @@ export default function createDomHelpers(context) {
 
   function renderPlotlyInCells() {
     const plots = document.querySelectorAll('.plotly-graph');
-    if (plots.length === 0) return;
-    
-    const renderPromises = [];
-    
     plots.forEach((div) => {
+      if(div.querySelector('svg')) return; // Already rendered
       const data = div.getAttribute('data-plot');
       try {
         const json = JSON.parse(decodeURIComponent(data));
         if (window.Plotly) {
-          // Plotly.newPlot returns a promise that resolves when rendering is complete
-          const promise = window.Plotly.newPlot(div, json.data, json.layout, json.config || {})
+          window.Plotly.newPlot(div, json.data, json.layout, json.config || {})
             .then(() => {
-              // Also listen for the afterplot event as a secondary check
-              return new Promise((resolve) => {
-                div.on('plotly_afterplot', () => resolve());
-                // Fallback timeout in case event doesn't fire
-                setTimeout(resolve, 100);
+              div.addEventListener('plotly_afterplot', () => {
+                if (ref && ref() && ref().table) {
+                  let rows = ref().table.getRows();
+                  for (let i = 0; i < rows.length; i++) {
+                    rows[i].normalizeHeight();
+                  }
+                }
               });
             });
-          renderPromises.push(promise);
         } else {
           div.innerHTML = `<div style="color:red;">Plotly CDN not loaded</div>`;
         }
@@ -138,31 +135,6 @@ export default function createDomHelpers(context) {
         div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
       }
     });
-    
-    // Wait for all Plotly graphs to finish rendering, then normalize heights
-    if (renderPromises.length > 0) {
-      Promise.all(renderPromises)
-        .then(() => {
-          if (ref && ref() && ref().table) {
-            let rows = ref().table.getRows();
-            for (let i = 0; i < rows.length; i++) {
-              rows[i].normalizeHeight();
-            }
-            ref().table.rowManager.adjustTableSize(false);
-          }
-        })
-        .catch((err) => {
-          console.error('Error rendering Plotly graphs:', err);
-          // Still normalize heights even if there's an error
-          if (ref && ref() && ref().table) {
-            let rows = ref().table.getRows();
-            for (let i = 0; i < rows.length; i++) {
-              rows[i].normalizeHeight();
-            }
-            ref().table.rowManager.adjustTableSize(false);
-          }
-        });
-    }
   }
 
   return {

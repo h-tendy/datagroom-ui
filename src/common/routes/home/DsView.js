@@ -440,8 +440,9 @@ class DsView extends Component {
         this.normalizeAllImgRows();
         // add HighlightJS-badge
         this.applyHighlightJsBadge();
-        //Render plotly graphs
-        this.renderPlotlyInCells();
+        // Render plotly graphs after DOM layout & paint is ready 
+        // (Double requestAnimationFrame ensures cells are fully laid out before measuring)
+        requestAnimationFrame(() => requestAnimationFrame(() => this.renderPlotlyInCells()) );
     }
 
     // Since we generate html after editing, we need to attach
@@ -1965,42 +1966,6 @@ class DsView extends Component {
                                         } else {
                                             row.getElement().style.backgroundColor = "white";
                                         }
-                                        // Render Plotly graphs when row comes into view (for virtual scrolling)
-                                        setTimeout(() => {
-                                            const rowElement = row.getElement();
-                                            const plots = rowElement.querySelectorAll('.plotly-graph');
-                                            const plotPromises = [];
-
-                                            plots.forEach((div) => {
-                                                // Check if already rendered
-                                                if (div.querySelector('svg')) return;
-                                                
-                                                const data = div.getAttribute('data-plot');
-                                                try {
-                                                    const json = JSON.parse(decodeURIComponent(data));
-                                                    if (window.Plotly) {
-                                                        // Wait for Plotly to finish rendering using promise
-                                                        const promise = window.Plotly.newPlot(div, json.data, json.layout, json.config || {})
-                                                            .then(() => {
-                                                                return new Promise((resolve) => {
-                                                                    div.on('plotly_afterplot', () => resolve());
-                                                                    setTimeout(resolve, 100);
-                                                                });
-                                                            });
-                                                        plotPromises.push(promise);
-                                                    }
-                                                } catch (e) {
-                                                    div.innerHTML = `<div style="color:red;">Invalid Plotly JSON</div>`;
-                                                }
-                                            });
-
-                                            // Normalize height after all plots in this row are rendered
-                                            if (plotPromises.length > 0) {
-                                                Promise.all(plotPromises)
-                                                    .then(() => row.normalizeHeight())
-                                                    .catch(() => row.normalizeHeight());
-                                            }
-                                        }, 50);
                                     },
                                     cellMouseEnter: (e, cell) => {
                                         if (cell.getElement().style.backgroundColor !== "#fcfcfc") 
