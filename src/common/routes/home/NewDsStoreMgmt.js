@@ -23,6 +23,14 @@ export const newDsConstants = {
     LOAD_FROM_RANGE_SUCCESS: 'LOAD_FROM_RANGE_SUCCESS',
     LOAD_FROM_RANGE_FAILURE: 'LOAD_FROM_RANGE_FAILURE',
 
+    AUTO_DETECT_RANGE_REQUEST: 'AUTO_DETECT_RANGE_REQUEST',
+    AUTO_DETECT_RANGE_SUCCESS: 'AUTO_DETECT_RANGE_SUCCESS',
+    AUTO_DETECT_RANGE_FAILURE: 'AUTO_DETECT_RANGE_FAILURE',
+
+    AUTO_DETECT_RANGE_INFO_REQUEST: 'AUTO_DETECT_RANGE_INFO_REQUEST',
+    AUTO_DETECT_RANGE_INFO_SUCCESS: 'AUTO_DETECT_RANGE_INFO_SUCCESS',
+    AUTO_DETECT_RANGE_INFO_FAILURE: 'AUTO_DETECT_RANGE_INFO_FAILURE',
+
     CREATE_DS_REQUEST: 'CREATE_DS_REQUEST',
     CREATE_DS_SUCCESS: 'CREATE_DS_SUCCESS',
     CREATE_DS_FAILURE: 'CREATE_DS_FAILURE'
@@ -82,6 +90,28 @@ export function newDs(state = initialState, action) {
             ...state,
             loadStatus: action.loadStatus,
         }
+    case newDsConstants.AUTO_DETECT_RANGE_SUCCESS:
+        return {
+            ...state,
+            autoDetectedRange: action.result.range
+        }
+    case newDsConstants.AUTO_DETECT_RANGE_FAILURE:
+        return {
+            ...state,
+            autoDetectedRange: null,
+            autoDetectError: action.error
+        }
+    case newDsConstants.AUTO_DETECT_RANGE_INFO_SUCCESS:
+        return {
+            ...state,
+            autoDetectedRangeInfo: action.result
+        }
+    case newDsConstants.AUTO_DETECT_RANGE_INFO_FAILURE:
+        return {
+            ...state,
+            autoDetectedRangeInfo: null,
+            autoDetectError: action.error
+        }
     case newDsConstants.SET_SELECTED_KEYS:
         return {
             ...state,
@@ -126,7 +156,9 @@ export const newDsActions = {
     createDs,
     uploadCsvFile,
     createDsViaCsv,
-    createDsFromDs
+    createDsFromDs,
+    autoDetectRange,
+    autoDetectRangeInfo
 }
 
 function clearReduxStore () {
@@ -282,4 +314,42 @@ function createDsFromDs (fromDsName, toDsName, dsUser, retainData) {
     function request(dsName) { return { type: newDsConstants.CREATE_DS_REQUEST, dsName } }
     function success(serverStatus) { return { type: newDsConstants.CREATE_DS_SUCCESS, fromDsName, toDsName, serverStatus } }
     function failure(serverStatus) { return { type: newDsConstants.CREATE_DS_FAILURE, serverStatus } }
+}
+
+function autoDetectRange (fileName, sheetName) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await uploadService.autoDetectRange({fileName, sheetName});
+            if (responseJson && responseJson.status) {
+                dispatch(success(responseJson));
+            } else {
+                dispatch(failure(responseJson || { error: 'Failed to detect range' }));
+            }
+        } catch (error) {
+            dispatch(failure({ error: 'Auto-detect range failed' }));
+        }
+    }
+    function request() { return { type: newDsConstants.AUTO_DETECT_RANGE_REQUEST } }
+    function success(result) { return { type: newDsConstants.AUTO_DETECT_RANGE_SUCCESS, result } }
+    function failure(error) { return { type: newDsConstants.AUTO_DETECT_RANGE_FAILURE, error } }
+}
+
+function autoDetectRangeInfo (fileName) {
+    return async dispatch => {
+        try {
+            dispatch(request());
+            let responseJson = await uploadService.autoDetectRangeInfo({fileName});
+            if (responseJson && responseJson.status) {
+                dispatch(success(responseJson));
+            } else {
+                dispatch(failure(responseJson || { error: 'Failed to detect CSV info' }));
+            }
+        } catch (error) {
+            dispatch(failure({ error: 'Auto-detect CSV info failed' }));
+        }
+    }
+    function request() { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_REQUEST } }
+    function success(result) { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_SUCCESS, result } }
+    function failure(error) { return { type: newDsConstants.AUTO_DETECT_RANGE_INFO_FAILURE, error } }
 }
